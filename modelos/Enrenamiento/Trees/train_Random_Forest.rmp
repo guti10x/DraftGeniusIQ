@@ -13,7 +13,7 @@
     <parameter key="encoding" value="SYSTEM"/>
     <process expanded="true">
       <operator activated="true" class="read_excel" compatibility="10.2.000" expanded="true" height="68" name="Read Excel (2)" width="90" x="45" y="34">
-        <parameter key="excel_file" value="C:/Users/34673/Documents/RapidMiner/Local Repository/DraftGenious/DraftGeniusIQ/data/jornada_12/dataset_jornada_12_todos_los_jugadores_MD_y_Swithout_missin_values.xlsx"/>
+        <parameter key="excel_file" value="C:\Users\34673\Documents\RapidMiner\Local Repository\DraftGenious\DraftGeniusIQ\data\jornada_12\dataset_jornada_12_todos_los_jugadores_MD_y_Swithout_missing_values.xlsx"/>
         <parameter key="sheet_selection" value="sheet number"/>
         <parameter key="sheet_number" value="1"/>
         <parameter key="imported_cell_range" value="A1"/>
@@ -83,7 +83,7 @@
           <parameter key="55" value="Hit woodwork.true.integer.attribute"/>
           <parameter key="56" value="Ausencia.true.polynominal.attribute"/>
           <parameter key="57" value="Error led to shot.true.integer.attribute"/>
-          <parameter key="58" value="Error led to goal.true.polynominal.attribute"/>
+          <parameter key="58" value="Error led to goal.true.integer.attribute"/>
         </list>
         <parameter key="read_not_matching_values_as_missings" value="false"/>
       </operator>
@@ -219,12 +219,14 @@
       <connect from_op="Cross Validation" from_port="example set" to_port="result 2"/>
       <connect from_op="Cross Validation" from_port="test result set" to_port="result 3"/>
       <connect from_op="Cross Validation" from_port="performance 2" to_port="result 4"/>
+      <connect from_op="Store" from_port="through" to_port="result 5"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
       <portSpacing port="sink_result 4" spacing="0"/>
       <portSpacing port="sink_result 5" spacing="0"/>
+      <portSpacing port="sink_result 6" spacing="0"/>
     </process>
   </operator>
 </process>

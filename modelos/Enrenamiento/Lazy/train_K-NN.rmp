@@ -195,11 +195,13 @@
       <connect from_op="Cross Validation" from_port="model" to_op="Store" to_port="input"/>
       <connect from_op="Cross Validation" from_port="test result set" to_port="result 2"/>
       <connect from_op="Cross Validation" from_port="performance 1" to_port="result 3"/>
+      <connect from_op="Store" from_port="through" to_port="result 4"/>
       <portSpacing port="source_input 1" spacing="0"/>
       <portSpacing port="sink_result 1" spacing="0"/>
       <portSpacing port="sink_result 2" spacing="0"/>
       <portSpacing port="sink_result 3" spacing="0"/>
       <portSpacing port="sink_result 4" spacing="0"/>
+      <portSpacing port="sink_result 5" spacing="0"/>
     </process>
   </operator>
 </process>

@@ -14,6 +14,7 @@ import time
 import os
 import threading
 import sys
+from datetime import datetime
 
 class VentanaPrincipal(QMainWindow):
     def __init__(self):
@@ -126,6 +127,20 @@ class marketWindow(QWidget):
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
+        # BOTÓN PARA GUARDAR MI PLANTILLA ###########################################################################
+        # Crear un botón
+        self.save_button = QPushButton("Guardar plantilla")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        self.save_button.clicked.connect(self.guardar_excell)
+
+        # Alineación
+        grid_layout.addWidget(self.save_button, 6, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        self.save_button.setMinimumWidth(100)
+        self.save_button.setMaximumWidth(150)
+
+
         # Agregar el diseño de cuadrícula al diseño principal
         layout.addLayout(grid_layout)
 
@@ -144,6 +159,52 @@ class marketWindow(QWidget):
 
             # Actualizar el QLineEdit con la ruta seleccionada
             self.text_input.setText(self.selected_path)
+
+    def guardar_excell(self):
+        self.output_textedit.append(f"________________________________________________________________________________________")
+        output_textedit = self.output_textedit
+        color_azul = QColor(0, 0, 255)  # Valores RGB para azul
+        formato_azul = QTextCharFormat()
+        formato_azul.setForeground(color_azul)
+        output_textedit.mergeCurrentCharFormat(formato_azul)
+        output_textedit.insertPlainText("\nGuardando plantilla...\n")
+        formato_negro = QTextCharFormat()
+        formato_negro.setForeground(QColor(0, 0, 0))
+        output_textedit.mergeCurrentCharFormat(formato_negro)
+
+        if len(self.nombres_jugadores) > 0:
+            # Obtener la fecha actual
+            fecha_actual = datetime.now()
+
+            # Formatear la fecha como una cadena (opcional)
+            fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
+
+            ruta_output = self.text_input.text()
+            excel_file_path= ruta_output +"/mi_plantilla"+fecha_actual_str+".xlsx"
+            
+            # Crear un nuevo libro de Excel
+            workbook = openpyxl.Workbook()
+
+            # Seleccionar la hoja activa (por defecto, es la primera hoja)
+            sheet = workbook.active
+
+            # Iterar sobre la lista y almacenar cada elemento en una nueva fila
+            for index, nombre in enumerate(self.nombres_jugadores, start=1):
+                sheet.cell(row=index, column=1, value=nombre)
+
+            # Guardar el libro de Excel
+            workbook.save(excel_file_path)
+            self.output_textedit.append(f"Plantilla guardada en {excel_file_path}")
+        else:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText("\n¡La plantilla no se puede guardar porque no esta inicializada")
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
 
     def iniciar_scrapear_thread(self):
         # Crear un hilo y ejecutar la función en segundo plano
@@ -164,75 +225,96 @@ class marketWindow(QWidget):
             masMenu.click()
 
     def scrapear_funcion(self):
-        # Agregar tu lógica de scraper aquí
-        # Ejemplo: Mostrar un mensaje en el QTextEdit
-        self.output_textedit.append("Obteniendo plantilla...\n")
+        self.output_textedit.append(f"________________________________________________________________________________________")
+        output_textedit = self.output_textedit
+        color_azul = QColor(0, 0, 255)  # Valores RGB para azul
+        formato_azul = QTextCharFormat()
+        formato_azul.setForeground(color_azul)
+        output_textedit.mergeCurrentCharFormat(formato_azul)
+        output_textedit.insertPlainText("\nObteniendo plantilla...\n")
+        formato_negro = QTextCharFormat()
+        formato_negro.setForeground(QColor(0, 0, 0))
+        output_textedit.mergeCurrentCharFormat(formato_negro)
+       
+        try:
 
-        self.driver = webdriver.Chrome()
+            self.driver = webdriver.Chrome()
 
-        # Navega a la página web que deseas hacer scraping
-        self.driver.get("https://mister.mundodeportivo.com/new-onboarding/#market")
+            # Navega a la página web que deseas hacer scraping
+            self.driver.get("https://mister.mundodeportivo.com/new-onboarding/#market")
 
-        # Espera a que se cargue la página
-        self.driver.implicitly_wait(15)
+            # Espera a que se cargue la página
+            self.driver.implicitly_wait(15)
 
-        # Encuentra el botón de "Consentir" 
-        button = self.driver.find_element(By.XPATH, '//*[@id="didomi-notice-agree-button"]')
-        # Haz clic en el botón de "Consentir" 
-        button.click()
+            # Encuentra el botón de "Consentir" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="didomi-notice-agree-button"]')
+            # Haz clic en el botón de "Consentir" 
+            button.click()
 
-        # Encuentra el botón de "Siguinete" 
-        button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')
-        # Haz clic en el botón de "Siguiente" 
-        button.click()
-        button.click()
-        button.click()
-        button.click()
+            # Encuentra el botón de "Siguinete" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')
+            # Haz clic en el botón de "Siguiente" 
+            button.click()
+            button.click()
+            button.click()
+            button.click()
 
-        # Encuentra el botón de "sing con gmail" 
-        button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/button[3]')
-        button.click()
+            # Encuentra el botón de "sing con gmail" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/button[3]')
+            button.click()
 
-        # Localiza el elemento del input gmail
-        inputgmail = self.driver.find_element(By.XPATH, '//*[@id="email"]')
+            # Localiza el elemento del input gmail
+            inputgmail = self.driver.find_element(By.XPATH, '//*[@id="email"]')
 
-        # Borra cualquier contenido existente en la caja de texto (opcional)
-        inputgmail.clear()
+            # Borra cualquier contenido existente en la caja de texto (opcional)
+            inputgmail.clear()
 
-        # Ingresa texto en la caja de texto
-        inputgmail.send_keys("m31_grupo6@outlook.com")
+            # Ingresa texto en la caja de texto
+            inputgmail.send_keys("m31_grupo6@outlook.com")
 
-        # Localiza el elemento del input gmail
-        inputpsw = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
+            # Localiza el elemento del input gmail
+            inputpsw = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
 
-        # Borra cualquier contenido existente en la caja de texto (opcional)
-        inputpsw.clear()
+            # Borra cualquier contenido existente en la caja de texto (opcional)
+            inputpsw.clear()
 
-        # Ingresa texto en la caja de texto
-        inputpsw.send_keys("Chocoflakes2")
+            # Ingresa texto en la caja de texto
+            inputpsw.send_keys("Chocoflakes2")
 
-        # Encuentra el botón de "sing con gmail" 
-        button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')
-        button.click()
+            # Encuentra el botón de "sing con gmail" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')
+            button.click()
 
-        # Espera a que se cargue la página
-        self.driver.implicitly_wait(10)
+            # Espera a que se cargue la página
+            self.driver.implicitly_wait(10)
 
-        #Hacer click en el btn Jugadores con la función click_mas() para manejar errores generados por anuncios intrusiovos
-        self.click_mas()
+            #Hacer click en el btn Jugadores con la función click_mas() para manejar errores generados por anuncios intrusiovos
+            self.click_mas()
 
-        # Encontrar el elemento div con la clase "team__squad"
-        team_squad_div = self.driver.find_element(By.CLASS_NAME, 'team__squad')
+            # Encontrar el elemento div con la clase "team__squad"
+            team_squad_div = self.driver.find_element(By.CLASS_NAME, 'team__squad')
 
-        # Encontrar todos los elementos con la clase "name" dentro del div
-        names_elements = team_squad_div.find_elements(By.CLASS_NAME, 'name')
+            # Encontrar todos los elementos con la clase "name" dentro del div
+            names_elements = team_squad_div.find_elements(By.CLASS_NAME, 'name')
 
-        # Iterar sobre los elementos encontrados e imprimir el texto
-        for name_element in names_elements:
-            self.output_textedit.append(name_element.text)
-            self.nombres_jugadores.append(name_element.text)
-            
-        self.driver.quit()
+            # Iterar sobre los elementos encontrados e imprimir el texto
+            for name_element in names_elements:
+                self.output_textedit.append(name_element.text)
+                self.nombres_jugadores.append(name_element.text)
+
+            self.driver.quit()
+
+        except: 
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText("n\Algo salió mal :( ,  Vuelve a intentarlo")
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+
 
 class Ventana2(QWidget):
     def __init__(self):
@@ -804,7 +886,7 @@ class PlayerScraperWindow(QDialog, QWidget):
         # Espera a que se cargue la página
         self.driver.implicitly_wait(10)
 
-        #Hacer click en el btn Jugadores con la función click_mas() para manejar errores generados por anuncios intrusiovos
+        #Hacer click en el btn Jugadores con la función click_mas() para manejar errores generados por anuncios intrusivos
         self.click_mas()
 
         # Pinchar en el botón "Jugaodres" para acceder al listado de jugadores 

@@ -79,6 +79,9 @@ class marketWindow(QWidget):
     def __init__(self):
         super().__init__()
 
+        #Varaible para guardar la plantilla scrapeada
+        self.nombres_jugadores=[]
+
         # Crear un diseño principal usando QVBoxLayout
         layout = QVBoxLayout()
 
@@ -147,10 +150,89 @@ class marketWindow(QWidget):
         thread = threading.Thread(target=self.scrapear_funcion)
         thread.start()
 
+    def click_mas(self):
+        # Pinchar en el botón del menu "Más"
+        masMenu = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[3]/a')
+
+        try:
+            masMenu.click()
+        except (ElementNotInteractableException, NoSuchElementException):
+            # Maneja la excepción y espera antes de intentar nuevamente
+            self.output_textedit.append("Anuncio detectado, reiniciando driver...")
+            self.driver.refresh()
+            time.sleep(3) 
+            masMenu.click()
+
     def scrapear_funcion(self):
         # Agregar tu lógica de scraper aquí
         # Ejemplo: Mostrar un mensaje en el QTextEdit
-        self.output_textedit.append("Obteniendo plantilla...")
+        self.output_textedit.append("Obteniendo plantilla...\n")
+
+        self.driver = webdriver.Chrome()
+
+        # Navega a la página web que deseas hacer scraping
+        self.driver.get("https://mister.mundodeportivo.com/new-onboarding/#market")
+
+        # Espera a que se cargue la página
+        self.driver.implicitly_wait(15)
+
+        # Encuentra el botón de "Consentir" 
+        button = self.driver.find_element(By.XPATH, '//*[@id="didomi-notice-agree-button"]')
+        # Haz clic en el botón de "Consentir" 
+        button.click()
+
+        # Encuentra el botón de "Siguinete" 
+        button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')
+        # Haz clic en el botón de "Siguiente" 
+        button.click()
+        button.click()
+        button.click()
+        button.click()
+
+        # Encuentra el botón de "sing con gmail" 
+        button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/button[3]')
+        button.click()
+
+        # Localiza el elemento del input gmail
+        inputgmail = self.driver.find_element(By.XPATH, '//*[@id="email"]')
+
+        # Borra cualquier contenido existente en la caja de texto (opcional)
+        inputgmail.clear()
+
+        # Ingresa texto en la caja de texto
+        inputgmail.send_keys("m31_grupo6@outlook.com")
+
+        # Localiza el elemento del input gmail
+        inputpsw = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
+
+        # Borra cualquier contenido existente en la caja de texto (opcional)
+        inputpsw.clear()
+
+        # Ingresa texto en la caja de texto
+        inputpsw.send_keys("Chocoflakes2")
+
+        # Encuentra el botón de "sing con gmail" 
+        button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')
+        button.click()
+
+        # Espera a que se cargue la página
+        self.driver.implicitly_wait(10)
+
+        #Hacer click en el btn Jugadores con la función click_mas() para manejar errores generados por anuncios intrusiovos
+        self.click_mas()
+
+        # Encontrar el elemento div con la clase "team__squad"
+        team_squad_div = self.driver.find_element(By.CLASS_NAME, 'team__squad')
+
+        # Encontrar todos los elementos con la clase "name" dentro del div
+        names_elements = team_squad_div.find_elements(By.CLASS_NAME, 'name')
+
+        # Iterar sobre los elementos encontrados e imprimir el texto
+        for name_element in names_elements:
+            self.output_textedit.append(name_element.text)
+            self.nombres_jugadores.append(name_element.text)
+            
+        self.driver.quit()
 
 class Ventana2(QWidget):
     def __init__(self):

@@ -19,7 +19,7 @@ class VentanaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.setWindowTitle("Ventana Principal")
+        self.setWindowTitle("DraftGeniousIQ")
 
         self.central_widget = QWidget()
         self.setCentralWidget(self.central_widget)
@@ -28,9 +28,9 @@ class VentanaPrincipal(QMainWindow):
 
         self.stacked_widget = QStackedWidget()
 
-        self.ventana1 = Ventana1()
+        self.ventana1 = marketWindow()
         self.ventana2 = Ventana2()
-        self.ventana3 = PlayerScraperWindow("Ventana 3")
+        self.ventana3 = PlayerScraperWindow("Players Scraper")
         self.ventana4 = Ventana4()
         self.ventana5 = Ventana5()
         self.ventana6 = Ventana6()
@@ -75,13 +75,82 @@ class VentanaPrincipal(QMainWindow):
 
         self.layout.addWidget(self.stacked_widget, 1, 0, 1, 6)
 
-class Ventana1(QWidget):
+class marketWindow(QWidget):
     def __init__(self):
         super().__init__()
+
+        # Crear un diseño principal usando QVBoxLayout
         layout = QVBoxLayout()
-        label = QLabel("Contenido de la Ventana 1")
-        layout.addWidget(label)
+
+        # Crear un diseño de cuadrícula dentro del QVBoxLayout
+        grid_layout = QGridLayout(self)
+
+        # LABEL DE TEXTO
+        label_text = QLabel("Obtener mi plantilla")
+        grid_layout.addWidget(label_text, 1, 0)
+
+        # BOTÓN PARA INICIAR LA OBTENCIÓN DE MI PLANTILLA ###########################################################
+        # Crear un botón
+        self.scrape_button = QPushButton("Obtener mi plantilla")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+
+        # Alineación y estilos
+        grid_layout.addWidget(self.scrape_button, 1, 1)
+        self.scrape_button.setMaximumWidth(150)
+
+        # VENTANA OUTPUT SCRAPER #####################################################################################
+        # Crear un QTextEdit para la salida
+        self.output_textedit = QTextEdit(self)
+        grid_layout.addWidget(self.output_textedit, 2, 0, 2, 2)  # row, column, rowSpan, columnSpan
+
+        # SELECCIONAR RUTA DONDE GUARDAR EL EXCEL OUTPUT DEL SCRAPER ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Guardar plantilla:")
+        grid_layout.addWidget(label_text, 4, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 4, 1)
+
+        # BOTÓN PARA SELECCIONAR CARPETA
+        select_folder_button = QPushButton("Seleccionar Carpeta")
+        select_folder_button.clicked.connect(self.select_folder)
+        # Alineación
+        grid_layout.addWidget(select_folder_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        select_folder_button.setMinimumWidth(140)
+
+        # Agregar el diseño de cuadrícula al diseño principal
+        layout.addLayout(grid_layout)
+
+        # Agregar el diseño principal al widget
         self.setLayout(layout)
+
+    def select_folder(self):
+        # Obtener el directorio del script de Python
+        script_directory = os.path.dirname(__file__)
+        
+        folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
+        if folder_path:
+            # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
+            self.selected_folder = folder_path
+            self.selected_path = folder_path
+
+            # Actualizar el QLineEdit con la ruta seleccionada
+            self.text_input.setText(self.selected_path)
+
+    def iniciar_scrapear_thread(self):
+        # Crear un hilo y ejecutar la función en segundo plano
+        thread = threading.Thread(target=self.scrapear_funcion)
+        thread.start()
+
+    def scrapear_funcion(self):
+        # Agregar tu lógica de scraper aquí
+        # Ejemplo: Mostrar un mensaje en el QTextEdit
+        self.output_textedit.append("Obteniendo plantilla...")
 
 class Ventana2(QWidget):
     def __init__(self):
@@ -90,11 +159,6 @@ class Ventana2(QWidget):
         label = QLabel("Contenido de la Ventana 2")
         layout.addWidget(label)
         self.setLayout(layout)
-
-class PlayerScraperWindow(QDialog, QWidget):
-    def __init__(self, window_title):
-        super().__init__()
-        self.setWindowTitle(window_title)
 
 class Ventana4(QWidget):
     def __init__(self):
@@ -571,6 +635,7 @@ class PlayerScraperWindow(QDialog, QWidget):
 
     def invocar_actualizacion(self, nuevo_valor):
         QMetaObject.invokeMethod(self.progress_bar, "setValue", Qt.ConnectionType.QueuedConnection, Q_ARG(int, nuevo_valor))
+
     def scrapear_funcion(self):
         self.output_textedit.append("Starting scraper...")
 

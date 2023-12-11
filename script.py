@@ -15,6 +15,7 @@ import os
 import threading
 import sys
 from datetime import datetime
+import re
 
 class VentanaPrincipal(QMainWindow):
     def __init__(self):
@@ -98,20 +99,20 @@ class squadWindow(QWidget):
         self.scrape_button = QPushButton("Scrapear mi plantilla")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+        self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
 
         # Alineación y estilos
         grid_layout.addWidget(self.scrape_button, 1, 1)
         self.scrape_button.setMaximumWidth(150)
 
         # VENTANA OUTPUT SCRAPER #####################################################################################
-        # Crear un QTextEdit para la salida 
+        # Crear un QTextEdit para la salida
         self.output_textedit = QTextEdit(self)
         grid_layout.addWidget(self.output_textedit, 2, 0, 2, 2)  # row, column, rowSpan, columnSpan
 
         # SELECCIONAR RUTA DONDE GUARDAR EL EXCEL OUTPUT DEL SCRAPER ##################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Guardar plantilla: ")
+        label_text = QLabel("Guardar plantilla:")
         grid_layout.addWidget(label_text, 4, 0)
 
         # INPUT DE TEXTO
@@ -334,7 +335,7 @@ class marketWindow(QWidget):
         self.scrape_button = QPushButton("Scrapear mercado")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+        self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
 
         # Alineación y estilos
         grid_layout.addWidget(self.scrape_button, 1, 1)
@@ -395,6 +396,115 @@ class marketWindow(QWidget):
 
             # Actualizar el QLineEdit con la ruta seleccionada
             self.text_input.setText(self.selected_path)
+
+    def click_mas(self):
+        # Pinchar en el botón del menu "Más"
+        masMenu = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[2]/a')
+
+        try:
+            masMenu.click()
+        except (ElementNotInteractableException, NoSuchElementException):
+            # Maneja la excepción y espera antes de intentar nuevamente
+            self.output_textedit.append("Anuncio detectado, reiniciando driver...")
+            self.driver.refresh()
+            time.sleep(3) 
+            masMenu.click()
+
+    def iniciar_scrapear_thread(self):
+        # Crear un hilo y ejecutar la función en segundo plano
+        thread = threading.Thread(target=self.scrapear_funcion)
+        thread.start()
+
+    def scrapear_funcion(self):
+        self.output_textedit.append(f"________________________________________________________________________________________")
+        output_textedit = self.output_textedit
+        color_azul = QColor(0, 0, 255)  # Valores RGB para azul
+        formato_azul = QTextCharFormat()
+        formato_azul.setForeground(color_azul)
+        output_textedit.mergeCurrentCharFormat(formato_azul)
+        output_textedit.insertPlainText("\nObteniendo jugadores en el mercado...\n")
+        formato_negro = QTextCharFormat()
+        formato_negro.setForeground(QColor(0, 0, 0))
+        output_textedit.mergeCurrentCharFormat(formato_negro)
+       
+        try:
+
+            self.driver = webdriver.Chrome()
+
+            # Navega a la página web que deseas hacer scraping
+            self.driver.get("https://mister.mundodeportivo.com/new-onboarding/#market")
+
+            # Espera a que se cargue la página
+            self.driver.implicitly_wait(15)
+
+            # Encuentra el botón de "Consentir" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="didomi-notice-agree-button"]')
+            # Haz clic en el botón de "Consentir" 
+            button.click()
+
+            # Encuentra el botón de "Siguinete" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')
+            # Haz clic en el botón de "Siguiente" 
+            button.click()
+            button.click()
+            button.click()
+            button.click()
+
+            # Encuentra el botón de "sing con gmail" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/button[3]')
+            button.click()
+
+            # Localiza el elemento del input gmail
+            inputgmail = self.driver.find_element(By.XPATH, '//*[@id="email"]')
+
+            # Borra cualquier contenido existente en la caja de texto (opcional)
+            inputgmail.clear()
+
+            # Ingresa texto en la caja de texto
+            inputgmail.send_keys("m31_grupo6@outlook.com")
+
+            # Localiza el elemento del input gmail
+            inputpsw = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
+
+            # Borra cualquier contenido existente en la caja de texto (opcional)
+            inputpsw.clear()
+
+            # Ingresa texto en la caja de texto
+            inputpsw.send_keys("Chocoflakes2")
+
+            # Encuentra el botón de "sing con gmail" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')
+            button.click()
+
+            # Espera a que se cargue la página
+            self.driver.implicitly_wait(10)
+
+            #Hacer click en el btn Jugadores con la función click_mas() para manejar errores generados por anuncios intrusiovos
+            self.click_mas()
+
+            # Encuentra el elemento <ul> con el id "list-on-sale"
+            ul_element = self.driver.find_element(By.ID, "list-on-sale")
+
+            # Encuentra los elementos <div> con la clase "name" dentro del elemento <ul>
+            div_elements = ul_element.find_elements(By.CSS_SELECTOR, "div.name")
+
+            # Itera sobre los elementos <div> encontrados e imprime el nombre del jugador
+            for div_element in div_elements:
+                # Obtener el contenido del elemento <div>
+                player_name = div_element.text.strip()  # Utiliza strip() para eliminar espacios en blanco adicionales
+                output_textedit.insertPlainText(f"{player_name}\n")
+        except:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText("n\Algo salió mal, vuelve a intentarlo   :(")
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+
+        self.driver.quit()
 
 
 class Ventana4(QWidget):

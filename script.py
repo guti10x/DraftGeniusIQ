@@ -15,7 +15,6 @@ import os
 import threading
 import sys
 from datetime import datetime
-import re
 
 class VentanaPrincipal(QMainWindow):
     def __init__(self):
@@ -320,11 +319,15 @@ class marketWindow(QWidget):
     def __init__(self):
         super().__init__()
         layout = QVBoxLayout()
+        
         # Crear un diseño principal usando QVBoxLayout
         layout = QVBoxLayout()
 
         # Crear un diseño de cuadrícula dentro del QVBoxLayout
         grid_layout = QGridLayout(self)
+
+        #Varaible para guardar la plantilla scrapeada
+        self.nombres_jugadores=[]
 
         # LABEL DE TEXTO
         label_text = QLabel("Obtener jugadores en el mercado")
@@ -369,7 +372,7 @@ class marketWindow(QWidget):
         self.save_button = QPushButton("Guardar plantilla")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.save_button.clicked.connect(self.guardar_excell)
+        self.save_button.clicked.connect(self.guardar_excell)
 
         # Alineación
         grid_layout.addWidget(self.save_button, 6, 1, alignment=Qt.AlignmentFlag.AlignRight)
@@ -396,6 +399,52 @@ class marketWindow(QWidget):
 
             # Actualizar el QLineEdit con la ruta seleccionada
             self.text_input.setText(self.selected_path)
+
+    def guardar_excell(self):
+        self.output_textedit.append(f"________________________________________________________________________________________")
+        output_textedit = self.output_textedit
+        color_azul = QColor(0, 0, 255)  # Valores RGB para azul
+        formato_azul = QTextCharFormat()
+        formato_azul.setForeground(color_azul)
+        output_textedit.mergeCurrentCharFormat(formato_azul)
+        output_textedit.insertPlainText("\nGuardando plantilla...\n")
+        formato_negro = QTextCharFormat()
+        formato_negro.setForeground(QColor(0, 0, 0))
+        output_textedit.mergeCurrentCharFormat(formato_negro)
+
+        if len(self.nombres_jugadores) > 0:
+            # Obtener la fecha actual
+            fecha_actual = datetime.now()
+
+            # Formatear la fecha como una cadena (opcional)
+            fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
+
+            ruta_output = self.text_input.text()
+            excel_file_path= ruta_output +"/mercado"+fecha_actual_str+".xlsx"
+            
+            # Crear un nuevo libro de Excel
+            workbook = openpyxl.Workbook()
+
+            # Seleccionar la hoja activa (por defecto, es la primera hoja)
+            sheet = workbook.active
+
+            # Iterar sobre la lista y almacenar cada elemento en una nueva fila
+            for index, nombre in enumerate(self.nombres_jugadores, start=1):
+                sheet.cell(row=index, column=1, value=nombre)
+
+            # Guardar el libro de Excel
+            workbook.save(excel_file_path)
+            self.output_textedit.append(f"Plantilla guardada en {excel_file_path}")
+        else:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText("\n¡La plantilla no se puede guardar porque no esta inicializada")
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
 
     def click_mas(self):
         # Pinchar en el botón del menu "Más"
@@ -491,8 +540,9 @@ class marketWindow(QWidget):
             # Itera sobre los elementos <div> encontrados e imprime el nombre del jugador
             for div_element in div_elements:
                 # Obtener el contenido del elemento <div>
-                player_name = div_element.text.strip()  # Utiliza strip() para eliminar espacios en blanco adicionales
-                output_textedit.insertPlainText(f"{player_name}\n")
+                name_element = div_element.text.strip()  # Utiliza strip() para eliminar espacios en blanco adicionales
+                output_textedit.insertPlainText(f"{name_element}\n")
+                self.nombres_jugadores.append(name_element)
         except:
             output_textedit = self.output_textedit
             color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo

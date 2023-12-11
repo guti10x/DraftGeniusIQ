@@ -33,7 +33,7 @@ class VentanaPrincipal(QMainWindow):
         self.ventana2 = marketWindow()
         self.ventana3 = PlayerScraperWindow("Players Scraper")
         self.ventana4 = Ventana4()
-        self.ventana5 = Ventana5()
+        self.ventana5 = trainWindow()
         self.ventana6 = predictWindowPoints()
         self.ventana7 = predictWindowPrice()
 
@@ -75,6 +75,7 @@ class VentanaPrincipal(QMainWindow):
         self.layout.addWidget(self.btn_ventana7, 0, 6)
 
         self.layout.addWidget(self.stacked_widget, 1, 0, 1, 7)
+
 
 class squadWindow(QWidget):
     def __init__(self):
@@ -566,13 +567,125 @@ class Ventana4(QWidget):
         layout.addWidget(label)
         self.setLayout(layout)
 
-class Ventana5(QWidget):
+
+class trainWindow(QWidget):
     def __init__(self):
         super().__init__()
+        # Crear un diseño principal usando QVBoxLayout
         layout = QVBoxLayout()
-        label = QLabel("Contenido de la Ventana 5")
-        layout.addWidget(label)
-        self.setLayout(layout)
+
+        # Crear un diseño de cuadrícula dentro del QVBoxLayout
+        grid_layout = QGridLayout(self)
+
+        ### SELECCIONAR RUTA DATASET DE ENTRADA ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Selecionar dataset de entrada: ")
+        grid_layout.addWidget(label_text, 1, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 1, 1)
+
+        # BOTÓN PARA SELECCIONAR ARCHIVO
+        select_file_button = QPushButton("Seleccionar Archivo")
+        select_file_button.clicked.connect(self.select_file)
+        # Alineación
+        grid_layout.addWidget(select_file_button, 2, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        select_file_button.setMinimumWidth(140)
+
+        ### SELECCIONAR ALGORITMO ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Selecionar algoritmo de entrenamiento: ")
+        grid_layout.addWidget(label_text, 3, 0)
+
+        ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Entrenar modeleo")
+        grid_layout.addWidget(label_text, 4, 0)
+
+        # Crear un botón
+        self.scrape_button = QPushButton("Iniciar entrenamiento")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+
+        # Alineación y estilos
+        grid_layout.addWidget(self.scrape_button, 4, 1)
+        self.scrape_button.setMaximumWidth(150)
+
+
+        ### DEFINIR NOMBRE DEL MODELO ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Nombre del modelo: ")
+        grid_layout.addWidget(label_text, 5, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 5, 1)
+
+
+        ###  SELECCIONAR RUTA DONDE GUARDAR EL MODELO  ###################################
+        # LABEL TEXTO 
+        label_text = QLabel("Ruta donde guardar el modelo:")
+        grid_layout.addWidget(label_text, 6, 0)
+
+        # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
+        text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(text_input, 6, 1)
+        # Estilos 
+        self.text_input.setMinimumWidth(350)
+
+        # BOTÓN PARA SELECCIONAR CARPETA
+        select_folder_button = QPushButton("Seleccionar Carpeta")
+        select_folder_button.clicked.connect(self.select_folder)
+        # Alineación
+        grid_layout.addWidget(select_folder_button, 7, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        select_folder_button.setMinimumWidth(140)
+
+        ### BOTÓN PARA GUARDAR MODLEO ###########################################################
+
+        # Crear un botón
+        self.scrape_button = QPushButton("Guardar modelo")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+
+        # Alineación y estilos
+        grid_layout.addWidget(self.scrape_button, 8, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        self.scrape_button.setMaximumWidth(150)
+
+    def select_file(self):
+        # Obtener el directorio del script de Python
+        script_directory = os.path.dirname(__file__)
+
+        # Abrir el cuadro de diálogo para seleccionar un archivo
+        file_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar Archivo", script_directory)
+
+        if file_path:
+            # Actualizar las variables de clase con el archivo y la ruta seleccionadas
+            self.selected_file = os.path.basename(file_path)
+            self.selected_path = file_path
+
+            # Actualizar el QLineEdit con la ruta seleccionada
+            self.text_input.setText(self.selected_path)
+
+    def select_folder(self):
+        # Obtener el directorio del script de Python
+        script_directory = os.path.dirname(__file__)
+        
+        folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
+        if folder_path:
+            # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
+            self.selected_folder = folder_path
+            self.selected_path = folder_path
+
+            # Actualizar el QLineEdit con la ruta seleccionada
+            self.text_input.setText(self.selected_path)
 
 class predictWindowPoints(QWidget):
     def __init__(self):
@@ -798,6 +911,7 @@ class predictWindowPrice(QWidget):
 
             # Actualizar el QLineEdit con la ruta seleccionada
             self.text_input.setText(self.selected_path)
+
 
 class PlayerScraperWindow(QDialog, QWidget):
     def __init__(self, window_title):
@@ -1447,6 +1561,7 @@ class PlayerScraperWindow(QDialog, QWidget):
 
         self.driver.quit()    
         self.output_textedit.append("Todos los jugadores scrapeados")
+
 
 def main():
     app = QApplication(sys.argv)

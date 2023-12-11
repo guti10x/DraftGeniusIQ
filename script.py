@@ -31,11 +31,12 @@ class VentanaPrincipal(QMainWindow):
 
         self.ventana1 = squadWindow()
         self.ventana2 = marketWindow()
-        self.ventana3 = PlayerScraperWindow("Players Scraper")
-        self.ventana4 = Ventana4()
-        self.ventana5 = trainWindow()
-        self.ventana6 = predictWindowPoints()
-        self.ventana7 = predictWindowPrice()
+        self.ventana3 = PlayerScraperWindowMF("Players Scraper")
+        self.ventana4 = PlayerScraperWindowSC()
+        self.ventana5 = dataset_creator()
+        self.ventana6 = trainWindow()
+        self.ventana7 = predictWindowPoints()
+        self.ventana8 = predictWindowPrice()
 
         self.stacked_widget.addWidget(self.ventana1)
         self.stacked_widget.addWidget(self.ventana2)
@@ -44,6 +45,7 @@ class VentanaPrincipal(QMainWindow):
         self.stacked_widget.addWidget(self.ventana5)
         self.stacked_widget.addWidget(self.ventana6)
         self.stacked_widget.addWidget(self.ventana7)
+        self.stacked_widget.addWidget(self.ventana8)
 
         self.btn_ventana1 = QPushButton("Mi plantilla")
         self.btn_ventana1.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
@@ -57,14 +59,17 @@ class VentanaPrincipal(QMainWindow):
         self.btn_ventana4 = QPushButton("Scraper jugadores SF")
         self.btn_ventana4.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
 
-        self.btn_ventana5 = QPushButton("Entrenar modelo")
+        self.btn_ventana5 = QPushButton("Crear dataset")
         self.btn_ventana5.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(4))
 
-        self.btn_ventana6 = QPushButton("Predecir Puntuación")
+        self.btn_ventana6 = QPushButton("Entrenar modelo")
         self.btn_ventana6.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(5))
 
-        self.btn_ventana7 = QPushButton("Predecir Valor")
+        self.btn_ventana7 = QPushButton("Predecir Puntuación")
         self.btn_ventana7.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(6))
+
+        self.btn_ventana8 = QPushButton("Predecir Valor")
+        self.btn_ventana8.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(7))
 
         self.layout.addWidget(self.btn_ventana1, 0, 0)
         self.layout.addWidget(self.btn_ventana2, 0, 1)
@@ -73,8 +78,9 @@ class VentanaPrincipal(QMainWindow):
         self.layout.addWidget(self.btn_ventana5, 0, 4)
         self.layout.addWidget(self.btn_ventana6, 0, 5)
         self.layout.addWidget(self.btn_ventana7, 0, 6)
+        self.layout.addWidget(self.btn_ventana8, 0, 7)
 
-        self.layout.addWidget(self.stacked_widget, 1, 0, 1, 7)
+        self.layout.addWidget(self.stacked_widget, 1, 0, 1, 8)
 
 
 class squadWindow(QWidget):
@@ -559,13 +565,71 @@ class marketWindow(QWidget):
         self.driver.quit()
 
 
-class Ventana4(QWidget):
+class dataset_creator(QWidget):
     def __init__(self):
         super().__init__()
+        # Crear un diseño principal usando QVBoxLayout
         layout = QVBoxLayout()
-        label = QLabel("Contenido de la Ventana 4")
-        layout.addWidget(label)
-        self.setLayout(layout)
+
+        # Crear un diseño de cuadrícula dentro del QVBoxLayout
+        grid_layout = QGridLayout(self)
+
+        ### SELECCIONAR RUTA DATASET DE ENTRADA SOFAESCORE ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Selecionar ruta del datset de entrada de Sofaescore: ")
+        grid_layout.addWidget(label_text, 1, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 1, 1)
+
+        # BOTÓN PARA SELECCIONAR ARCHIVO
+        select_file_button = QPushButton("Seleccionar Archivo")
+        #select_file_button.clicked.connect(self.select_file)
+
+        # Alineación
+        grid_layout.addWidget(select_file_button, 2, 1, alignment=Qt.AlignmentFlag.AlignRight)
+
+        # Estilos
+        select_file_button.setMinimumWidth(140)
+
+        ### SELECCIONAR RUTA DATASET DE ENTRADA MISTER FANTASY ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Selecionar ruta del datset de entrada de Mister Fantasy Mundo Deportivo: ")
+        grid_layout.addWidget(label_text, 3, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 3, 1)
+
+        # BOTÓN PARA SELECCIONAR ARCHIVO
+        select_file_button = QPushButton("Seleccionar Archivo")
+        #select_file_button.clicked.connect(self.select_file)
+
+        # Alineación
+        grid_layout.addWidget(select_file_button, 4, 1, alignment=Qt.AlignmentFlag.AlignRight)
+
+        # Estilos
+        select_file_button.setMinimumWidth(140)
+
+        ### BOTÓN PARA EJECUTAR FUNCIÓN PARA FUSIONAR EXCELLS ###########################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Obtener dataset de entrenamiento")
+        grid_layout.addWidget(label_text, 5, 0)
+
+        # Crear un botón
+        self.save_button = QPushButton("Generar dataset")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        #self.save_button.clicked.connect(self.guardar_excell)
+
+        # Alineación
+        grid_layout.addWidget(self.save_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        self.save_button.setMinimumWidth(100)
+        self.save_button.setMaximumWidth(150)
 
 
 class trainWindow(QWidget):
@@ -687,6 +751,7 @@ class trainWindow(QWidget):
             # Actualizar el QLineEdit con la ruta seleccionada
             self.text_input.setText(self.selected_path)
 
+
 class predictWindowPoints(QWidget):
     def __init__(self):
         super().__init__()
@@ -798,6 +863,7 @@ class predictWindowPoints(QWidget):
 
             # Actualizar el QLineEdit con la ruta seleccionada
             self.text_input.setText(self.selected_path)
+
 
 class predictWindowPrice(QWidget):
     def __init__(self):
@@ -913,7 +979,16 @@ class predictWindowPrice(QWidget):
             self.text_input.setText(self.selected_path)
 
 
-class PlayerScraperWindow(QDialog, QWidget):
+class PlayerScraperWindowSC(QWidget):
+    def __init__(self):
+        super().__init__()
+        layout = QVBoxLayout()
+        label = QLabel("Contenido de la Ventana 4")
+        layout.addWidget(label)
+        self.setLayout(layout)
+
+
+class PlayerScraperWindowMF(QDialog, QWidget):
     def __init__(self, window_title):
         super().__init__()
         self.setWindowTitle(window_title)

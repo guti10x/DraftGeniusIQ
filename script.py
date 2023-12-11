@@ -37,6 +37,7 @@ class VentanaPrincipal(QMainWindow):
         self.ventana6 = trainWindow()
         self.ventana7 = predictWindowPoints()
         self.ventana8 = predictWindowPrice()
+        self.ventana9 = login()
 
         self.stacked_widget.addWidget(self.ventana1)
         self.stacked_widget.addWidget(self.ventana2)
@@ -46,6 +47,7 @@ class VentanaPrincipal(QMainWindow):
         self.stacked_widget.addWidget(self.ventana6)
         self.stacked_widget.addWidget(self.ventana7)
         self.stacked_widget.addWidget(self.ventana8)
+        self.stacked_widget.addWidget(self.ventana9)
 
         self.btn_ventana1 = QPushButton("Mi plantilla")
         self.btn_ventana1.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
@@ -71,6 +73,9 @@ class VentanaPrincipal(QMainWindow):
         self.btn_ventana8 = QPushButton("Predecir Valor")
         self.btn_ventana8.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(7))
 
+        self.btn_ventana9 = QPushButton("Mi perfil")
+        self.btn_ventana9.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(8))
+
         self.layout.addWidget(self.btn_ventana1, 0, 0)
         self.layout.addWidget(self.btn_ventana2, 0, 1)
         self.layout.addWidget(self.btn_ventana3, 0, 2)
@@ -79,8 +84,9 @@ class VentanaPrincipal(QMainWindow):
         self.layout.addWidget(self.btn_ventana6, 0, 5)
         self.layout.addWidget(self.btn_ventana7, 0, 6)
         self.layout.addWidget(self.btn_ventana8, 0, 7)
+        self.layout.addWidget(self.btn_ventana9, 0, 8)
 
-        self.layout.addWidget(self.stacked_widget, 1, 0, 1, 8)
+        self.layout.addWidget(self.stacked_widget, 1, 0, 1, 9)
 
 
 class squadWindow(QWidget):
@@ -621,6 +627,49 @@ class dataset_creator(QWidget):
 
         # Crear un botón
         self.save_button = QPushButton("Generar dataset")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        #self.save_button.clicked.connect(self.guardar_excell)
+
+        # Alineación
+        grid_layout.addWidget(self.save_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        self.save_button.setMinimumWidth(100)
+        self.save_button.setMaximumWidth(150)
+
+
+class login(QWidget):
+    def __init__(self):
+        super().__init__()
+        # Crear un diseño principal usando QVBoxLayout
+        layout = QVBoxLayout()
+
+        # Crear un diseño de cuadrícula dentro del QVBoxLayout
+        grid_layout = QGridLayout(self)
+
+        ### SELECCIONAR USUARIO ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Usuario en Mister Fantasy Mundo Deportivo: ")
+        grid_layout.addWidget(label_text, 1, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 1, 1)
+
+        ### SELECCIONAR PSW ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Contraseñaen Mister Fantasy Mundo Deportivo: ")
+        grid_layout.addWidget(label_text, 3, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 3, 1)
+
+        ### BOTÓN PARA EJECUTAR FUNCIÓN PARA FUSIONAR EXCELLS ###########################################################
+        # Crear un botón
+        self.save_button = QPushButton("Guardar")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
         #self.save_button.clicked.connect(self.guardar_excell)

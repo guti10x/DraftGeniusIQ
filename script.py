@@ -16,6 +16,10 @@ import threading
 import sys
 from datetime import datetime
 
+#Credenciales ususario
+usuario=None
+contrasena=None
+
 class VentanaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -323,7 +327,7 @@ class squadWindow(QWidget):
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText("n\Algo salió mal, vuelve a intentarlo   :(")
+            output_textedit.insertPlainText('Algo salió mal, vuelve a intentarlo   :(\n')
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -563,7 +567,7 @@ class marketWindow(QWidget):
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText("n\Algo salió mal, vuelve a intentarlo   :(")
+            output_textedit.insertPlainText('Algo salió mal, vuelve a intentarlo   :(\n')
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -647,32 +651,35 @@ class login(QWidget):
         # Crear un diseño de cuadrícula dentro del QVBoxLayout
         grid_layout = QGridLayout(self)
 
-        ### SELECCIONAR USUARIO ##################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Usuario en Mister Fantasy Mundo Deportivo: ")
-        grid_layout.addWidget(label_text, 1, 0)
+        #label_text1 = QLabel("Introduce tu cuenta de Mister Fantasy Mundo Deportivo para conectarla con la aplicación: ")
+        #grid_layout.addWidget(label_text1, 1, 0, 1, 2, alignment=Qt.AlignmentFlag.AlignTop)
+
+        # LABEL DE TEXTO
+        label_text2 = QLabel("Usuario: ")
+        grid_layout.addWidget(label_text2, 2, 0, alignment=Qt.AlignmentFlag.AlignTop)
 
         # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
+        self.text_input1 = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 1, 1)
+        grid_layout.addWidget(self.text_input1, 2, 1)
 
         ### SELECCIONAR PSW ##################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Contraseñaen Mister Fantasy Mundo Deportivo: ")
+        label_text = QLabel("Contraseña: ")
         grid_layout.addWidget(label_text, 3, 0)
 
         # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
+        self.text_input2 = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 3, 1)
+        grid_layout.addWidget(self.text_input2, 3, 1)
 
         ### BOTÓN PARA EJECUTAR FUNCIÓN PARA FUSIONAR EXCELLS ###########################################################
         # Crear un botón
-        self.save_button = QPushButton("Guardar")
+        self.save_button = QPushButton("Guardar credenciales")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.save_button.clicked.connect(self.guardar_excell)
+        self.save_button.clicked.connect(self.iniciar_scrapear_thread)
 
         # Alineación
         grid_layout.addWidget(self.save_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
@@ -680,6 +687,110 @@ class login(QWidget):
         self.save_button.setMinimumWidth(100)
         self.save_button.setMaximumWidth(150)
 
+        ###  VENTANA OUTPUT SCRAPER  ####################################################################################
+        # Crear un QTextEdit para la salida
+        self.output_textedit = QTextEdit(self)
+        grid_layout.addWidget(self.output_textedit, 6, 0, 2, 0)  # row, column, rowSpan, columnSpan
+
+    def iniciar_scrapear_thread(self):  
+        # Crear un hilo y ejecutar la función en segundo plano
+        thread = threading.Thread(target=self.guardar_credenciales)
+        thread.start()
+
+    def guardar_credenciales(self):
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText('Comprobando credenciales introducidas...\n')
+
+        usuario_input = self.text_input1.text()
+        contrasena_input = self.text_input2.text()
+
+        if usuario_input!="" and contrasena_input!="":
+            
+            self.driver = webdriver.Chrome()
+
+            # Navega a la página web que deseas hacer scraping
+            self.driver.get("https://mister.mundodeportivo.com/new-onboarding/#market")
+
+            # Espera a que se cargue la página
+            self.driver.implicitly_wait(15)
+
+            # Encuentra el botón de "Consentir" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="didomi-notice-agree-button"]')
+            # Haz clic en el botón de "Consentir" 
+            button.click()
+
+            # Encuentra el botón de "Siguinete" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')
+            # Haz clic en el botón de "Siguiente" 
+            button.click()
+            button.click()
+            button.click()
+            button.click()
+
+            # Encuentra el botón de "sing con gmail" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/button[3]')
+            button.click()
+
+            # Localiza el elemento del input gmail
+            inputgmail = self.driver.find_element(By.XPATH, '//*[@id="email"]')
+
+            # Borra cualquier contenido existente en la caja de texto (opcional)
+            inputgmail.clear()
+
+            # Ingresa texto en la caja de texto
+            inputgmail.send_keys(usuario_input)
+
+            # Localiza el elemento del input gmail
+            inputpsw = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
+
+            # Borra cualquier contenido existente en la caja de texto (opcional)
+            inputpsw.clear()
+
+            # Ingresa texto en la caja de texto
+            inputpsw.send_keys(contrasena_input)
+
+            # Encuentra el botón de "sing con gmail" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')
+            button.click()
+            try:
+                # Encuentra el botón para comprobar si se ha conseguido loguear en la web de Mister Fantasy
+                button = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[2]/a')
+                
+                # Haz clic en el botón
+                button.click()
+
+                self.driver.quit()
+
+                self.output_textedit.insertPlainText('Usuario o contraseña correctos.\n')
+
+                usuario = usuario_input
+                contrasena = contrasena_input
+
+                return
+            
+            except NoSuchElementException:
+                self.driver.quit()
+                output_textedit = self.output_textedit
+                color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+                formato_rojo = QTextCharFormat()
+                formato_rojo.setForeground(color_rojo)
+                output_textedit.mergeCurrentCharFormat(formato_rojo)
+                output_textedit.insertPlainText('Usuario o contraseña incorrectos.\n')
+                formato_negro = QTextCharFormat()
+                formato_negro.setForeground(QColor(0, 0, 0))
+                output_textedit.mergeCurrentCharFormat(formato_negro)
+                return
+        else:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText("Credenciales no inicializadas.\n")
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+            
 
 class trainWindow(QWidget):
     def __init__(self):
@@ -1547,7 +1658,7 @@ class PlayerScraperWindowMF(QDialog, QWidget):
         inputgmail.clear()
 
         # Ingresa texto en la caja de texto
-        inputgmail.send_keys("m31_grupo6@outlook.com")
+        inputgmail.send_keys(usuario)
 
         # Localiza el elemento del input gmail
         inputpsw = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
@@ -1556,7 +1667,7 @@ class PlayerScraperWindowMF(QDialog, QWidget):
         inputpsw.clear()
 
         # Ingresa texto en la caja de texto
-        inputpsw.send_keys("Chocoflakes2")
+        inputpsw.send_keys(contrasena)
 
         # Encuentra el botón de "sing con gmail" 
         button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')

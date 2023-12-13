@@ -232,7 +232,7 @@
         </process>
       </operator>
       <operator activated="true" class="store" compatibility="10.2.000" expanded="true" height="68" name="Store" width="90" x="983" y="136">
-        <parameter key="repository_entry" value="Deep_Learning"/>
+        <parameter key="repository_entry" value="modelos_generados/Deep_Learning"/>
       </operator>
       <operator activated="true" class="multiply" compatibility="10.2.000" expanded="true" height="103" name="Multiply" width="90" x="1117" y="136"/>
       <operator activated="true" class="apply_model" compatibility="10.2.000" expanded="true" height="82" name="Apply Model (2)" width="90" x="849" y="289">

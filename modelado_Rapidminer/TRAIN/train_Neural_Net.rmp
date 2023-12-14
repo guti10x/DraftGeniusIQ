@@ -134,8 +134,11 @@
           <parameter key="Puntuación Fantasy" value="label"/>
         </list>
       </operator>
-      <operator activated="true" class="blending:split_data" compatibility="10.2.000" expanded="true" height="68" name="Split Data" width="90" x="715" y="34">
-        <enumeration key="partitions"/>
+      <operator activated="true" class="blending:split_data" compatibility="10.2.000" expanded="true" height="103" name="Split Data" width="90" x="715" y="34">
+        <enumeration key="partitions">
+          <parameter key="ratio" value="0.7"/>
+          <parameter key="ratio" value="0.3"/>
+        </enumeration>
         <parameter key="sampling_type" value="automatic"/>
         <parameter key="use_local_random_seed" value="false"/>
         <parameter key="local_random_seed" value="1992"/>
@@ -232,6 +235,8 @@
       <connect from_op="Nominal to Numerical" from_port="example set output" to_op="Select Attributes" to_port="example set input"/>
       <connect from_op="Select Attributes" from_port="example set output" to_op="Set Role" to_port="example set input"/>
       <connect from_op="Set Role" from_port="example set output" to_op="Split Data" to_port="example set"/>
+      <connect from_op="Split Data" from_port="partition 1" to_op="Cross Validation" to_port="example set"/>
+      <connect from_op="Split Data" from_port="partition 2" to_op="Apply Model (2)" to_port="unlabelled data"/>
       <connect from_op="Cross Validation" from_port="model" to_op="Store" to_port="input"/>
       <connect from_op="Cross Validation" from_port="example set" to_port="result 1"/>
       <connect from_op="Cross Validation" from_port="test result set" to_port="result 2"/>

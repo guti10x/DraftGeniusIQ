@@ -15,6 +15,10 @@ import os
 import threading
 import sys
 from datetime import datetime
+import json
+import pandas as pd
+from unidecode import unidecode
+import Levenshtein
 
 #Credenciales ususario
 usuario=None
@@ -590,32 +594,30 @@ class dataset_creator(QWidget):
         grid_layout.addWidget(label_text, 1, 0)
 
         # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
+        self.text_input1 = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 1, 1)
+        grid_layout.addWidget(self.text_input1, 1, 1)
 
-        # BOTÓN PARA SELECCIONAR ARCHIVO
-        select_file_button = QPushButton("Seleccionar Archivo")
-        #select_file_button.clicked.connect(self.select_file)
-
+        # BOTÓN PARA SELECCIONAR CARPETA
+        select_folder_button = QPushButton("Seleccionar Carpeta")
+        select_folder_button.clicked.connect(self.select_folder)
         # Alineación
-        grid_layout.addWidget(select_file_button, 2, 1, alignment=Qt.AlignmentFlag.AlignRight)
-
+        grid_layout.addWidget(select_folder_button, 2, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
-        select_file_button.setMinimumWidth(140)
+        select_folder_button.setMinimumWidth(140)
 
         ### SELECCIONAR RUTA DATASET DE ENTRADA MISTER FANTASY ##################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Selecionar ruta del datset de entrada de Mister Fantasy Mundo Deportivo: ")
+        label_text = QLabel("Selecionar carperta de la jornada de todos los partidos de Sofaescore scrapeados: ")
         grid_layout.addWidget(label_text, 3, 0)
 
         # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
+        self.text_input2 = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 3, 1)
+        grid_layout.addWidget(self.text_input2, 3, 1)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
-        select_file_button = QPushButton("Seleccionar Archivo")
+        select_file_button = QPushButton("Seleccionar archivo de la jornada de Misterfantasy srapeado: ")
         #select_file_button.clicked.connect(self.select_file)
 
         # Alineación
@@ -633,13 +635,67 @@ class dataset_creator(QWidget):
         self.save_button = QPushButton("Generar dataset")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.save_button.clicked.connect(self.guardar_excell)
+        self.save_button.clicked.connect(self.json_a_excel)
 
         # Alineación
         grid_layout.addWidget(self.save_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         self.save_button.setMinimumWidth(100)
         self.save_button.setMaximumWidth(150)
+
+        # VENTANA OUTPUT SCRAPER #####################################################################################
+        # Crear un QTextEdit para la salida
+        self.output_textedit = QTextEdit(self)
+        grid_layout.addWidget(self.output_textedit,6, 0, 2, 2)  # row, column, rowSpan, columnSpan
+    
+    def select_folder(self):
+        # Obtener el directorio del script de Python
+        script_directory = os.path.dirname(__file__)
+        
+        folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
+        if folder_path:
+            # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
+            self.selected_folder = folder_path
+            self.selected_path = folder_path
+
+            # Actualizar el QLineEdit con la ruta seleccionada
+            self.text_input1.setText(self.selected_path)
+
+
+    def json_a_excel(self):
+        
+        # Rutas globales
+        carpeta_json = self.text_input1.text()
+        carpeta_xlsx = self.text_input1.text()
+        nombre_archivo_excel = 'todos_los_partidos_de_la_jornada.xlsx'
+
+        # Lista para almacenar los DataFrames de cada archivo JSON
+        dfs = []
+
+        # Iterar sobre cada archivo en la carpeta
+        for archivo_json in os.listdir(carpeta_json):
+            if archivo_json.endswith(".json"):
+                with open(os.path.join(carpeta_json, archivo_json), "r") as file:
+                    data = json.load(file)
+
+                # Crear un DataFrame vacío para cada archivo JSON
+                df = pd.DataFrame()
+
+                # Iterar sobre los elementos del JSON y agregarlos al DataFrame
+                for jugador, estadisticas in data.items():
+                    df = pd.concat([df, pd.DataFrame([[jugador, estadisticas["puntuacion"]] + [stat[key] for stat in estadisticas["estadisticas"] for key in stat.keys()]], columns=["Nombre", "Puntuación"] + [key for stat in estadisticas["estadisticas"] for key in stat.keys()])], ignore_index=True)
+
+                # Agregar el DataFrame a la lista
+                dfs.append(df)
+
+        # Concatenar todos los DataFrames en uno solo
+        df_final = pd.concat(dfs, ignore_index=True)
+
+        # Guardar el DataFrame en un archivo Excel
+        ruta_excel = os.path.join(carpeta_xlsx, nombre_archivo_excel)
+        df_final.to_excel(ruta_excel, index=False)
+
+        self.output_textedit.insertPlainText(f"Archivo Excel guardado en: {ruta_excel}")
 
 
 class login(QWidget):

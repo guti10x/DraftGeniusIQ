@@ -37,6 +37,19 @@ def select_folder(self):
         # Actualizar el QLineEdit con la ruta seleccionada
         self.text_input.setText(selected_path)
 
+def select_folder2(self):
+    # Obtener el directorio del script de Python
+    script_directory = os.path.dirname(__file__) if __file__ else os.getcwd()
+
+    folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
+    if folder_path:
+        # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
+        selected_folder = folder_path
+        selected_path = folder_path
+
+        # Actualizar el QLineEdit con la ruta seleccionada
+        self.text_input2.setText(selected_path)
+
 def select_file(self):
     # Obtener el directorio del script de Python
     script_directory = os.path.dirname(__file__)
@@ -50,7 +63,22 @@ def select_file(self):
         self.selected_path = file_path
 
         # Actualizar el QLineEdit con la ruta seleccionada
-        self.text_input.setText(self.selected_path)
+        self.text_file_input.setText(self.selected_path)
+
+def select_file2(self):
+    # Obtener el directorio del script de Python
+    script_directory = os.path.dirname(__file__)
+
+    # Abrir el cuadro de diálogo para seleccionar un archivo
+    file_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar Archivo", script_directory)
+
+    if file_path:
+        # Actualizar las variables de clase con el archivo y la ruta seleccionadas
+        self.selected_file = os.path.basename(file_path)
+        self.selected_path = file_path
+
+        # Actualizar el QLineEdit con la ruta seleccionada
+        self.text_file2_input.setText(self.selected_path)
 
 def realizar_login(driver):
 
@@ -582,8 +610,8 @@ class dataset_entrenamiento(QWidget):
     def __init__(self):
         super().__init__()
         
-        # Crear un diseño principal usando QVBoxLayout
-        layout = QVBoxLayout()
+        self.jugadoresS_noencontrados = ["Marc-André ter Stegen", "Adria Miquel Bosch Sanchis", "Sergio Ruiz Alonso", "Abderrahman Rebbach", "Kaiky", "Alejandro Pozo", "Lázaro", "Luis Javier Suárez", "Abdessamad Ezzalzouli", "Iván Cuéllar", "Djené", "Maximiliano Gómez", "Mamadou Mbaye", "Fali", "Anthony Lozano", "José María Giménez", "Sandro Ramírez", "Reinildo Isnard Mandava", "Chimy Ávila", "Pablo Ibáñez Lumbreras", "Portu", "Juan Carlos", "José Manuel Arnáiz", "Federico Valverde", "Alfonso Espino", "Ismaila Ciss", "Josep Chavarría", "José Pozo", "Imanol García de Albéniz", "Peru Nolaskoain Esnal", "Malcom Ares"] 
+        self.jugadoresMD_noencontrados = ["Ter Stegen", "Miki Bosch", "Sergio Ruiz", "Abde Rebbach", "Kaiky Fernandes", "Álex Pozo", "Lázaro Vinicius", "Luis Suárez", "Abde Ezzalzouli", "Pichu Cuéllar", "Dakonam Djené", "Maxi Gómez", "Momo Mbaye", "Fali Giménez", "Choco Lozano", "José Giménez", "Sandro", "Reinildo Mandava", "Ezequiel Ávila", "Pablo Ibáñez", "Cristian Portu", "Juan Carlos Martín", "José Arnaiz", "Fede Valverde", "Pacha Espino", "Pathé Ciss", "Pep Chavarría", "José Ángel Pozo", "Imanol García", "Peru Nolaskoain", "Malcom Adu Ares"]
 
         # Crear un diseño de cuadrícula dentro del QVBoxLayout
         grid_layout = QGridLayout(self)
@@ -606,15 +634,15 @@ class dataset_entrenamiento(QWidget):
         grid_layout.addWidget(label_text, 2, 0)
 
         # INPUT DE TEXTO
-        self.text_input1 = QLineEdit(self)
+        self.text_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input1, 3, 0)
+        grid_layout.addWidget(self.text_input, 3, 0)
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
         select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
-        grid_layout.addWidget(select_folder_button, 4, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        grid_layout.addWidget(select_folder_button, 4, 0, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
@@ -624,43 +652,68 @@ class dataset_entrenamiento(QWidget):
         grid_layout.addWidget(label_text, 5, 0)
 
         # INPUT DE TEXTO
-        self.text_input2 = QLineEdit(self)
+        self.text_file_input= QLineEdit(self)  
         # Alineación
-        grid_layout.addWidget(self.text_input2, 6, 0)
+        grid_layout.addWidget(self.text_file_input, 6, 0)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar archivo")
         select_file_button.clicked.connect(lambda: select_file(self))
 
         # Alineación
-        grid_layout.addWidget(select_file_button, 7, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        grid_layout.addWidget(select_file_button, 7, 0, alignment=Qt.AlignmentFlag.AlignRight)
+
+        # Estilos
+        select_file_button.setMinimumWidth(140)
+
+        ### SELECCIONAR RUTA DONDE GUARDAR DATASET RESULTANTE #####################################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Selecionar ruta donde guardar el dataset generado de la jornada: ")
+        grid_layout.addWidget(label_text, 8, 0)
+
+        # INPUT DE TEXTO
+        self.text_input2 = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input2, 9, 0)
+
+        # BOTÓN PARA SELECCIONAR ARCHIVO
+        select_folder_button = QPushButton("Seleccionar carpeta")
+        select_folder_button.clicked.connect(lambda: select_folder2(self))
+
+        # Alineación
+        grid_layout.addWidget(select_folder_button, 10, 0, alignment=Qt.AlignmentFlag.AlignRight)
 
         # Estilos
         select_file_button.setMinimumWidth(140)
 
         ### BOTÓN PARA EJECUTAR FUNCIÓN PARA FUSIONAR EXCELLS ######################################################################
         # Crear un botón
-        self.save_button = QPushButton("Generar dataset")
+        self.generate_button = QPushButton("Generar dataset")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        self.save_button.clicked.connect(self.json_a_excel)
+        self.generate_button.clicked.connect(self.iniciar_thread_function)
 
         # Alineación
-        grid_layout.addWidget(self.save_button, 8, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        grid_layout.addWidget(self.generate_button, 11, 0, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
-        self.save_button.setMinimumWidth(100)
-        self.save_button.setMaximumWidth(150)
+        self.generate_button.setMinimumWidth(100)
+        self.generate_button.setMaximumWidth(150)
 
         # VENTANA OUTPUT SCRAPER #####################################################################################
         # Crear un QTextEdit para la salida
         self.output_textedit = QTextEdit(self)
-        grid_layout.addWidget(self.output_textedit,9, 0, 2, 2)  # row, column, rowSpan, columnSpan
+        grid_layout.addWidget(self.output_textedit,12, 0, 2, 2)  # row, column, rowSpan, columnSpan
     
+    def iniciar_thread_function(self):  
+        # Crear un hilo y ejecutar la función en segundo plano
+        thread = threading.Thread(target=self.json_a_excel)
+        thread.start()
+
     def json_a_excel(self):
-        
+        # Parte 1: fusionar todos los jsons de todos los partidos scrapeados de la jornada ##############################################
         # Rutas globales
-        carpeta_json = self.text_input1.text()
-        carpeta_xlsx = self.text_input1.text()
+        carpeta_json = self.text_input.text()
+        carpeta_xlsx = self.text_input.text()
         nombre_archivo_excel = 'todos_los_partidos_de_la_jornada.xlsx'
 
         # Lista para almacenar los DataFrames de cada archivo JSON
@@ -689,18 +742,55 @@ class dataset_entrenamiento(QWidget):
         ruta_excel = os.path.join(carpeta_xlsx, nombre_archivo_excel)
         df_final.to_excel(ruta_excel, index=False)
 
-        self.output_textedit.insertPlainText(f"Archivo Excel guardado en: {ruta_excel}")
+        self.output_textedit.insertPlainText(f"Archivo Excel con todos los partidos scrpaeados de la jornada fusionado y guardado correctamente en: {ruta_excel}\n")
 
-        excel1_path = self.text_input1.text()
-        excel2_path = self.text_input2.text()
+        # Parte 2: Fusionar MD con SC por nombre ########################################################################################
+        # Rutas de los archivos Excel
+        excel1_path = ruta_excel
+        excel2_path = self.text_file_input.text()
+        output = self.text_input2.text()
 
+        output_archivo=output+"/jornadaN.xlsx"
+
+        print("a)",excel1_path)
+        print(" b)",excel2_path)
+        print(" c)",output)
+        print(" c2)",output_archivo)
+
+        # Leer los datos de los archivos Excel
+        df1 = pd.read_excel(excel1_path, header=None)
+        df2 = pd.read_excel(excel2_path, header=None)
+        
+        # Obtener todas las celdas de la fila 1 (que ahora es la segunda fila después de desactivar el encabezado)
+        fila_excel1 = df1.iloc[0, :].dropna().tolist()
+        fila_excel2 = df2.iloc[0, :].dropna().tolist()
+
+        # Concatenar las listas
+        fila_concatenada =  fila_excel2 + fila_excel1
+
+        # Crear un DataFrame de pandas con una sola fila y múltiples columnas
+        df = pd.DataFrame([fila_concatenada])
+
+
+        # Escribir el DataFrame en un archivo Excel
+        df.to_excel(output_archivo, index=False, header=False)
+
+        # Inicializar el conjunto de valores encontrados
+        valores_encontrados = set()
+        df_fusionado = pd.DataFrame()
+        encabezado=0
+        contador_coincidencias=0
+        contador_manual=0
+        contador_global=0
+        
+        self.output_textedit.insertPlainText("_____________________________________________________________________________________________________\n")   
+        self.output_textedit.insertPlainText("Buscando coincidencia entre jugadores...\n")
+        
+ 
 class dataset_predecir(QWidget):
     
     def __init__(self):
         super().__init__()
-        
-        # Crear un diseño principal usando QVBoxLayout
-        layout = QVBoxLayout()
 
         # Crear un diseño de cuadrícula dentro del QVBoxLayout
         grid_layout = QGridLayout(self)
@@ -723,9 +813,9 @@ class dataset_predecir(QWidget):
         grid_layout.addWidget(label_text, 2, 0)
 
         # INPUT DE TEXTO
-        self.text_input1 = QLineEdit(self)
+        self.text_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input1, 3, 0)
+        grid_layout.addWidget(self.text_input, 3, 0)
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
@@ -1414,9 +1504,9 @@ class trainWindow(QWidget):
         grid_layout.addWidget(label_text, 2, 0)
 
         # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
+        self.text_file_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 2, 1)
+        grid_layout.addWidget(self.text_file_input, 2, 1)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar Archivo")
@@ -1534,9 +1624,9 @@ class predictWindow(QWidget):
         grid_layout.addWidget(label_text, 2, 0)
 
         # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
+        self.text_file_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 2, 1)
+        grid_layout.addWidget(self.text_file_input, 2, 1)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar Archivo")
@@ -1555,13 +1645,13 @@ class predictWindow(QWidget):
         grid_layout.addWidget(label_text, 4, 0)
 
         # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
+        self.text_file2_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 4, 1)
+        grid_layout.addWidget(self.text_file2_input, 4, 1)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar Archivo")
-        select_file_button.clicked.connect(lambda: select_file(self))
+        select_file_button.clicked.connect(lambda: select_file2(self))
         # Alineación
         grid_layout.addWidget(select_file_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
@@ -1588,11 +1678,11 @@ class predictWindow(QWidget):
         grid_layout.addWidget(label_text, 7, 0)
 
         # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
-        text_input = QLineEdit(self)
+        self.text_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(text_input, 7, 1)
+        grid_layout.addWidget(self.text_input, 7, 1)
         # Estilos 
-        self.text_input.setMinimumWidth(350)
+        #self.text_input.setMinimumWidth(350)
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")

@@ -585,6 +585,35 @@ class marketWindow(QWidget):
 
 
 class dataset_creator(QWidget):
+  def __init__(self):
+        super().__init__()
+
+        main_layout = QVBoxLayout(self)
+
+        self.stacked_widget = QStackedWidget()
+
+        self.ventana1 = dataset_entrenamiento()
+        self.ventana2 = dataset_predecir()
+
+        self.stacked_widget.addWidget(self.ventana1)
+        self.stacked_widget.addWidget(self.ventana2)
+
+        button_layout = QHBoxLayout()  
+
+        self.btn_ventana1 = QPushButton("Generar dataset para entrenar modelos")
+        self.btn_ventana1.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
+
+        self.btn_ventana2 = QPushButton("Generar dataset sobre el que realizar predecicciones")
+        self.btn_ventana2.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
+
+        button_layout.addWidget(self.btn_ventana1)
+        button_layout.addWidget(self.btn_ventana2)
+
+        main_layout.addLayout(button_layout)  
+        main_layout.addWidget(self.stacked_widget)
+
+
+class dataset_entrenamiento(QWidget):
     
     def __init__(self):
         super().__init__()
@@ -609,7 +638,7 @@ class dataset_creator(QWidget):
 
         ### SELECCIONAR RUTA DATASET DE ENTRADA SOFAESCORE #########################################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Selecionar carpeta donde se almacenaron tododos los partidos scrapeados de la web de Sofaescore: ")
+        label_text = QLabel("Selecionar carpeta donde se almacenaron tododos los partidos scrapeados de la jornada de la web de Sofaescore: ")
         grid_layout.addWidget(label_text, 2, 0)
 
         # INPUT DE TEXTO
@@ -627,7 +656,7 @@ class dataset_creator(QWidget):
 
         ### SELECCIONAR RUTA DATASET DE ENTRADA MISTER FANTASY #####################################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Selecionar archivo resultante del scrapeo del archivo de la web de Mister Fantasy Mundo Deportivo: ")
+        label_text = QLabel("Selecionar archivo resultante del scrapeo de la jornada de la web de Mister Fantasy Mundo Deportivo: ")
         grid_layout.addWidget(label_text, 5, 0)
 
         # INPUT DE TEXTO
@@ -636,7 +665,7 @@ class dataset_creator(QWidget):
         grid_layout.addWidget(self.text_input2, 6, 0)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
-        select_file_button = QPushButton("Seleccionar archivos")
+        select_file_button = QPushButton("Seleccionar archivo")
         select_file_button.clicked.connect(lambda: select_file(self))
 
         # Alineación
@@ -701,6 +730,47 @@ class dataset_creator(QWidget):
         excel1_path = self.text_input1.text()
         excel2_path = self.text_input2.text()
 
+
+class dataset_predecir(QWidget):
+    
+    def __init__(self):
+        super().__init__()
+        
+        # Crear un diseño principal usando QVBoxLayout
+        layout = QVBoxLayout()
+
+        # Crear un diseño de cuadrícula dentro del QVBoxLayout
+        grid_layout = QGridLayout(self)
+       
+        # TITULO VENTANA  ###########################################################################################
+        # LABEL TÍTULO
+        label_text = QLabel("Crear dataset sobre el que realizar prediciones")
+        # Aplicar estilos para destacar el texto
+        label_text.setStyleSheet("font-weight: bold; color: black; font-size: 20px;")
+        grid_layout.addWidget(label_text, 0, 0)
+
+        # LABEL SUBTÍTULO
+        label_subtext = QLabel("Crea un dataset con los jugaodores en mi plantilla / en el mercado para realizar prediciones sobre su puntuación / valor de mercado en la prócima jornada")
+        grid_layout.addWidget(label_subtext, 1, 0, 1, 2)
+
+
+        ### SELECCIONAR RUTA DATASET DE ENTRADA SOFAESCORE #########################################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Selecionar fichero con los jugaodres en el mercado/ en mi plantilla : ")
+        grid_layout.addWidget(label_text, 2, 0)
+
+        # INPUT DE TEXTO
+        self.text_input1 = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input1, 3, 0)
+
+        # BOTÓN PARA SELECCIONAR CARPETA
+        select_folder_button = QPushButton("Seleccionar Carpeta")
+        select_folder_button.clicked.connect(lambda: select_file(self))
+        # Alineación
+        grid_layout.addWidget(select_folder_button, 4, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        # Estilos
+        select_folder_button.setMinimumWidth(140)
 
 class scrapear_datos(QWidget):
   def __init__(self):
@@ -1125,7 +1195,7 @@ class PlayerScraperWindowSC(QWidget):
         layout.addWidget(label_text, 0, 0,1, 2)
 
         # LABEL SUBTÍTULO
-        label_subtext = QLabel("Obtener el listado de todos los jugaodres titulares, suplentes, y no vonvocados y sus estadisticas de juego asociadas.")
+        label_subtext = QLabel("Obtener el listado de todos los jugaodres titulares, suplentes y no vonvocados y sus estadisticas de juego asociadas.")
         layout.addWidget(label_subtext, 1, 0, 1, 2)
 
         # Configurar el diseño para la ventana

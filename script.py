@@ -21,8 +21,8 @@ from unidecode import unidecode
 import Levenshtein
 
 #Credenciales ususario
-usuario=None
-contrasena=None
+usuario=""
+contrasena=""
 
 def select_folder(self):
     # Obtener el directorio del script de Python
@@ -51,6 +51,38 @@ def select_file(self):
 
         # Actualizar el QLineEdit con la ruta seleccionada
         self.text_input.setText(self.selected_path)
+
+def realizar_login(driver):
+
+    driver.get("https://mister.mundodeportivo.com/new-onboarding/#market")
+    driver.implicitly_wait(15)
+
+    # Consentir
+    consent_button = driver.find_element(By.XPATH, '//*[@id="didomi-notice-agree-button"]')
+    consent_button.click()
+
+    # Click en "Siguiente"
+    siguiente_button = driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')
+    for _ in range(4):  # Haz clic 4 veces
+        siguiente_button.click()
+
+    # Click en "Sign in with gmail"
+    gmail_button = driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/button[3]')
+    gmail_button.click()
+
+    # Ingresar usuario
+    input_gmail = driver.find_element(By.XPATH, '//*[@id="email"]')
+    input_gmail.clear()
+    input_gmail.send_keys(usuario)
+
+    # Ingresar contraseña
+    input_psw = driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
+    input_psw.clear()
+    input_psw.send_keys(contrasena)
+
+    # Click en "Sign in with gmail"
+    login_button = driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')
+    login_button.click()
 
 class VentanaPrincipal(QMainWindow):
     def __init__(self):
@@ -156,7 +188,7 @@ class squadWindow(QWidget):
 
         # SELECCIONAR RUTA DONDE GUARDAR EL EXCEL OUTPUT DEL SCRAPER #################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Guardar plantilla:")
+        label_text = QLabel("Guardar mi plantilla:")
         grid_layout.addWidget(label_text, 13, 0)
 
         # INPUT DE TEXTO
@@ -268,85 +300,51 @@ class squadWindow(QWidget):
         formato_negro.setForeground(QColor(0, 0, 0))
         output_textedit.mergeCurrentCharFormat(formato_negro)
        
-        try:
+        if usuario!="":
+            try:
+                self.driver = webdriver.Chrome()
+                realizar_login(self.driver)
+                time.sleep(5)
 
-            self.driver = webdriver.Chrome()
+                # Espera a que se cargue la página
+                self.driver.implicitly_wait(10)
 
-            # Navega a la página web que deseas hacer scraping
-            self.driver.get("https://mister.mundodeportivo.com/new-onboarding/#market")
+                #Hacer click en el btn Jugadores con la función click_mas() para manejar errores generados por anuncios intrusiovos
+                self.click_mas()
 
-            # Espera a que se cargue la página
-            self.driver.implicitly_wait(15)
+                # Encontrar el elemento div con la clase "team__squad"
+                team_squad_div = self.driver.find_element(By.CLASS_NAME, 'team__squad')
 
-            # Encuentra el botón de "Consentir" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="didomi-notice-agree-button"]')
-            # Haz clic en el botón de "Consentir" 
-            button.click()
+                # Encontrar todos los elementos con la clase "name" dentro del div
+                names_elements = team_squad_div.find_elements(By.CLASS_NAME, 'name')
 
-            # Encuentra el botón de "Siguinete" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')
-            # Haz clic en el botón de "Siguiente" 
-            button.click()
-            button.click()
-            button.click()
-            button.click()
+                # Iterar sobre los elementos encontrados e imprimir el texto
+                for name_element in names_elements:
+                    self.output_textedit.append(name_element.text)
+                    self.nombres_jugadores.append(name_element.text)
 
-            # Encuentra el botón de "sing con gmail" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/button[3]')
-            button.click()
+                self.driver.quit()
 
-            # Localiza el elemento del input gmail
-            inputgmail = self.driver.find_element(By.XPATH, '//*[@id="email"]')
-
-            # Borra cualquier contenido existente en la caja de texto (opcional)
-            inputgmail.clear()
-
-            # Ingresa texto en la caja de texto
-            inputgmail.send_keys("m31_grupo6@outlook.com")
-
-            # Localiza el elemento del input gmail
-            inputpsw = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
-
-            # Borra cualquier contenido existente en la caja de texto (opcional)
-            inputpsw.clear()
-
-            # Ingresa texto en la caja de texto
-            inputpsw.send_keys("Chocoflakes2")
-
-            # Encuentra el botón de "sing con gmail" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')
-            button.click()
-
-            # Espera a que se cargue la página
-            self.driver.implicitly_wait(10)
-
-            #Hacer click en el btn Jugadores con la función click_mas() para manejar errores generados por anuncios intrusiovos
-            self.click_mas()
-
-            # Encontrar el elemento div con la clase "team__squad"
-            team_squad_div = self.driver.find_element(By.CLASS_NAME, 'team__squad')
-
-            # Encontrar todos los elementos con la clase "name" dentro del div
-            names_elements = team_squad_div.find_elements(By.CLASS_NAME, 'name')
-
-            # Iterar sobre los elementos encontrados e imprimir el texto
-            for name_element in names_elements:
-                self.output_textedit.append(name_element.text)
-                self.nombres_jugadores.append(name_element.text)
-
-            self.driver.quit()
-
-        except: 
+            except: 
+                output_textedit = self.output_textedit
+                color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+                formato_rojo = QTextCharFormat()
+                formato_rojo.setForeground(color_rojo)
+                output_textedit.mergeCurrentCharFormat(formato_rojo)
+                output_textedit.insertPlainText('Algo salió mal, vuelve a intentarlo   :(\n')
+                formato_negro = QTextCharFormat()
+                formato_negro.setForeground(QColor(0, 0, 0))
+                output_textedit.mergeCurrentCharFormat(formato_negro)
+        else:
             output_textedit = self.output_textedit
             color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText('Algo salió mal, vuelve a intentarlo   :(\n')
+            output_textedit.insertPlainText('No te has iniciado sesion en la aplicación. Loguearte con tus credenciales de Mister Fantasy MD en la ventana Perfil para acceder a tu plantilla.\n')
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)
-
 
 class marketWindow(QWidget):
     def __init__(self):
@@ -409,7 +407,7 @@ class marketWindow(QWidget):
 
         # BOTÓN PARA GUARDAR MI PLANTILLA ###########################################################################
         # Crear un botón
-        self.save_button = QPushButton("Guardar plantilla")
+        self.save_button = QPushButton("Guardar jugadores")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
         self.save_button.clicked.connect(self.guardar_excell)
@@ -502,86 +500,53 @@ class marketWindow(QWidget):
         formato_negro = QTextCharFormat()
         formato_negro.setForeground(QColor(0, 0, 0))
         output_textedit.mergeCurrentCharFormat(formato_negro)
-       
-        try:
 
-            self.driver = webdriver.Chrome()
+        if usuario!="":
+            try:
+                self.driver = webdriver.Chrome()
+                realizar_login(self.driver)
+                time.sleep(5)
 
-            # Navega a la página web que deseas hacer scraping
-            self.driver.get("https://mister.mundodeportivo.com/new-onboarding/#market")
+                # Espera a que se cargue la página
+                self.driver.implicitly_wait(10)
 
-            # Espera a que se cargue la página
-            self.driver.implicitly_wait(15)
+                #Hacer click en el btn Jugadores con la función click_mas() para manejar errores generados por anuncios intrusiovos
+                self.click_mas()
 
-            # Encuentra el botón de "Consentir" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="didomi-notice-agree-button"]')
-            # Haz clic en el botón de "Consentir" 
-            button.click()
+                # Encuentra el elemento <ul> con el id "list-on-sale"
+                ul_element = self.driver.find_element(By.ID, "list-on-sale")
 
-            # Encuentra el botón de "Siguinete" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')
-            # Haz clic en el botón de "Siguiente" 
-            button.click()
-            button.click()
-            button.click()
-            button.click()
+                # Encuentra los elementos <div> con la clase "name" dentro del elemento <ul>
+                div_elements = ul_element.find_elements(By.CSS_SELECTOR, "div.name")
 
-            # Encuentra el botón de "sing con gmail" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/button[3]')
-            button.click()
+                # Itera sobre los elementos <div> encontrados e imprime el nombre del jugador
+                for div_element in div_elements:
+                    # Obtener el contenido del elemento <div>
+                    name_element = div_element.text.strip()  # Utiliza strip() para eliminar espacios en blanco adicionales
+                    output_textedit.insertPlainText(f"{name_element}\n")
+                    self.nombres_jugadores.append(name_element)
+            except:
+                output_textedit = self.output_textedit
+                color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+                formato_rojo = QTextCharFormat()
+                formato_rojo.setForeground(color_rojo)
+                output_textedit.mergeCurrentCharFormat(formato_rojo)
+                output_textedit.insertPlainText('Algo salió mal, vuelve a intentarlo   :(\n')
+                formato_negro = QTextCharFormat()
+                formato_negro.setForeground(QColor(0, 0, 0))
+                output_textedit.mergeCurrentCharFormat(formato_negro)
 
-            # Localiza el elemento del input gmail
-            inputgmail = self.driver.find_element(By.XPATH, '//*[@id="email"]')
-
-            # Borra cualquier contenido existente en la caja de texto (opcional)
-            inputgmail.clear()
-
-            # Ingresa texto en la caja de texto
-            inputgmail.send_keys("m31_grupo6@outlook.com")
-
-            # Localiza el elemento del input gmail
-            inputpsw = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
-
-            # Borra cualquier contenido existente en la caja de texto (opcional)
-            inputpsw.clear()
-
-            # Ingresa texto en la caja de texto
-            inputpsw.send_keys("Chocoflakes2")
-
-            # Encuentra el botón de "sing con gmail" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')
-            button.click()
-
-            # Espera a que se cargue la página
-            self.driver.implicitly_wait(10)
-
-            #Hacer click en el btn Jugadores con la función click_mas() para manejar errores generados por anuncios intrusiovos
-            self.click_mas()
-
-            # Encuentra el elemento <ul> con el id "list-on-sale"
-            ul_element = self.driver.find_element(By.ID, "list-on-sale")
-
-            # Encuentra los elementos <div> con la clase "name" dentro del elemento <ul>
-            div_elements = ul_element.find_elements(By.CSS_SELECTOR, "div.name")
-
-            # Itera sobre los elementos <div> encontrados e imprime el nombre del jugador
-            for div_element in div_elements:
-                # Obtener el contenido del elemento <div>
-                name_element = div_element.text.strip()  # Utiliza strip() para eliminar espacios en blanco adicionales
-                output_textedit.insertPlainText(f"{name_element}\n")
-                self.nombres_jugadores.append(name_element)
-        except:
+            self.driver.quit()
+        else:
             output_textedit = self.output_textedit
             color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText('Algo salió mal, vuelve a intentarlo   :(\n')
+            output_textedit.insertPlainText('No te has iniciado sesion en la aplicación. Loguearte con tus credenciales de Mister Fantasy MD en la ventana Perfil para acceder al mercado de jugaodes.\n')
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)
-
-        self.driver.quit()
 
 
 class dataset_creator(QWidget):
@@ -603,7 +568,7 @@ class dataset_creator(QWidget):
         self.btn_ventana1 = QPushButton("Generar dataset para entrenar modelos")
         self.btn_ventana1.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
 
-        self.btn_ventana2 = QPushButton("Generar dataset sobre el que realizar predecicciones")
+        self.btn_ventana2 = QPushButton("Generar dataset para predecir valores")
         self.btn_ventana2.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
 
         button_layout.addWidget(self.btn_ventana1)
@@ -611,7 +576,6 @@ class dataset_creator(QWidget):
 
         main_layout.addLayout(button_layout)  
         main_layout.addWidget(self.stacked_widget)
-
 
 class dataset_entrenamiento(QWidget):
     
@@ -730,7 +694,6 @@ class dataset_entrenamiento(QWidget):
         excel1_path = self.text_input1.text()
         excel2_path = self.text_input2.text()
 
-
 class dataset_predecir(QWidget):
     
     def __init__(self):
@@ -772,6 +735,7 @@ class dataset_predecir(QWidget):
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
+
 class scrapear_datos(QWidget):
   def __init__(self):
         super().__init__()
@@ -800,387 +764,6 @@ class scrapear_datos(QWidget):
         main_layout.addLayout(button_layout)  
         main_layout.addWidget(self.stacked_widget)
 
-
-class login(QWidget):
-    def __init__(self):
-        super().__init__()
-        # Crear un diseño principal usando QVBoxLayout
-        layout = QVBoxLayout()
-
-        # Crear un diseño de cuadrícula dentro del QVBoxLayout
-        grid_layout = QGridLayout(self)
-
-        # TITULO VENTANA  ###########################################################################################
-        # LABEL TÍTULO
-        label_text = QLabel("MI PERFIL")
-        # Aplicar estilos para destacar el texto
-        label_text.setStyleSheet("font-weight: bold; color: black; font-size: 20px;")
-        grid_layout.addWidget(label_text, 0, 0)
-
-        # LABEL SUBTÍTULO 1
-        label_subtext1 = QLabel("Danos acceso a tu cuenta de Mister Fantasy MD logueandote en el siguiente formulario para permitir a la aplicación obtener informacion de los jugadores de la liga. ")
-        grid_layout.addWidget(label_subtext1, 1, 0, 1, 2)
-
-        # LABEL SUBTÍTULO 2
-        label_subtext2 = QLabel("* Tus credenciales nunca serán guardadas y se eliminaran autoamticamente al cerrar la aplicación. *")
-        # Aplicar estilos para destacar el texto
-        label_subtext2.setStyleSheet("color: red;")
-        grid_layout.addWidget(label_subtext2, 2, 0, 1, 2)
-
-        # INPUT CREDENCIALES  #########################################################################################
-        # LABEL DE TEXTO
-        label_text2 = QLabel("Usuario: ")
-        grid_layout.addWidget(label_text2, 3, 0, alignment=Qt.AlignmentFlag.AlignTop)
-
-        # INPUT DE TEXTO
-        self.text_input1 = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(self.text_input1, 3, 1)
-
-        ### SELECCIONAR PSW ##################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Contraseña: ")
-        grid_layout.addWidget(label_text, 4, 0)
-
-        # INPUT DE TEXTO
-        self.text_input2 = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(self.text_input2, 4, 1)
-
-        ### BOTÓN PARA EJECUTAR FUNCIÓN PARA FUSIONAR EXCELLS ###########################################################
-        # Crear un botón
-        self.save_button = QPushButton("Guardar credenciales")
-
-        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        self.save_button.clicked.connect(self.iniciar_scrapear_thread)
-
-        # Alineación
-        grid_layout.addWidget(self.save_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
-        # Estilos
-        self.save_button.setMinimumWidth(100)
-        self.save_button.setMaximumWidth(150)
-
-        ###  VENTANA OUTPUT SCRAPER  ####################################################################################
-        # Crear un QTextEdit para la salida
-        self.output_textedit = QTextEdit(self)
-        grid_layout.addWidget(self.output_textedit, 6, 0, 11, 0)  # row, column, rowSpan, columnSpan
-
-    def iniciar_scrapear_thread(self):  
-        # Crear un hilo y ejecutar la función en segundo plano
-        thread = threading.Thread(target=self.guardar_credenciales)
-        thread.start()
-
-    def guardar_credenciales(self):
-        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
-        self.output_textedit.insertPlainText('Comprobando credenciales introducidas...\n')
-
-        usuario_input = self.text_input1.text()
-        contrasena_input = self.text_input2.text()
-
-        if usuario_input!="" and contrasena_input!="":
-            
-            self.driver = webdriver.Chrome()
-
-            # Navega a la página web que deseas hacer scraping
-            self.driver.get("https://mister.mundodeportivo.com/new-onboarding/#market")
-
-            # Espera a que se cargue la página
-            self.driver.implicitly_wait(15)
-
-            # Encuentra el botón de "Consentir" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="didomi-notice-agree-button"]')
-            # Haz clic en el botón de "Consentir" 
-            button.click()
-
-            # Encuentra el botón de "Siguinete" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')
-            # Haz clic en el botón de "Siguiente" 
-            button.click()
-            button.click()
-            button.click()
-            button.click()
-
-            # Encuentra el botón de "sing con gmail" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/button[3]')
-            button.click()
-
-            # Localiza el elemento del input gmail
-            inputgmail = self.driver.find_element(By.XPATH, '//*[@id="email"]')
-
-            # Borra cualquier contenido existente en la caja de texto (opcional)
-            inputgmail.clear()
-
-            # Ingresa texto en la caja de texto
-            inputgmail.send_keys(usuario_input)
-
-            # Localiza el elemento del input gmail
-            inputpsw = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
-
-            # Borra cualquier contenido existente en la caja de texto (opcional)
-            inputpsw.clear()
-
-            # Ingresa texto en la caja de texto
-            inputpsw.send_keys(contrasena_input)
-
-            # Encuentra el botón de "sing con gmail" 
-            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')
-            button.click()
-            try:
-                # Encuentra el botón para comprobar si se ha conseguido loguear en la web de Mister Fantasy
-                button = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[2]/a')
-                
-                # Haz clic en el botón
-                button.click()
-
-                self.driver.quit()
-
-                self.output_textedit.insertPlainText('Usuario o contraseña correctos.\n')
-
-                usuario = usuario_input
-                contrasena = contrasena_input
-
-                return
-            
-            except NoSuchElementException:
-                self.driver.quit()
-                output_textedit = self.output_textedit
-                color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
-                formato_rojo = QTextCharFormat()
-                formato_rojo.setForeground(color_rojo)
-                output_textedit.mergeCurrentCharFormat(formato_rojo)
-                output_textedit.insertPlainText('Usuario o contraseña incorrectos.\n')
-                formato_negro = QTextCharFormat()
-                formato_negro.setForeground(QColor(0, 0, 0))
-                output_textedit.mergeCurrentCharFormat(formato_negro)
-                return
-        else:
-            output_textedit = self.output_textedit
-            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
-            formato_rojo = QTextCharFormat()
-            formato_rojo.setForeground(color_rojo)
-            output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText("Credenciales no inicializadas.\n")
-            formato_negro = QTextCharFormat()
-            formato_negro.setForeground(QColor(0, 0, 0))
-            output_textedit.mergeCurrentCharFormat(formato_negro)
-            
-
-class trainWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-        # Crear un diseño principal usando QVBoxLayout
-        layout = QVBoxLayout()
-
-        # Crear un diseño de cuadrícula dentro del QVBoxLayout
-        grid_layout = QGridLayout(self)
-
-        # TITULO VENTANA  ###########################################################################################
-        # LABEL TÍTULO
-        label_text = QLabel("ENTRENAR MODELEO")
-        # Aplicar estilos para destacar el texto
-        label_text.setStyleSheet("font-weight: bold; color: black; font-size: 20px;")
-        grid_layout.addWidget(label_text, 0, 0)
-
-        # LABEL SUBTÍTULO 1
-        label_subtext1 = QLabel("Pruba con los diferentes algoritmos disponibles a entrenar varios modelo y conparar entre ellos su desenpeño para selecionar el que mejores predicciones realice. ")
-        grid_layout.addWidget(label_subtext1, 1, 0, 1, 2)
-
-        ### SELECCIONAR RUTA DATASET DE ENTRADA ##################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Selecionar dataset de entrada: ")
-        grid_layout.addWidget(label_text, 2, 0)
-
-        # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(self.text_input, 2, 1)
-
-        # BOTÓN PARA SELECCIONAR ARCHIVO
-        select_file_button = QPushButton("Seleccionar Archivo")
-        select_file_button.clicked.connect(lambda: select_file(self))
-        # Alineación
-        grid_layout.addWidget(select_file_button, 3, 1, alignment=Qt.AlignmentFlag.AlignRight)
-        # Estilos
-        select_file_button.setMinimumWidth(140)
-
-        ### SELECCIONAR ALGORITMO ##################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Seleciona un algoritmo de entrenamiento: ")
-        grid_layout.addWidget(label_text, 4, 0)
-        combo_box = QComboBox()
-        combo_box.addItem("Gradient Boosted Tree model")
-        combo_box.addItem("Random Forest model")
-        combo_box.addItem("K-NN model")
-        combo_box.addItem("Linear Regresion model")
-        combo_box.addItem("Neural Net model")
-        # Establecer el ancho máximo para la QComboBox
-        combo_box.setMaximumWidth(185)
-        grid_layout.addWidget(combo_box, 4, 1)
-
-
-        label_choice = QLabel("Seleccionar atributo del jugador predecir:")
-        grid_layout.addWidget(label_choice, 5, 0)
-
-        combo_box = QComboBox()
-        combo_box.addItem("Entrenar para predecir valor de mercado que alcanzará un jugaodr en la próxima jornada")
-        combo_box.addItem("Entrenar para predecir puntos que obtendrá un jugaodr en la próxima jornada")
-        
-        # Establecer el ancho máximo para la QComboBox
-        combo_box.setMaximumWidth(500)
-        grid_layout.addWidget(combo_box, 5, 1)
-
-        ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
-        # Crear un botón
-        self.scrape_button = QPushButton("Iniciar entrenamiento")
-
-        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
-
-        # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 6, 0)
-        self.scrape_button.setMaximumWidth(150)
-
-
-        ### DEFINIR NOMBRE DEL MODELO ##################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Nombre del modelo: ")
-        grid_layout.addWidget(label_text, 7, 0)
-
-        # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(self.text_input, 7, 1)
-
-
-        ###  SELECCIONAR RUTA DONDE GUARDAR EL MODELO  ###################################
-        # LABEL TEXTO 
-        label_text = QLabel("Ruta donde guardar el modelo:")
-        grid_layout.addWidget(label_text, 8, 0)
-
-        # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
-        text_input = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(text_input, 8, 1)
-        # Estilos 
-        self.text_input.setMinimumWidth(350)
-
-        # BOTÓN PARA SELECCIONAR CARPETA
-        select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(lambda: select_folder(self))
-        # Alineación
-        grid_layout.addWidget(select_folder_button, 9, 1, alignment=Qt.AlignmentFlag.AlignRight)
-        # Estilos
-        select_folder_button.setMinimumWidth(140)
-
-        ### BOTÓN PARA GUARDAR MODLEO ###########################################################
-
-        # Crear un botón
-        self.scrape_button = QPushButton("Guardar modelo")
-
-        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
-
-        # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 10, 1, alignment=Qt.AlignmentFlag.AlignRight)
-        self.scrape_button.setMaximumWidth(150)
-
-
-class predictWindow(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        # Crear un diseño principal usando QVBoxLayout
-        layout = QVBoxLayout()
-
-        # Crear un diseño de cuadrícula dentro del QVBoxLayout
-        grid_layout = QGridLayout(self)
-
-        # TITULO VENTANA  ###########################################################################################
-        # LABEL TÍTULO
-        label_text = QLabel("PREDECIR")
-        # Aplicar estilos para destacar el texto
-        label_text.setStyleSheet("font-weight: bold; color: black; font-size: 20px;")
-        grid_layout.addWidget(label_text, 0, 0)
-
-        # LABEL SUBTÍTULO 1
-        label_subtext1 = QLabel("predecir el valor de mercado o los puntos que obtendrá el jugaodr en la sigueinte jornada de la liga mediante el modelo generado en el entrenamiento. ")
-        grid_layout.addWidget(label_subtext1, 1, 0, 1, 2)
-
-        ### SELECCIONAR RUTA DATASET DE ENTRADA ##################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Selecionar ruta de los futbolitas a predecir su puntuación: ")
-        grid_layout.addWidget(label_text, 2, 0)
-
-        # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(self.text_input, 2, 1)
-
-        # BOTÓN PARA SELECCIONAR ARCHIVO
-        select_file_button = QPushButton("Seleccionar Archivo")
-        select_file_button.clicked.connect(lambda: select_file(self))
-
-        # Alineación
-        grid_layout.addWidget(select_file_button, 3, 1, alignment=Qt.AlignmentFlag.AlignRight)
-
-        # Estilos
-        select_file_button.setMinimumWidth(140)
-
-
-        ### SELECCIONAR RUTA MODELO A USAR #################################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Selecionar ruta del modelo que se desea utilzar para predecir: ")
-        grid_layout.addWidget(label_text, 4, 0)
-
-        # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(self.text_input, 4, 1)
-
-        # BOTÓN PARA SELECCIONAR ARCHIVO
-        select_file_button = QPushButton("Seleccionar Archivo")
-        select_file_button.clicked.connect(lambda: select_file(self))
-        # Alineación
-        grid_layout.addWidget(select_file_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
-        # Estilos
-        select_file_button.setMinimumWidth(140)
-
-        ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Predecir valores")
-        grid_layout.addWidget(label_text, 6, 0)
-
-        # Crear un botón
-        self.scrape_button = QPushButton("Predecir puntuación")
-
-        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
-
-        # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 6, 1)
-        self.scrape_button.setMaximumWidth(150)
-
-        ###  SELECCIONAR RUTA DONDE GUARDAR EL EXCEL OUTPUT DEL SCRAPER  ###################################
-        # LABEL TEXTO 
-        label_text = QLabel("Ruta output donde guardar estadisticas del modelo:")
-        grid_layout.addWidget(label_text, 7, 0)
-
-        # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
-        text_input = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(text_input, 7, 1)
-        # Estilos 
-        self.text_input.setMinimumWidth(350)
-
-        # BOTÓN PARA SELECCIONAR CARPETA
-        select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(lambda: select_folder(self))
-        # Alineación
-        grid_layout.addWidget(select_folder_button, 8, 1, alignment=Qt.AlignmentFlag.AlignRight)
-        # Estilos
-        select_folder_button.setMinimumWidth(140)
-
-
 class PlayerScraperWindowSC(QWidget):
     def __init__(self):
         super().__init__()
@@ -1200,7 +783,6 @@ class PlayerScraperWindowSC(QWidget):
 
         # Configurar el diseño para la ventana
         self.setLayout(layout)
-
 
 class PlayerScraperWindowMF(QDialog, QWidget):
     def __init__(self, window_title):
@@ -1680,52 +1262,7 @@ class PlayerScraperWindowMF(QDialog, QWidget):
              os.remove(rutaDel)
 
         self.driver = webdriver.Chrome()
-
-        # Navega a la página web que deseas hacer scraping
-        self.driver.get("https://mister.mundodeportivo.com/new-onboarding/#market")
-
-        # Espera a que se cargue la página
-        self.driver.implicitly_wait(15)
-
-        # Encuentra el botón de "Consentir" 
-        button = self.driver.find_element(By.XPATH, '//*[@id="didomi-notice-agree-button"]')
-        # Haz clic en el botón de "Consentir" 
-        button.click()
-
-        # Encuentra el botón de "Siguinete" 
-        button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')
-        # Haz clic en el botón de "Siguiente" 
-        button.click()
-        button.click()
-        button.click()
-        button.click()
-
-        # Encuentra el botón de "sing con gmail" 
-        button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/button[3]')
-        button.click()
-
-        # Localiza el elemento del input gmail
-        inputgmail = self.driver.find_element(By.XPATH, '//*[@id="email"]')
-
-        # Borra cualquier contenido existente en la caja de texto (opcional)
-        inputgmail.clear()
-
-        # Ingresa texto en la caja de texto
-        inputgmail.send_keys(usuario)
-
-        # Localiza el elemento del input gmail
-        inputpsw = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
-
-        # Borra cualquier contenido existente en la caja de texto (opcional)
-        inputpsw.clear()
-
-        # Ingresa texto en la caja de texto
-        inputpsw.send_keys(contrasena)
-
-        # Encuentra el botón de "sing con gmail" 
-        button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')
-        button.click()
-
+        realizar_login(self.driver)
         time.sleep(5)
 
         # Espera a que se cargue la página
@@ -1850,6 +1387,387 @@ class PlayerScraperWindowMF(QDialog, QWidget):
         self.driver.quit()    
         self.output_textedit.append("Todos los jugadores scrapeados")
 
+
+class trainWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+        # Crear un diseño principal usando QVBoxLayout
+        layout = QVBoxLayout()
+
+        # Crear un diseño de cuadrícula dentro del QVBoxLayout
+        grid_layout = QGridLayout(self)
+
+        # TITULO VENTANA  ###########################################################################################
+        # LABEL TÍTULO
+        label_text = QLabel("ENTRENAR MODELEO")
+        # Aplicar estilos para destacar el texto
+        label_text.setStyleSheet("font-weight: bold; color: black; font-size: 20px;")
+        grid_layout.addWidget(label_text, 0, 0)
+
+        # LABEL SUBTÍTULO 1
+        label_subtext1 = QLabel("Pruba con los diferentes algoritmos disponibles a entrenar varios modelo y conparar entre ellos su desenpeño para selecionar el que mejores predicciones realice. ")
+        grid_layout.addWidget(label_subtext1, 1, 0, 1, 2)
+
+        ### SELECCIONAR RUTA DATASET DE ENTRADA ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Selecionar dataset de entrada: ")
+        grid_layout.addWidget(label_text, 2, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 2, 1)
+
+        # BOTÓN PARA SELECCIONAR ARCHIVO
+        select_file_button = QPushButton("Seleccionar Archivo")
+        select_file_button.clicked.connect(lambda: select_file(self))
+        # Alineación
+        grid_layout.addWidget(select_file_button, 3, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        select_file_button.setMinimumWidth(140)
+
+        ### SELECCIONAR ALGORITMO ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Seleciona un algoritmo de entrenamiento: ")
+        grid_layout.addWidget(label_text, 4, 0)
+        combo_box = QComboBox()
+        combo_box.addItem("Gradient Boosted Tree model")
+        combo_box.addItem("Random Forest model")
+        combo_box.addItem("K-NN model")
+        combo_box.addItem("Linear Regresion model")
+        combo_box.addItem("Neural Net model")
+        # Establecer el ancho máximo para la QComboBox
+        combo_box.setMaximumWidth(185)
+        grid_layout.addWidget(combo_box, 4, 1)
+
+
+        label_choice = QLabel("Seleccionar atributo del jugador predecir:")
+        grid_layout.addWidget(label_choice, 5, 0)
+
+        combo_box = QComboBox()
+        combo_box.addItem("Entrenar para predecir valor de mercado que alcanzará un jugaodr en la próxima jornada")
+        combo_box.addItem("Entrenar para predecir puntos que obtendrá un jugaodr en la próxima jornada")
+        
+        # Establecer el ancho máximo para la QComboBox
+        combo_box.setMaximumWidth(500)
+        grid_layout.addWidget(combo_box, 5, 1)
+
+        ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
+        # Crear un botón
+        self.scrape_button = QPushButton("Iniciar entrenamiento")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+
+        # Alineación y estilos
+        grid_layout.addWidget(self.scrape_button, 6, 0)
+        self.scrape_button.setMaximumWidth(150)
+
+
+        ### DEFINIR NOMBRE DEL MODELO ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Nombre del modelo: ")
+        grid_layout.addWidget(label_text, 7, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 7, 1)
+
+
+        ###  SELECCIONAR RUTA DONDE GUARDAR EL MODELO  ###################################
+        # LABEL TEXTO 
+        label_text = QLabel("Ruta donde guardar el modelo:")
+        grid_layout.addWidget(label_text, 8, 0)
+
+        # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
+        text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(text_input, 8, 1)
+        # Estilos 
+        self.text_input.setMinimumWidth(350)
+
+        # BOTÓN PARA SELECCIONAR CARPETA
+        select_folder_button = QPushButton("Seleccionar Carpeta")
+        select_folder_button.clicked.connect(lambda: select_folder(self))
+        # Alineación
+        grid_layout.addWidget(select_folder_button, 9, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        select_folder_button.setMinimumWidth(140)
+
+        ### BOTÓN PARA GUARDAR MODLEO ###########################################################
+
+        # Crear un botón
+        self.scrape_button = QPushButton("Guardar modelo")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+
+        # Alineación y estilos
+        grid_layout.addWidget(self.scrape_button, 10, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        self.scrape_button.setMaximumWidth(150)
+
+class predictWindow(QWidget):
+    def __init__(self):
+        super().__init__()
+
+        # Crear un diseño principal usando QVBoxLayout
+        layout = QVBoxLayout()
+
+        # Crear un diseño de cuadrícula dentro del QVBoxLayout
+        grid_layout = QGridLayout(self)
+
+        # TITULO VENTANA  ###########################################################################################
+        # LABEL TÍTULO
+        label_text = QLabel("PREDECIR")
+        # Aplicar estilos para destacar el texto
+        label_text.setStyleSheet("font-weight: bold; color: black; font-size: 20px;")
+        grid_layout.addWidget(label_text, 0, 0)
+
+        # LABEL SUBTÍTULO 1
+        label_subtext1 = QLabel("predecir el valor de mercado o los puntos que obtendrá el jugaodr en la sigueinte jornada de la liga mediante el modelo generado en el entrenamiento. ")
+        grid_layout.addWidget(label_subtext1, 1, 0, 1, 2)
+
+        ### SELECCIONAR RUTA DATASET DE ENTRADA ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Selecionar ruta de los futbolitas a predecir su puntuación: ")
+        grid_layout.addWidget(label_text, 2, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 2, 1)
+
+        # BOTÓN PARA SELECCIONAR ARCHIVO
+        select_file_button = QPushButton("Seleccionar Archivo")
+        select_file_button.clicked.connect(lambda: select_file(self))
+
+        # Alineación
+        grid_layout.addWidget(select_file_button, 3, 1, alignment=Qt.AlignmentFlag.AlignRight)
+
+        # Estilos
+        select_file_button.setMinimumWidth(140)
+
+
+        ### SELECCIONAR RUTA MODELO A USAR #################################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Selecionar ruta del modelo que se desea utilzar para predecir: ")
+        grid_layout.addWidget(label_text, 4, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 4, 1)
+
+        # BOTÓN PARA SELECCIONAR ARCHIVO
+        select_file_button = QPushButton("Seleccionar Archivo")
+        select_file_button.clicked.connect(lambda: select_file(self))
+        # Alineación
+        grid_layout.addWidget(select_file_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        select_file_button.setMinimumWidth(140)
+
+        ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Predecir valores")
+        grid_layout.addWidget(label_text, 6, 0)
+
+        # Crear un botón
+        self.scrape_button = QPushButton("Predecir puntuación")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+
+        # Alineación y estilos
+        grid_layout.addWidget(self.scrape_button, 6, 1)
+        self.scrape_button.setMaximumWidth(150)
+
+        ###  SELECCIONAR RUTA DONDE GUARDAR EL EXCEL OUTPUT DEL SCRAPER  ###################################
+        # LABEL TEXTO 
+        label_text = QLabel("Ruta output donde guardar estadisticas del modelo:")
+        grid_layout.addWidget(label_text, 7, 0)
+
+        # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
+        text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(text_input, 7, 1)
+        # Estilos 
+        self.text_input.setMinimumWidth(350)
+
+        # BOTÓN PARA SELECCIONAR CARPETA
+        select_folder_button = QPushButton("Seleccionar Carpeta")
+        select_folder_button.clicked.connect(lambda: select_folder(self))
+        # Alineación
+        grid_layout.addWidget(select_folder_button, 8, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        select_folder_button.setMinimumWidth(140)
+
+
+class login(QWidget):
+    def __init__(self):
+        super().__init__()
+        # Crear un diseño principal usando QVBoxLayout
+        layout = QVBoxLayout()
+
+        # Crear un diseño de cuadrícula dentro del QVBoxLayout
+        grid_layout = QGridLayout(self)
+
+        # TITULO VENTANA  ###########################################################################################
+        # LABEL TÍTULO
+        label_text = QLabel("MI PERFIL")
+        # Aplicar estilos para destacar el texto
+        label_text.setStyleSheet("font-weight: bold; color: black; font-size: 20px;")
+        grid_layout.addWidget(label_text, 0, 0)
+
+        # LABEL SUBTÍTULO 1
+        label_subtext1 = QLabel("Danos acceso a tu cuenta de Mister Fantasy MD logueandote en el siguiente formulario para permitir a la aplicación obtener informacion de los jugadores de la liga. ")
+        grid_layout.addWidget(label_subtext1, 1, 0, 1, 2)
+
+        # LABEL SUBTÍTULO 2
+        label_subtext2 = QLabel("* Tus credenciales nunca serán guardadas y se eliminaran autoamticamente al cerrar la aplicación. *")
+        # Aplicar estilos para destacar el texto
+        label_subtext2.setStyleSheet("color: red;")
+        grid_layout.addWidget(label_subtext2, 2, 0, 1, 2)
+
+        # INPUT CREDENCIALES  #########################################################################################
+        # LABEL DE TEXTO
+        label_text2 = QLabel("Usuario: ")
+        grid_layout.addWidget(label_text2, 3, 0, alignment=Qt.AlignmentFlag.AlignTop)
+
+        # INPUT DE TEXTO
+        self.text_input1 = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input1, 3, 1)
+
+        ### SELECCIONAR PSW ##################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Contraseña: ")
+        grid_layout.addWidget(label_text, 4, 0)
+
+        # INPUT DE TEXTO
+        self.text_input2 = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input2, 4, 1)
+
+        ### BOTÓN PARA EJECUTAR FUNCIÓN PARA FUSIONAR EXCELLS ###########################################################
+        # Crear un botón
+        self.save_button = QPushButton("Guardar credenciales")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        self.save_button.clicked.connect(self.iniciar_scrapear_thread)
+
+        # Alineación
+        grid_layout.addWidget(self.save_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        self.save_button.setMinimumWidth(100)
+        self.save_button.setMaximumWidth(150)
+
+        ###  VENTANA OUTPUT SCRAPER  ####################################################################################
+        # Crear un QTextEdit para la salida
+        self.output_textedit = QTextEdit(self)
+        grid_layout.addWidget(self.output_textedit, 6, 0, 11, 0)  # row, column, rowSpan, columnSpan
+
+    def iniciar_scrapear_thread(self):  
+        # Crear un hilo y ejecutar la función en segundo plano
+        thread = threading.Thread(target=self.guardar_credenciales)
+        thread.start()
+
+    def guardar_credenciales(self):
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText('Comprobando credenciales introducidas...\n')
+
+        usuario_input = self.text_input1.text()
+        contrasena_input = self.text_input2.text()
+
+        if usuario_input!="" and contrasena_input!="":
+            
+            self.driver = webdriver.Chrome()
+
+            # Navega a la página web que deseas hacer scraping
+            self.driver.get("https://mister.mundodeportivo.com/new-onboarding/#market")
+
+            # Espera a que se cargue la página
+            self.driver.implicitly_wait(15)
+
+            # Encuentra el botón de "Consentir" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="didomi-notice-agree-button"]')
+            # Haz clic en el botón de "Consentir" 
+            button.click()
+
+            # Encuentra el botón de "Siguinete" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div[2]/button')
+            # Haz clic en el botón de "Siguiente" 
+            button.click()
+            button.click()
+            button.click()
+            button.click()
+
+            # Encuentra el botón de "sing con gmail" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/button[3]')
+            button.click()
+
+            # Localiza el elemento del input gmail
+            inputgmail = self.driver.find_element(By.XPATH, '//*[@id="email"]')
+
+            # Borra cualquier contenido existente en la caja de texto (opcional)
+            inputgmail.clear()
+
+            # Ingresa texto en la caja de texto
+            inputgmail.send_keys(usuario_input)
+
+            # Localiza el elemento del input gmail
+            inputpsw = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[2]/input')
+
+            # Borra cualquier contenido existente en la caja de texto (opcional)
+            inputpsw.clear()
+
+            # Ingresa texto en la caja de texto
+            inputpsw.send_keys(contrasena_input)
+
+            # Encuentra el botón de "sing con gmail" 
+            button = self.driver.find_element(By.XPATH, '//*[@id="app"]/div/div[2]/div/form/div[3]/button')
+            button.click()
+            try:
+                # Encuentra el botón para comprobar si se ha conseguido loguear en la web de Mister Fantasy
+                button = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[2]/a')
+                
+                # Haz clic en el botón
+                button.click()
+
+                self.driver.quit()
+
+                self.output_textedit.insertPlainText('Usuario o contraseña correctos.\n')
+
+                # Acceder a las variables globales desde la clase
+                global usuario, contrasena
+                usuario = usuario_input
+                contrasena = contrasena_input
+
+                return
+            
+            except NoSuchElementException:
+                self.driver.quit()
+                output_textedit = self.output_textedit
+                color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+                formato_rojo = QTextCharFormat()
+                formato_rojo.setForeground(color_rojo)
+                output_textedit.mergeCurrentCharFormat(formato_rojo)
+                output_textedit.insertPlainText('Usuario o contraseña incorrectos.\n')
+                formato_negro = QTextCharFormat()
+                formato_negro.setForeground(QColor(0, 0, 0))
+                output_textedit.mergeCurrentCharFormat(formato_negro)
+                return
+        else:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText("Credenciales no inicializadas.\n")
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+            
 
 def main():
     app = QApplication(sys.argv)

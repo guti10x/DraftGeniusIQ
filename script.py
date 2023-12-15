@@ -24,6 +24,34 @@ import Levenshtein
 usuario=None
 contrasena=None
 
+def select_folder(self):
+    # Obtener el directorio del script de Python
+    script_directory = os.path.dirname(__file__) if __file__ else os.getcwd()
+
+    folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
+    if folder_path:
+        # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
+        selected_folder = folder_path
+        selected_path = folder_path
+
+        # Actualizar el QLineEdit con la ruta seleccionada
+        self.text_input.setText(selected_path)
+
+def select_file(self):
+    # Obtener el directorio del script de Python
+    script_directory = os.path.dirname(__file__)
+
+    # Abrir el cuadro de diálogo para seleccionar un archivo
+    file_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar Archivo", script_directory)
+
+    if file_path:
+        # Actualizar las variables de clase con el archivo y la ruta seleccionadas
+        self.selected_file = os.path.basename(file_path)
+        self.selected_path = file_path
+
+        # Actualizar el QLineEdit con la ruta seleccionada
+        self.text_input.setText(self.selected_path)
+
 class VentanaPrincipal(QMainWindow):
     def __init__(self):
         super().__init__()
@@ -138,7 +166,7 @@ class squadWindow(QWidget):
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(self.select_folder)
+        select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
         grid_layout.addWidget(select_folder_button, 14, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
@@ -163,19 +191,6 @@ class squadWindow(QWidget):
 
         # Agregar el diseño principal al widget
         self.setLayout(layout)
-
-    def select_folder(self):
-        # Obtener el directorio del script de Python
-        script_directory = os.path.dirname(__file__)
-        
-        folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
-        if folder_path:
-            # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
-            self.selected_folder = folder_path
-            self.selected_path = folder_path
-
-            # Actualizar el QLineEdit con la ruta seleccionada
-            self.text_input.setText(self.selected_path)
 
     def guardar_excell(self):
         self.output_textedit.append(f"________________________________________________________________________________________")
@@ -386,7 +401,7 @@ class marketWindow(QWidget):
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(self.select_folder)
+        select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
         grid_layout.addWidget(select_folder_button, 16, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
@@ -411,18 +426,6 @@ class marketWindow(QWidget):
         # Agregar el diseño principal al widget
         self.setLayout(layout)
 
-    def select_folder(self):
-        # Obtener el directorio del script de Python
-        script_directory = os.path.dirname(__file__)
-        
-        folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
-        if folder_path:
-            # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
-            self.selected_folder = folder_path
-            self.selected_path = folder_path
-
-            # Actualizar el QLineEdit con la ruta seleccionada
-            self.text_input.setText(self.selected_path)
 
     def guardar_excell(self):
         self.output_textedit.append(f"________________________________________________________________________________________")
@@ -616,7 +619,7 @@ class dataset_creator(QWidget):
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(self.select_folder)
+        select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
         grid_layout.addWidget(select_folder_button, 4, 0, alignment=Qt.AlignmentFlag.AlignLeft)
         # Estilos
@@ -634,7 +637,7 @@ class dataset_creator(QWidget):
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar archivos")
-        #select_file_button.clicked.connect(self.select_file)
+        select_file_button.clicked.connect(lambda: select_file(self))
 
         # Alineación
         grid_layout.addWidget(select_file_button, 7, 0, alignment=Qt.AlignmentFlag.AlignLeft)
@@ -660,20 +663,6 @@ class dataset_creator(QWidget):
         self.output_textedit = QTextEdit(self)
         grid_layout.addWidget(self.output_textedit,9, 0, 2, 2)  # row, column, rowSpan, columnSpan
     
-    def select_folder(self):
-        # Obtener el directorio del script de Python
-        script_directory = os.path.dirname(__file__)
-        
-        folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
-        if folder_path:
-            # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
-            self.selected_folder = folder_path
-            self.selected_path = folder_path
-
-            # Actualizar el QLineEdit con la ruta seleccionada
-            self.text_input1.setText(self.selected_path)
-
-
     def json_a_excel(self):
         
         # Rutas globales
@@ -938,7 +927,7 @@ class trainWindow(QWidget):
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar Archivo")
-        select_file_button.clicked.connect(self.select_file)
+        select_file_button.clicked.connect(lambda: select_file(self))
         # Alineación
         grid_layout.addWidget(select_file_button, 3, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
@@ -1007,7 +996,7 @@ class trainWindow(QWidget):
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(self.select_folder)
+        select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
         grid_layout.addWidget(select_folder_button, 9, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
@@ -1024,34 +1013,6 @@ class trainWindow(QWidget):
         # Alineación y estilos
         grid_layout.addWidget(self.scrape_button, 10, 1, alignment=Qt.AlignmentFlag.AlignRight)
         self.scrape_button.setMaximumWidth(150)
-
-    def select_file(self):
-        # Obtener el directorio del script de Python
-        script_directory = os.path.dirname(__file__)
-
-        # Abrir el cuadro de diálogo para seleccionar un archivo
-        file_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar Archivo", script_directory)
-
-        if file_path:
-            # Actualizar las variables de clase con el archivo y la ruta seleccionadas
-            self.selected_file = os.path.basename(file_path)
-            self.selected_path = file_path
-
-            # Actualizar el QLineEdit con la ruta seleccionada
-            self.text_input.setText(self.selected_path)
-
-    def select_folder(self):
-        # Obtener el directorio del script de Python
-        script_directory = os.path.dirname(__file__)
-        
-        folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
-        if folder_path:
-            # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
-            self.selected_folder = folder_path
-            self.selected_path = folder_path
-
-            # Actualizar el QLineEdit con la ruta seleccionada
-            self.text_input.setText(self.selected_path)
 
 
 class predictWindow(QWidget):
@@ -1087,7 +1048,7 @@ class predictWindow(QWidget):
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar Archivo")
-        select_file_button.clicked.connect(self.select_file)
+        select_file_button.clicked.connect(lambda: select_file(self))
 
         # Alineación
         grid_layout.addWidget(select_file_button, 3, 1, alignment=Qt.AlignmentFlag.AlignRight)
@@ -1108,7 +1069,7 @@ class predictWindow(QWidget):
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar Archivo")
-        select_file_button.clicked.connect(self.select_file)
+        select_file_button.clicked.connect(lambda: select_file(self))
         # Alineación
         grid_layout.addWidget(select_file_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
@@ -1143,39 +1104,11 @@ class predictWindow(QWidget):
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(self.select_folder)
+        select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
         grid_layout.addWidget(select_folder_button, 8, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         select_folder_button.setMinimumWidth(140)
-
-    def select_file(self):
-        # Obtener el directorio del script de Python
-        script_directory = os.path.dirname(__file__)
-
-        # Abrir el cuadro de diálogo para seleccionar un archivo
-        file_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar Archivo", script_directory)
-
-        if file_path:
-            # Actualizar las variables de clase con el archivo y la ruta seleccionadas
-            self.selected_file = os.path.basename(file_path)
-            self.selected_path = file_path
-
-            # Actualizar el QLineEdit con la ruta seleccionada
-            self.text_input.setText(self.selected_path)
-
-    def select_folder(self):
-        # Obtener el directorio del script de Python
-        script_directory = os.path.dirname(__file__)
-        
-        folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
-        if folder_path:
-            # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
-            self.selected_folder = folder_path
-            self.selected_path = folder_path
-
-            # Actualizar el QLineEdit con la ruta seleccionada
-            self.text_input.setText(self.selected_path)
 
 
 class PlayerScraperWindowSC(QWidget):
@@ -1290,7 +1223,7 @@ class PlayerScraperWindowMF(QDialog, QWidget):
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(self.select_folder)
+        select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación  
         layout.addWidget(select_folder_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos 
@@ -1339,19 +1272,6 @@ class PlayerScraperWindowMF(QDialog, QWidget):
 
         # Evento cerrar ventana 
         self.destroyed.connect(self.cleanup)
-
-    def select_folder(self):
-        # Obtener el directorio del script de Python
-        script_directory = os.path.dirname(__file__)
-        
-        folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
-        if folder_path:
-            # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
-            self.selected_folder = folder_path
-            self.selected_path = folder_path
-
-            # Actualizar el QLineEdit con la ruta seleccionada
-            self.text_input.setText(self.selected_path)
 
     def cleanup(self):
         # Realizar cualquier limpieza necesaria aquí

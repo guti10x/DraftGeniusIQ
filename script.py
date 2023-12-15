@@ -627,41 +627,54 @@ class dataset_entrenamiento(QWidget):
         label_subtext = QLabel("Crea un dataset para entrenar un modelo de predicción")
         grid_layout.addWidget(label_subtext, 1, 0, 1, 2)
 
+        ### SELECCIONAR JORNADA INPUT ####################################################
+        # INPUT NÚMERO JORNADA 
+        label_number = QLabel("Jornada a scrapear:")
+        grid_layout.addWidget(label_number, 2, 0)
+        # Estilos 
+        self.number_input = QSpinBox(self)
+        self.number_input.setMinimum(1)  # Establecer el valor mínimo (jornada 1)
+        self.number_input.setMaximum(38)  # Establecer el valor máximo (Jornada 36)
+        self.number_input.setSingleStep(2)  # Establecer el paso
+        self.number_input.setMaximumSize(38, 20)
+        self.number_input.setMinimumSize(38, 20)
+        # Aliniación
+        grid_layout.addWidget(self.number_input, 3, 0)
 
         ### SELECCIONAR RUTA DATASET DE ENTRADA SOFAESCORE #########################################################################
         # LABEL DE TEXTO
         label_text = QLabel("Selecionar carpeta donde se almacenaron tododos los partidos scrapeados de la jornada de la web de Sofaescore: ")
-        grid_layout.addWidget(label_text, 2, 0)
+        grid_layout.addWidget(label_text, 4, 0)
 
         # INPUT DE TEXTO
         self.text_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 3, 0)
+        grid_layout.addWidget(self.text_input, 5, 0)
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
         select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
-        grid_layout.addWidget(select_folder_button, 4, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_folder_button, 6, 0, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
         ### SELECCIONAR RUTA DATASET DE ENTRADA MISTER FANTASY #####################################################################
         # LABEL DE TEXTO
         label_text = QLabel("Selecionar archivo resultante del scrapeo de la jornada de la web de Mister Fantasy Mundo Deportivo: ")
-        grid_layout.addWidget(label_text, 5, 0)
+        grid_layout.addWidget(label_text, 7, 0)
 
         # INPUT DE TEXTO
         self.text_file_input= QLineEdit(self)  
         # Alineación
-        grid_layout.addWidget(self.text_file_input, 6, 0)
+        grid_layout.addWidget(self.text_file_input, 8, 0)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar archivo")
         select_file_button.clicked.connect(lambda: select_file(self))
 
         # Alineación
-        grid_layout.addWidget(select_file_button, 7, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_file_button, 9, 0, alignment=Qt.AlignmentFlag.AlignRight)
 
         # Estilos
         select_file_button.setMinimumWidth(140)
@@ -669,19 +682,19 @@ class dataset_entrenamiento(QWidget):
         ### SELECCIONAR RUTA DONDE GUARDAR DATASET RESULTANTE #####################################################################
         # LABEL DE TEXTO
         label_text = QLabel("Selecionar ruta donde guardar el dataset generado de la jornada: ")
-        grid_layout.addWidget(label_text, 8, 0)
+        grid_layout.addWidget(label_text, 10, 0)
 
         # INPUT DE TEXTO
         self.text_input2 = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input2, 9, 0)
+        grid_layout.addWidget(self.text_input2, 11, 0)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_folder_button = QPushButton("Seleccionar carpeta")
         select_folder_button.clicked.connect(lambda: select_folder2(self))
 
         # Alineación
-        grid_layout.addWidget(select_folder_button, 10, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_folder_button, 12, 0, alignment=Qt.AlignmentFlag.AlignRight)
 
         # Estilos
         select_file_button.setMinimumWidth(140)
@@ -694,7 +707,7 @@ class dataset_entrenamiento(QWidget):
         self.generate_button.clicked.connect(self.iniciar_thread_function)
 
         # Alineación
-        grid_layout.addWidget(self.generate_button, 11, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(self.generate_button, 13, 0, alignment=Qt.AlignmentFlag.AlignLeft)
         # Estilos
         self.generate_button.setMinimumWidth(100)
         self.generate_button.setMaximumWidth(150)
@@ -702,7 +715,7 @@ class dataset_entrenamiento(QWidget):
         # VENTANA OUTPUT SCRAPER #####################################################################################
         # Crear un QTextEdit para la salida
         self.output_textedit = QTextEdit(self)
-        grid_layout.addWidget(self.output_textedit,12, 0, 2, 2)  # row, column, rowSpan, columnSpan
+        grid_layout.addWidget(self.output_textedit,14, 0, 2, 2)  # row, column, rowSpan, columnSpan
     
     def iniciar_thread_function(self):  
         # Crear un hilo y ejecutar la función en segundo plano
@@ -710,6 +723,32 @@ class dataset_entrenamiento(QWidget):
         thread.start()
 
     def json_a_excel(self):
+
+        def guardar_en_excell():
+
+            output = self.text_input2.text()
+            numero_jornada = str(self.number_input.value())
+            output_archivo=output+"/dataset_completo_jornada"+numero_jornada+".xlsx"
+
+            # Obtener las listas de las filas
+            fila_excel1 = df1.iloc[index_df1, :].tolist()
+            fila_excel2 = df2.iloc[index_df2, :].tolist()
+
+            # Concatenar las listas
+            fila_concatenada = fila_excel2 + fila_excel1
+
+            # Crear un DataFrame de pandas con una sola fila y múltiples columnas
+            df_nueva_fila = pd.DataFrame([fila_concatenada])
+
+            # Leer el archivo Excel existente
+            df_existente = pd.read_excel(output_archivo, header=None)
+
+            # Concatenar el DataFrame existente con la nueva fila
+            df_final = pd.concat([df_existente, df_nueva_fila], ignore_index=True)
+
+            # Escribir el DataFrame final en el archivo Excel
+            df_final.to_excel(output_archivo, index=False, header=False)
+
         # Parte 1: fusionar todos los jsons de todos los partidos scrapeados de la jornada ##############################################
         # Rutas globales
         carpeta_json = self.text_input.text()
@@ -749,9 +788,9 @@ class dataset_entrenamiento(QWidget):
         excel1_path = ruta_excel
         excel2_path = self.text_file_input.text()
         output = self.text_input2.text()
-
-        output_archivo=output+"/jornadaN.xlsx"
-
+        numero_jornada = str(self.number_input.value())
+        output_archivo=output+"/dataset_completo_jornada"+numero_jornada+".xlsx"
+        
         # Leer los datos de los archivos Excel
         df1 = pd.read_excel(excel1_path, header=None)
         df2 = pd.read_excel(excel2_path, header=None)
@@ -809,7 +848,7 @@ class dataset_entrenamiento(QWidget):
                     self.output_textedit.insertPlainText(f"Coincidencia encontrada: excell1-fila-{index_df1} <-> excell2-fila.{index_df2} , {value_to_compare1} == {value_to_compare2}\n")
                     valores_encontrados.add(value_to_compare1) 
 
-                    #guardar_en_excell()
+                    guardar_en_excell()
 
                     contador_coincidencias +=1
                     coincidencia_encontrada = True
@@ -821,6 +860,8 @@ class dataset_entrenamiento(QWidget):
                     self.output_textedit.insertPlainText("------------------------------------------------------------------------------------------------\n")
                     self.output_textedit.insertPlainText(f"Coincidencia NO encontrada: excell1-fila-{index_df1} en {value_to_compare1}\n")
                     self.output_textedit.insertPlainText("------------------------------------------------------------------------------------------------\n")
+        
+        #Estadisticas de la fusion de los datasets
         self.output_textedit.insertPlainText("_____________________________________________________________________________________________________\n")       
         self.output_textedit.insertPlainText("Buscando jugaodres manualmente que no hicieron match...\n")
         for jugadorS, jugadorMD in zip(self.jugadoresS_noencontrados, self.jugadoresMD_noencontrados):
@@ -831,7 +872,7 @@ class dataset_entrenamiento(QWidget):
 
                     if value_to_compare1o == jugadorS and value_to_compare2o == jugadorMD:
                         self.output_textedit.insertPlainText(f"Coincidencia encontrada: {jugadorS}\n")
-                        #guardar_en_excell()
+                        guardar_en_excell()
                         contador_manual+=1
             
         #Resultados de la fusión de datasets
@@ -841,6 +882,7 @@ class dataset_entrenamiento(QWidget):
         self.output_textedit.insertPlainText(f"Jugadores no disponibles en MisterFantasy: {((contador_global-1)-(contador_coincidencias+contador_manual))}\n")
         self.output_textedit.insertPlainText(f"Precisión: {(((contador_coincidencias+contador_manual)/(contador_global-1))*100)} %\n")
         self.output_textedit.insertPlainText("Dataset generado correctamente\n")
+
 class dataset_predecir(QWidget):
     
     def __init__(self):

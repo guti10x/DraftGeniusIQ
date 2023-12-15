@@ -1,5 +1,5 @@
 # Dependencias
-from PyQt6.QtWidgets import QApplication, QDialog, QGridLayout, QLabel, QLineEdit, QSpinBox, QPushButton, QFileDialog, QWidget, QTextEdit, QProgressBar, QVBoxLayout, QTextEdit, QMainWindow, QStackedWidget, QHBoxLayout
+from PyQt6.QtWidgets import QApplication, QDialog, QGridLayout, QLabel, QLineEdit, QSpinBox, QPushButton, QFileDialog, QWidget, QTextEdit, QProgressBar, QVBoxLayout, QTextEdit, QMainWindow, QStackedWidget, QHBoxLayout,QComboBox
 from PyQt6.QtGui import QColor, QTextCharFormat
 from PyQt6.QtCore import QMetaObject, Qt, pyqtSignal, Q_ARG
 from selenium import webdriver
@@ -39,13 +39,11 @@ class VentanaPrincipal(QMainWindow):
 
         self.ventana1 = squadWindow()
         self.ventana2 = marketWindow()
-        self.ventana3 = PlayerScraperWindowMF("Players Scraper")
-        self.ventana4 = PlayerScraperWindowSC()
-        self.ventana5 = dataset_creator()
-        self.ventana6 = trainWindow()
-        self.ventana7 = predictWindowPoints()
-        self.ventana8 = predictWindowPrice()
-        self.ventana9 = login()
+        self.ventana3 = scrapear_datos()
+        self.ventana4 = dataset_creator()
+        self.ventana5 = trainWindow()
+        self.ventana6 = predictWindow()
+        self.ventana7 = login()
 
         self.stacked_widget.addWidget(self.ventana1)
         self.stacked_widget.addWidget(self.ventana2)
@@ -54,8 +52,6 @@ class VentanaPrincipal(QMainWindow):
         self.stacked_widget.addWidget(self.ventana5)
         self.stacked_widget.addWidget(self.ventana6)
         self.stacked_widget.addWidget(self.ventana7)
-        self.stacked_widget.addWidget(self.ventana8)
-        self.stacked_widget.addWidget(self.ventana9)
 
         self.btn_ventana1 = QPushButton("Mi plantilla")
         self.btn_ventana1.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
@@ -63,26 +59,20 @@ class VentanaPrincipal(QMainWindow):
         self.btn_ventana2 = QPushButton("Mercado")
         self.btn_ventana2.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
 
-        self.btn_ventana3 = QPushButton("Scraper jugadores MF")
+        self.btn_ventana3 = QPushButton("Obtener datos de futbolistas")
         self.btn_ventana3.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(2))
 
-        self.btn_ventana4 = QPushButton("Scraper jugadores SF")
+        self.btn_ventana4 = QPushButton("Crear dataset")
         self.btn_ventana4.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(3))
 
-        self.btn_ventana5 = QPushButton("Crear dataset")
+        self.btn_ventana5 = QPushButton("Entrenar modelo")
         self.btn_ventana5.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(4))
 
-        self.btn_ventana6 = QPushButton("Entrenar modelo")
+        self.btn_ventana6 = QPushButton("Predecir")
         self.btn_ventana6.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(5))
 
-        self.btn_ventana7 = QPushButton("Predecir Puntuación")
+        self.btn_ventana7 = QPushButton("Mi perfil")
         self.btn_ventana7.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(6))
-
-        self.btn_ventana8 = QPushButton("Predecir Valor")
-        self.btn_ventana8.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(7))
-
-        self.btn_ventana9 = QPushButton("Mi perfil")
-        self.btn_ventana9.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(8))
 
         self.layout.addWidget(self.btn_ventana1, 0, 0)
         self.layout.addWidget(self.btn_ventana2, 0, 1)
@@ -91,10 +81,9 @@ class VentanaPrincipal(QMainWindow):
         self.layout.addWidget(self.btn_ventana5, 0, 4)
         self.layout.addWidget(self.btn_ventana6, 0, 5)
         self.layout.addWidget(self.btn_ventana7, 0, 6)
-        self.layout.addWidget(self.btn_ventana8, 0, 7)
-        self.layout.addWidget(self.btn_ventana9, 0, 8)
 
-        self.layout.addWidget(self.stacked_widget, 1, 0, 1, 9)
+
+        self.layout.addWidget(self.stacked_widget, 1, 0, 1, 7)
 
 
 class squadWindow(QWidget):
@@ -593,14 +582,15 @@ class marketWindow(QWidget):
 
 
 class dataset_creator(QWidget):
+    
     def __init__(self):
         super().__init__()
+        
         # Crear un diseño principal usando QVBoxLayout
         layout = QVBoxLayout()
 
         # Crear un diseño de cuadrícula dentro del QVBoxLayout
         grid_layout = QGridLayout(self)
-
        
         # TITULO VENTANA  ###########################################################################################
         # LABEL TÍTULO
@@ -612,10 +602,6 @@ class dataset_creator(QWidget):
         # LABEL SUBTÍTULO
         label_subtext = QLabel("Crea un dataset para entrenar un modelo de predicción")
         grid_layout.addWidget(label_subtext, 1, 0, 1, 2)
-
-        label_subtext = QLabel("Crea un dataset para entrenar un modelo de predicción")
-        grid_layout.addWidget(label_subtext, 1, 0, 1, 2)
-
 
 
         ### SELECCIONAR RUTA DATASET DE ENTRADA SOFAESCORE #########################################################################
@@ -725,6 +711,35 @@ class dataset_creator(QWidget):
 
         excel1_path = self.text_input1.text()
         excel2_path = self.text_input2.text()
+
+
+class scrapear_datos(QWidget):
+  def __init__(self):
+        super().__init__()
+
+        main_layout = QVBoxLayout(self)
+
+        self.stacked_widget = QStackedWidget()
+
+        self.ventana1 = PlayerScraperWindowMF("Players Scraper")
+        self.ventana2 = PlayerScraperWindowSC()
+
+        self.stacked_widget.addWidget(self.ventana1)
+        self.stacked_widget.addWidget(self.ventana2)
+
+        button_layout = QHBoxLayout()  
+
+        self.btn_ventana1 = QPushButton("Extraer datos de Mister Fantasy Mundo Deportivo")
+        self.btn_ventana1.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(0))
+
+        self.btn_ventana2 = QPushButton("Extraer datos de Sofaescore")
+        self.btn_ventana2.clicked.connect(lambda: self.stacked_widget.setCurrentIndex(1))
+
+        button_layout.addWidget(self.btn_ventana1)
+        button_layout.addWidget(self.btn_ventana2)
+
+        main_layout.addLayout(button_layout)  
+        main_layout.addWidget(self.stacked_widget)
 
 
 class login(QWidget):
@@ -900,7 +915,6 @@ class trainWindow(QWidget):
         # Crear un diseño de cuadrícula dentro del QVBoxLayout
         grid_layout = QGridLayout(self)
 
-
         # TITULO VENTANA  ###########################################################################################
         # LABEL TÍTULO
         label_text = QLabel("ENTRENAR MODELEO")
@@ -932,8 +946,29 @@ class trainWindow(QWidget):
 
         ### SELECCIONAR ALGORITMO ##################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Selecionar algoritmo de entrenamiento: ")
+        label_text = QLabel("Seleciona un algoritmo de entrenamiento: ")
         grid_layout.addWidget(label_text, 4, 0)
+        combo_box = QComboBox()
+        combo_box.addItem("Gradient Boosted Tree model")
+        combo_box.addItem("Random Forest model")
+        combo_box.addItem("K-NN model")
+        combo_box.addItem("Linear Regresion model")
+        combo_box.addItem("Neural Net model")
+        # Establecer el ancho máximo para la QComboBox
+        combo_box.setMaximumWidth(185)
+        grid_layout.addWidget(combo_box, 4, 1)
+
+
+        label_choice = QLabel("Seleccionar atributo del jugador predecir:")
+        grid_layout.addWidget(label_choice, 5, 0)
+
+        combo_box = QComboBox()
+        combo_box.addItem("Entrenar para predecir valor de mercado que alcanzará un jugaodr en la próxima jornada")
+        combo_box.addItem("Entrenar para predecir puntos que obtendrá un jugaodr en la próxima jornada")
+        
+        # Establecer el ancho máximo para la QComboBox
+        combo_box.setMaximumWidth(500)
+        grid_layout.addWidget(combo_box, 5, 1)
 
         ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
         # Crear un botón
@@ -1019,7 +1054,7 @@ class trainWindow(QWidget):
             self.text_input.setText(self.selected_path)
 
 
-class predictWindowPoints(QWidget):
+class predictWindow(QWidget):
     def __init__(self):
         super().__init__()
 
@@ -1143,126 +1178,24 @@ class predictWindowPoints(QWidget):
             self.text_input.setText(self.selected_path)
 
 
-class predictWindowPrice(QWidget):
-    def __init__(self):
-        super().__init__()
-
-        # Crear un diseño principal usando QVBoxLayout
-        layout = QVBoxLayout()
-
-        # Crear un diseño de cuadrícula dentro del QVBoxLayout
-        grid_layout = QGridLayout(self)
-
-        ### SELECCIONAR RUTA DATASET DE ENTRADA ##################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Selecionar ruta de los futbolitas a predecir el valor: ")
-        grid_layout.addWidget(label_text, 1, 0)
-
-        # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(self.text_input, 1, 1)
-
-        # BOTÓN PARA SELECCIONAR ARCHIVO
-        select_file_button = QPushButton("Seleccionar Archivo")
-        select_file_button.clicked.connect(self.select_file)
-
-        # Alineación
-        grid_layout.addWidget(select_file_button, 2, 1, alignment=Qt.AlignmentFlag.AlignRight)
-
-        # Estilos
-        select_file_button.setMinimumWidth(140)
-
-
-        ### SELECCIONAR RUTA MODELO A USAR #################################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Selecionar ruta del modelo que se desea utilzar para predecir: ")
-        grid_layout.addWidget(label_text, 3, 0)
-
-        # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(self.text_input, 3, 1)
-
-        # BOTÓN PARA SELECCIONAR ARCHIVO
-        select_file_button = QPushButton("Seleccionar Archivo")
-        select_file_button.clicked.connect(self.select_file)
-        # Alineación
-        grid_layout.addWidget(select_file_button, 4, 1, alignment=Qt.AlignmentFlag.AlignRight)
-        # Estilos
-        select_file_button.setMinimumWidth(140)
-
-        ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Predecir valores")
-        grid_layout.addWidget(label_text, 5, 0)
-
-        # Crear un botón
-        self.scrape_button = QPushButton("Predecir valor")
-
-        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
-
-        # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 5, 1)
-        self.scrape_button.setMaximumWidth(150)
-
-
-        ###  SELECCIONAR RUTA DONDE GUARDAR EL EXCEL OUTPUT DEL SCRAPER  ###################################
-        # LABEL TEXTO 
-        label_text = QLabel("Ruta output donde guardar estadisticas del modelo:")
-        grid_layout.addWidget(label_text, 6, 0)
-
-        # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
-        text_input = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(text_input, 6, 1)
-        # Estilos 
-        self.text_input.setMinimumWidth(350)
-
-        # BOTÓN PARA SELECCIONAR CARPETA
-        select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(self.select_folder)
-        # Alineación
-        grid_layout.addWidget(select_folder_button, 7, 1, alignment=Qt.AlignmentFlag.AlignRight)
-        # Estilos
-        select_folder_button.setMinimumWidth(140)
-
-    def select_file(self):
-        # Obtener el directorio del script de Python
-        script_directory = os.path.dirname(__file__)
-
-        # Abrir el cuadro de diálogo para seleccionar un archivo
-        file_path, _ = QFileDialog.getOpenFileName(self, "Seleccionar Archivo", script_directory)
-
-        if file_path:
-            # Actualizar las variables de clase con el archivo y la ruta seleccionadas
-            self.selected_file = os.path.basename(file_path)
-            self.selected_path = file_path
-
-            # Actualizar el QLineEdit con la ruta seleccionada
-            self.text_input.setText(self.selected_path)
-
-    def select_folder(self):
-        # Obtener el directorio del script de Python
-        script_directory = os.path.dirname(__file__)
-        
-        folder_path = QFileDialog.getExistingDirectory(self, "Seleccionar Carpeta", script_directory)
-        if folder_path:
-            # Actualizar las variables de clase con la carpeta y la ruta seleccionadas
-            self.selected_folder = folder_path
-            self.selected_path = folder_path
-
-            # Actualizar el QLineEdit con la ruta seleccionada
-            self.text_input.setText(self.selected_path)
-
-
 class PlayerScraperWindowSC(QWidget):
     def __init__(self):
         super().__init__()
-        layout = QVBoxLayout()
-        label = QLabel("Contenido de la Ventana 4")
-        layout.addWidget(label)
+        # Crear un diseño de cuadrícula
+        layout = QGridLayout(self)
+
+        # TITULO VENTANA  ###########################################################################################
+        # LABEL TÍTULO
+        label_text = QLabel("Sofaescore Scraper")
+        # Aplicar estilos para destacar el texto
+        label_text.setStyleSheet("font-weight: bold; color: black; font-size: 20px;")
+        layout.addWidget(label_text, 0, 0,1, 2)
+
+        # LABEL SUBTÍTULO
+        label_subtext = QLabel("Obtener el listado de todos los jugaodres titulares, suplentes, y no vonvocados y sus estadisticas de juego asociadas.")
+        layout.addWidget(label_subtext, 1, 0, 1, 2)
+
+        # Configurar el diseño para la ventana
         self.setLayout(layout)
 
 

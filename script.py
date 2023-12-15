@@ -752,11 +752,6 @@ class dataset_entrenamiento(QWidget):
 
         output_archivo=output+"/jornadaN.xlsx"
 
-        print("a)",excel1_path)
-        print(" b)",excel2_path)
-        print(" c)",output)
-        print(" c2)",output_archivo)
-
         # Leer los datos de los archivos Excel
         df1 = pd.read_excel(excel1_path, header=None)
         df2 = pd.read_excel(excel2_path, header=None)
@@ -786,7 +781,66 @@ class dataset_entrenamiento(QWidget):
         self.output_textedit.insertPlainText("_____________________________________________________________________________________________________\n")   
         self.output_textedit.insertPlainText("Buscando coincidencia entre jugadores...\n")
         
- 
+        # Iterar sobre las filas de df1 y comparar con las filas de df2
+        for index_df1, row_df1 in df1.iterrows():
+            value_to_compare1o =row_df1.iloc[0] 
+            value_to_compare1 =value_to_compare1o.lower()
+            value_to_compare1 =unidecode(value_to_compare1)
+            value_to_compare1 =unidecode(value_to_compare1)
+            value_to_compare1=value_to_compare1.replace(" ", "")
+            
+            coincidencia_encontrada = False
+            contador_global+=1
+            # Iterar sobre las filas de df2
+            for index_df2, row_df2 in df2.iterrows():
+                #print("-----",value_to_compare1,"-----",value_to_compare2,"-----")
+                value_to_compare2o =row_df2.iloc[0]
+                value_to_compare2 =value_to_compare2o.lower()
+                value_to_compare2 =unidecode(value_to_compare2)
+                value_to_compare2 = unidecode(value_to_compare2)
+                value_to_compare2=value_to_compare2.replace(" ", "")
+                
+                # Calcular la distancia de Levenshtein
+                distancia = Levenshtein.distance(value_to_compare1, value_to_compare2)
+                # Establecer un umbral para considerar coincidencias
+                umbral = 2  
+
+                if distancia <= umbral:
+                    self.output_textedit.insertPlainText(f"Coincidencia encontrada: excell1-fila-{index_df1} <-> excell2-fila.{index_df2} , {value_to_compare1} == {value_to_compare2}\n")
+                    valores_encontrados.add(value_to_compare1) 
+
+                    #guardar_en_excell()
+
+                    contador_coincidencias +=1
+                    coincidencia_encontrada = True
+                    time.sleep(0.02)
+
+            # Imprimir si no se encontró ninguna coincidencia
+            if not coincidencia_encontrada:
+                if value_to_compare1!="nombre":
+                    self.output_textedit.insertPlainText("------------------------------------------------------------------------------------------------\n")
+                    self.output_textedit.insertPlainText(f"Coincidencia NO encontrada: excell1-fila-{index_df1} en {value_to_compare1}\n")
+                    self.output_textedit.insertPlainText("------------------------------------------------------------------------------------------------\n")
+        self.output_textedit.insertPlainText("_____________________________________________________________________________________________________\n")       
+        self.output_textedit.insertPlainText("Buscando jugaodres manualmente que no hicieron match...\n")
+        for jugadorS, jugadorMD in zip(self.jugadoresS_noencontrados, self.jugadoresMD_noencontrados):
+            for index_df1, row_df1 in df1.iterrows():
+                value_to_compare1o = row_df1.iloc[0]
+                for index_df2, row_df2 in df2.iterrows():
+                    value_to_compare2o = row_df2.iloc[0]
+
+                    if value_to_compare1o == jugadorS and value_to_compare2o == jugadorMD:
+                        self.output_textedit.insertPlainText(f"Coincidencia encontrada: {jugadorS}\n")
+                        #guardar_en_excell()
+                        contador_manual+=1
+            
+        #Resultados de la fusión de datasets
+        self.output_textedit.insertPlainText("\n_____________________________________________________________________________________________________\n")
+        self.output_textedit.insertPlainText(f"Total coincidencias: {contador_coincidencias} / {contador_global-1}\n")
+        self.output_textedit.insertPlainText(f"Añadidos manualmente: {contador_manual}\n")
+        self.output_textedit.insertPlainText(f"Jugadores no disponibles en MisterFantasy: {((contador_global-1)-(contador_coincidencias+contador_manual))}\n")
+        self.output_textedit.insertPlainText(f"Precisión: {(((contador_coincidencias+contador_manual)/(contador_global-1))*100)} %\n")
+        self.output_textedit.insertPlainText("Dataset generado correctamente\n")
 class dataset_predecir(QWidget):
     
     def __init__(self):

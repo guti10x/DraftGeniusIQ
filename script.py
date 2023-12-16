@@ -1581,6 +1581,8 @@ class trainWindow(QWidget):
         # Crear un diseño principal usando QVBoxLayout
         layout = QVBoxLayout()
 
+        self.progress = 0
+
         # Crear un diseño de cuadrícula dentro del QVBoxLayout
         grid_layout = QGridLayout(self)
 
@@ -1641,14 +1643,19 @@ class trainWindow(QWidget):
 
         ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
         # Crear un botón
-        self.scrape_button = QPushButton("Iniciar entrenamiento")
+        self.scrape_button = QPushButton("Iniciar entrenamiento del modelo")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
         self.scrape_button.clicked.connect(self.iniciar_thread)
 
         # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 7, 0)
-        self.scrape_button.setMaximumWidth(150)
+        grid_layout.addWidget(self.scrape_button, 7, 0,alignment=Qt.AlignmentFlag.AlignLeft)
+        self.scrape_button.setMaximumWidth(210)
+
+        ###  BARRA DE PROGRESO  ################################################
+        # Crear Barra de progreso
+        self.progress_bar = QProgressBar(self)
+        grid_layout.addWidget(self.progress_bar,7,1)
 
         ###  VENTANA OUTPUT SCRAPER  ####################################################################################
         # Crear un QTextEdit para la salida
@@ -1699,12 +1706,24 @@ class trainWindow(QWidget):
         grid_layout.addWidget(self.scrape_button, 15, 1, alignment=Qt.AlignmentFlag.AlignRight)
         self.scrape_button.setMaximumWidth(150)
 
+    def start_progress(self):
+        # Establecer el rango de la barra de progreso según tus necesidades
+        self.progress_bar.setRange(0, 5)
+
+        ruta_output = self.text_input.text()
+        if ruta_output!="":
+            self.progress_bar.setValue(0)
+
+    def invocar_actualizacion(self, nuevo_valor):
+        QMetaObject.invokeMethod(self.progress_bar, "setValue", Qt.ConnectionType.QueuedConnection, Q_ARG(int, nuevo_valor))
+
     def iniciar_thread(self):  
         # Crear un hilo y ejecutar la función en segundo plano
         thread = threading.Thread(target=self.train_function)
         thread.start()
 
     def train_function(self):
+        self.start_progress()
         # FASE 1: fusionar todos los dataset de entrada de cada jornada selecionados en uno solo #######################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Generando dataset de entrada...\n")
@@ -1734,6 +1753,9 @@ class trainWindow(QWidget):
             df_combinado.to_excel(archivo_salida, index=False)
             self.output_textedit.insertPlainText(f"Dataset de entrada fusionado exitosamente.\n")
 
+        self.progress += 1
+        self.invocar_actualizacion(self.progress)
+
         # FASE 2: Gestión de MISSING VALUES ##########################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Manejando Missing Values...\n")
@@ -1755,6 +1777,9 @@ class trainWindow(QWidget):
 
         self.output_textedit.insertPlainText(f"Gestión de Missing Values completada exitosamente.\n")
 
+        self.progress += 1
+        self.invocar_actualizacion(self.progress)
+
         # FASE 3: Gestión de atributos del dataset de entrada ##########################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Eliminando atributos inservibles del dataset...\n")
@@ -1775,6 +1800,11 @@ class trainWindow(QWidget):
             self.output_textedit.insertPlainText(f"Columna '{columna_a_eliminar}' eliminada con éxito.")
         else:
             self.output_textedit.insertPlainText(f"La columna '{columna_a_eliminar}' no existe en el DataFrame y no se pudo eliminar.")
+        
+        self.progress += 1
+        self.invocar_actualizacion(self.progress)
+
+        # FASE 4:
 
     def guardar_modeleo(self):
         self.output_textedit.insertPlainText("future guardar modelo\n")

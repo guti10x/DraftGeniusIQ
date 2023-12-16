@@ -19,6 +19,7 @@ import json
 import pandas as pd
 from unidecode import unidecode
 import Levenshtein
+import glob
 
 #Credenciales ususario
 usuario=""
@@ -1596,26 +1597,26 @@ class trainWindow(QWidget):
 
         ### SELECCIONAR RUTA DATASET DE ENTRADA ##################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Selecionar dataset de entrada: ")
-        grid_layout.addWidget(label_text, 2, 0)
+        label_text = QLabel("Selecionar ruta de la carpeta de los datasets de entrada de cada jornada: ")
+        grid_layout.addWidget(label_text, 2, 0, 1, 2)
 
         # INPUT DE TEXTO
-        self.text_file_input = QLineEdit(self)
+        self.text_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_file_input, 2, 1)
+        grid_layout.addWidget(self.text_input, 3, 0, 1, 2)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
-        select_file_button = QPushButton("Seleccionar Archivo")
-        select_file_button.clicked.connect(lambda: select_file(self))
+        select_folder_button = QPushButton("Seleccionar carpeta")
+        select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
-        grid_layout.addWidget(select_file_button, 3, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_folder_button, 4, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
-        select_file_button.setMinimumWidth(140)
+        select_folder_button.setMinimumWidth(140)
 
         ### SELECCIONAR ALGORITMO ##################################################
         # LABEL DE TEXTO
         label_text = QLabel("Seleciona un algoritmo de entrenamiento: ")
-        grid_layout.addWidget(label_text, 4, 0)
+        grid_layout.addWidget(label_text, 5, 0)
         combo_box = QComboBox()
         combo_box.addItem("Gradient Boosted Tree model")
         combo_box.addItem("Random Forest model")
@@ -1624,11 +1625,11 @@ class trainWindow(QWidget):
         combo_box.addItem("Neural Net model")
         # Establecer el ancho máximo para la QComboBox
         combo_box.setMaximumWidth(185)
-        grid_layout.addWidget(combo_box, 4, 1)
+        grid_layout.addWidget(combo_box, 5, 1)
 
 
         label_choice = QLabel("Seleccionar atributo del jugador predecir:")
-        grid_layout.addWidget(label_choice, 5, 0)
+        grid_layout.addWidget(label_choice, 6, 0)
 
         combo_box = QComboBox()
         combo_box.addItem("Entrenar para predecir valor de mercado que alcanzará un jugaodr en la próxima jornada")
@@ -1636,48 +1637,53 @@ class trainWindow(QWidget):
         
         # Establecer el ancho máximo para la QComboBox
         combo_box.setMaximumWidth(500)
-        grid_layout.addWidget(combo_box, 5, 1)
+        grid_layout.addWidget(combo_box, 6, 1)
 
         ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
         # Crear un botón
         self.scrape_button = QPushButton("Iniciar entrenamiento")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+        self.scrape_button.clicked.connect(self.iniciar_thread)
 
         # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 6, 0)
+        grid_layout.addWidget(self.scrape_button, 7, 0)
         self.scrape_button.setMaximumWidth(150)
 
-
-        ### DEFINIR NOMBRE DEL MODELO ##################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Nombre del modelo: ")
-        grid_layout.addWidget(label_text, 7, 0)
-
-        # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(self.text_input, 7, 1)
-
+        ###  VENTANA OUTPUT SCRAPER  ####################################################################################
+        # Crear un QTextEdit para la salida
+        self.output_textedit = QTextEdit(self)
+        grid_layout.addWidget(self.output_textedit, 8, 0, 2, 0)  # row, column, rowSpan, columnSpan
 
         ###  SELECCIONAR RUTA DONDE GUARDAR EL MODELO  ###################################
         # LABEL TEXTO 
-        label_text = QLabel("Ruta donde guardar el modelo:")
-        grid_layout.addWidget(label_text, 8, 0)
+        label_text = QLabel("Ruta donde guardar el modelo generado:")
+        grid_layout.addWidget(label_text, 11, 0)
 
         # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
-        text_input = QLineEdit(self)
+        self.text_input2 = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(text_input, 8, 1)
+        grid_layout.addWidget(self.text_input2, 11, 1)
         # Estilos 
-        self.text_input.setMinimumWidth(350)
+        self.text_input2.setMinimumWidth(350)
+
+        ###  SELECCIONAR NOMBRE MODELO  ###################################
+        # LABEL TEXTO 
+        label_text = QLabel("Nombre del modelo generado:")
+        grid_layout.addWidget(label_text, 12, 0)
+
+        # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
+        self.text_input2 = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input2, 12, 1)
+        # Estilos 
+        self.text_input2.setMinimumWidth(350)
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(lambda: select_folder(self))
+        select_folder_button.clicked.connect(lambda: select_folder2(self))
         # Alineación
-        grid_layout.addWidget(select_folder_button, 9, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_folder_button, 14, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
@@ -1687,11 +1693,47 @@ class trainWindow(QWidget):
         self.scrape_button = QPushButton("Guardar modelo")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+        #self.scrape_button.clicked.connect(self.guardar_modeleo)
 
         # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 10, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(self.scrape_button, 15, 1, alignment=Qt.AlignmentFlag.AlignRight)
         self.scrape_button.setMaximumWidth(150)
+
+    def iniciar_thread(self):  
+        # Crear un hilo y ejecutar la función en segundo plano
+        thread = threading.Thread(target=self.train_function)
+        thread.start()
+
+    def train_function(self):
+        carpeta_datasets = self.text_input.text()
+
+        # Obtener la lista de archivos en la carpeta de entrada
+        archivos_excel = [archivo for archivo in os.listdir(carpeta_datasets) if archivo.endswith('.xlsx')]
+
+        # Comprobar si hay archivos Excel en la carpeta
+        if not archivos_excel:
+            self.output_textedit.insertPlainText("No hay archivos Excel (.xlsx) en la carpeta de entrada.\n")
+        else:
+            # Crear una lista para almacenar los DataFrames individuales
+            lista_dataframes = []
+
+            # Iterar sobre cada archivo Excel y almacenar los DataFrames en la lista
+            for archivo in archivos_excel:
+                ruta_archivo = os.path.join(carpeta_datasets, archivo)
+                df = pd.read_excel(ruta_archivo)
+                lista_dataframes.append(df)
+
+            # Concatenar los DataFrames en uno solo
+            df_combinado = pd.concat(lista_dataframes, ignore_index=True)
+            
+            # Guardar el DataFrame combinado en un nuevo archivo Excel
+            archivo_salida = "dataset_training.xlsx"
+            df_combinado.to_excel(archivo_salida, index=False)
+            self.output_textedit.insertPlainText(f"Archivos Excel fusionados exitosamente\n")
+
+        
+    def guardar_modeleo(self):
+        self.output_textedit.insertPlainText("future guardar modelo\n")
 
 class predictWindow(QWidget):
     def __init__(self):

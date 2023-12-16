@@ -1705,6 +1705,8 @@ class trainWindow(QWidget):
         thread.start()
 
     def train_function(self):
+        # FASE 1: fusionar todos los dataset de entrada de cada jornada selecionados en uno solo #######################
+        self.output_textedit.insertPlainText(f"Generand dataset de entrada...\n")
         carpeta_datasets = self.text_input.text()
 
         # Obtener la lista de archivos en la carpeta de entrada
@@ -1727,10 +1729,29 @@ class trainWindow(QWidget):
             df_combinado = pd.concat(lista_dataframes, ignore_index=True)
             
             # Guardar el DataFrame combinado en un nuevo archivo Excel
-            archivo_salida = "dataset_training.xlsx"
+            archivo_salida = carpeta_datasets + "/dataset_training.xlsx"
             df_combinado.to_excel(archivo_salida, index=False)
-            self.output_textedit.insertPlainText(f"Archivos Excel fusionados exitosamente\n")
+            self.output_textedit.insertPlainText(f"Dataset de entrada fusionado exitosamente\n")
 
+        # FASE 2: GEstión de MISSING VALUES ##########################################################################
+        self.output_textedit.insertPlainText(f"Manejando Missing Values...\n")
+        # Lee el archivo Excel
+        df = pd.read_excel(archivo_salida)
+
+        # Reemplaza los valores vacíos con 0
+        df = df.fillna(0)
+        df = df.replace('-', 0)
+
+        # Reemplaza los valores iguales a 0 con un string en una columna específica
+        columna = 'Ausencia'
+        string_reemplazo = 'None'
+        df[columna] = df[columna].apply(lambda x: string_reemplazo if x == 0 else x)
+
+        # Guarda el DataFrame modificado en un nuevo archivo Excel
+        archivo_salida = carpeta_datasets + "/dataset_training_without_missing_values.xlsx"
+        df.to_excel(archivo_salida, index=False)
+
+        self.output_textedit.insertPlainText(f"Gestión de Missing Values completada exitosamente\n")
         
     def guardar_modeleo(self):
         self.output_textedit.insertPlainText("future guardar modelo\n")

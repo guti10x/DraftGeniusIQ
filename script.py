@@ -1706,7 +1706,8 @@ class trainWindow(QWidget):
 
     def train_function(self):
         # FASE 1: fusionar todos los dataset de entrada de cada jornada selecionados en uno solo #######################
-        self.output_textedit.insertPlainText(f"Generand dataset de entrada...\n")
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Generando dataset de entrada...\n")
         carpeta_datasets = self.text_input.text()
 
         # Obtener la lista de archivos en la carpeta de entrada
@@ -1731,9 +1732,10 @@ class trainWindow(QWidget):
             # Guardar el DataFrame combinado en un nuevo archivo Excel
             archivo_salida = carpeta_datasets + "/dataset_training.xlsx"
             df_combinado.to_excel(archivo_salida, index=False)
-            self.output_textedit.insertPlainText(f"Dataset de entrada fusionado exitosamente\n")
+            self.output_textedit.insertPlainText(f"Dataset de entrada fusionado exitosamente.\n")
 
-        # FASE 2: GEstión de MISSING VALUES ##########################################################################
+        # FASE 2: Gestión de MISSING VALUES ##########################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Manejando Missing Values...\n")
         # Lee el archivo Excel
         df = pd.read_excel(archivo_salida)
@@ -1748,11 +1750,32 @@ class trainWindow(QWidget):
         df[columna] = df[columna].apply(lambda x: string_reemplazo if x == 0 else x)
 
         # Guarda el DataFrame modificado en un nuevo archivo Excel
-        archivo_salida = carpeta_datasets + "/dataset_training_without_missing_values.xlsx"
+        archivo_salida = carpeta_datasets + "/dataset_training_without_Missing_Values.xlsx"
         df.to_excel(archivo_salida, index=False)
 
-        self.output_textedit.insertPlainText(f"Gestión de Missing Values completada exitosamente\n")
-        
+        self.output_textedit.insertPlainText(f"Gestión de Missing Values completada exitosamente.\n")
+
+        # FASE 3: Gestión de atributos del dataset de entrada ##########################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Eliminando atributos inservibles del dataset...\n")
+        # Lee el archivo Excel
+        df = pd.read_excel(archivo_salida)
+
+        columna_a_eliminar="Nombre"
+
+        # Verifica si la columna existe antes de intentar eliminarla
+        if columna_a_eliminar in df.columns:
+            # Elimina la columna por su nombre
+            df = df.drop(columns=columna_a_eliminar)
+
+            # Guarda el DataFrame modificado en un nuevo archivo Excel
+            archivo_salida = carpeta_datasets + "/dataset_training_without_Missing_Values_without_Useless_Atributes.xlsx"
+            df.to_excel(archivo_salida, index=False)
+                        
+            self.output_textedit.insertPlainText(f"Columna '{columna_a_eliminar}' eliminada con éxito.")
+        else:
+            self.output_textedit.insertPlainText(f"La columna '{columna_a_eliminar}' no existe en el DataFrame y no se pudo eliminar.")
+
     def guardar_modeleo(self):
         self.output_textedit.insertPlainText("future guardar modelo\n")
 

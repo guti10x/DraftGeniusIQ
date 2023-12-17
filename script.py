@@ -931,8 +931,8 @@ class scrapear_datos(QWidget):
 
         self.stacked_widget = QStackedWidget()
 
-        self.ventana1 = PlayerScraperWindowMF("Players Scraper")
-        self.ventana2 = PlayerScraperWindowSC()
+        self.ventana1 = PlayerScraperWindowMF("Players Scraper MD")
+        self.ventana2 = PlayerScraperWindowSC("Players Scraper SF")
 
         self.stacked_widget.addWidget(self.ventana1)
         self.stacked_widget.addWidget(self.ventana2)
@@ -952,8 +952,20 @@ class scrapear_datos(QWidget):
         main_layout.addWidget(self.stacked_widget)
 
 class PlayerScraperWindowSC(QWidget):
-    def __init__(self):
+    def __init__(self, window_title):
         super().__init__()
+        self.setWindowTitle(window_title)
+
+        # Variables de la clase
+        self.selected_folder = ""
+        self.selected_path = ""
+        
+        self.driver = None
+
+        self.progress = 0
+        self.ruta_jornada=""
+        self.slugJson=""
+
         # Crear un diseño de cuadrícula
         layout = QGridLayout(self)
 
@@ -968,8 +980,105 @@ class PlayerScraperWindowSC(QWidget):
         label_subtext = QLabel("Obtener el listado de todos los jugaodres titulares, suplentes y no vonvocados y sus estadisticas de juego asociadas.")
         layout.addWidget(label_subtext, 1, 0, 1, 2)
 
-        # Configurar el diseño para la ventana
-        self.setLayout(layout)
+
+        ### SELECCIONAR EQUIPO INPUT ####################################################
+        # INPUT NOMBRRE EQUIPO 
+        label_equipo = QLabel("Equipo a scrapear:")
+        # Aliniación
+        layout.addWidget(label_equipo, 2, 0)
+
+        # Lista de equipos
+        teams = ["Real Madrid", "Barcelona", "Atl. de Madrid", "Valencia", "Sevilla", "Villarreal",
+                 "Real Sociedad", "Real Betis", "Athletic Club", "Celta Vigo", "Almeria", "Getafe",
+                 "Mallorca", "Girona", "Granada", "", "Alavés", "Rayo Vallecano", "Osasuna", "Las Palmas"]
+
+        # Crear un QComboBox y agregar los equipos
+        self.team_combobox = QComboBox(self)
+        self.team_combobox.addItems(teams)
+        # Aliniación
+        layout.addWidget(self.team_combobox, 2, 1)
+        # Estilos 
+        self.team_combobox.setFixedWidth(120)
+
+
+        ### SELECCIONAR JORNADA INPUT ####################################################
+        # INPUT NÚMERO JORNADA 
+        label_number = QLabel("Jornada a scrapear:")
+        layout.addWidget(label_number, 3, 0)
+        # Estilos 
+        self.number_input = QSpinBox(self)
+        self.number_input.setMinimum(11)  # Establecer el valor mínimo (jornada 1)
+        self.number_input.setMaximum(38)  # Establecer el valor máximo (Jornada 36)
+        self.number_input.setSingleStep(2)  # Establecer el paso
+        self.number_input.setMaximumSize(45, 20)
+        self.number_input.setMinimumSize(45, 20)
+        # Aliniación
+        layout.addWidget(self.number_input, 3, 1)
+
+
+        ###  SELECCIONAR RUTA DONDE GUARDAR EL EXCEL OUTPUT DEL SCRAPER  #################
+        # LABEL TEXTO 
+        label_text = QLabel("Ruta output scraper:")
+        layout.addWidget(label_text, 4, 0)
+
+        # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
+        self.text_input = QLineEdit(self)
+        # Alineación
+        layout.addWidget(self.text_input, 4, 1)
+        # Estilos 
+        self.text_input.setMinimumWidth(350)
+        
+        # BOTÓN PARA SELECCIONAR CARPETA
+        select_folder_button = QPushButton("Seleccionar Carpeta")
+        select_folder_button.clicked.connect(lambda: select_folder(self))
+        # Alineación  
+        layout.addWidget(select_folder_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos 
+        select_folder_button.setMinimumWidth(140)
+
+
+        ###  BOTÓN PARA INICIAR SCRAPER  ################################################
+        # Crear un botón llamado "Scrapear"
+        scrape_button = QPushButton("Scrapear")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar barra progreso
+        scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+        scrape_button.clicked.connect(self.start_progress)
+
+        # Alineación 
+        layout.addWidget(scrape_button, 6, 0)
+        # Estilos
+        self.number_input.setMaximumSize(38, 20)
+
+        ###  BARRA DE PROGRESO  ################################################
+        # Crear Barra de progreso
+        self.progress_bar = QProgressBar(self)
+        layout.addWidget(self.progress_bar, 6, 1)
+
+        ###  VENTANA OUTPUT SCRAPER  ####################################################
+        # Crear un QTextEdit para la salida
+        self.output_textedit = QTextEdit(self)
+        layout.addWidget(self.output_textedit, 7, 0, 11, 0)  # row, column, rowSpan, columnSpan
+
+
+
+
+    def start_progress(self):
+        # Establecer el rango de la barra de progreso según tus necesidades
+        self.progress_bar.setRange(0, 511)
+
+        ruta_output = self.text_input.text()
+        if ruta_output!="":
+            self.progress_bar.setValue(0) 
+        
+    def iniciar_scrapear_thread(self):  
+        # Crear un hilo y ejecutar la función en segundo plano
+        thread = threading.Thread(target=self.scrapear_funcion)
+        thread.start()
+
+    def invocar_actualizacion(self, nuevo_valor):
+        QMetaObject.invokeMethod(self.progress_bar, "setValue", Qt.ConnectionType.QueuedConnection, Q_ARG(int, nuevo_valor))
+
 
 class PlayerScraperWindowMF(QDialog, QWidget):
     def __init__(self, window_title):

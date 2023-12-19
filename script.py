@@ -21,6 +21,11 @@ from unidecode import unidecode
 import Levenshtein
 import glob
 
+headers = {
+    "X-RapidAPI-Key": "11822210cdmsha855c4a12c471b5p18100fjsn3972b17b3be8",
+    "X-RapidAPI-Host": "sofascore.p.rapidapi.com"
+}
+
 #Credenciales ususario
 usuario=""
 contrasena=""
@@ -1061,8 +1066,6 @@ class PlayerScraperWindowSC(QWidget):
         layout.addWidget(self.output_textedit, 7, 0, 11, 0)  # row, column, rowSpan, columnSpan
 
 
-
-
     def start_progress(self):
         # Establecer el rango de la barra de progreso según tus necesidades
         self.progress_bar.setRange(0, 511)
@@ -1078,7 +1081,113 @@ class PlayerScraperWindowSC(QWidget):
 
     def invocar_actualizacion(self, nuevo_valor):
         QMetaObject.invokeMethod(self.progress_bar, "setValue", Qt.ConnectionType.QueuedConnection, Q_ARG(int, nuevo_valor))
+    
+    def scrapear_funcion(self):
+        self.output_textedit.append("Conecting to API...")
 
+        # GESTIÓN DEL INPUT DEL USUARIO
+        selected_team = self.team_combobox.currentText()
+        ruta_output = self.text_input.text()
+        jornada=int(self.number_input.value())
+
+        # Mostrar el valor en el QTextEdit
+        self.output_textedit.append(f"Equipo seleccionado: {selected_team}")
+        self.output_textedit.append(f"Jornada seleccionada: {jornada}")
+        self.output_textedit.append(f"Ruta para la salida del scraper selecionada: {ruta_output}")
+
+        if ruta_output=="":
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText("\n¡La jornada no está inicializada!, Configúrala antes de empezar a scrapear")
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
+        
+        ############################################  eliminar excell a scrapear si ya existe !!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        ##############################################################################################################################################################
+        # FASE 1: Obtener la url de la pagina web de Sofaescore de todas los partidos de LaLiga                                                                      #
+        ##############################################################################################################################################################
+
+        #######################################################################################################################################################
+        #  PARTE 1 : Mediante una request a la API de Sofaescore obtenemos el id de todos los equipos de LaLiga para posteriores cnsultas                     #
+        #######################################################################################################################################################
+
+        url = "https://sofascore.p.rapidapi.com/teams/search"
+
+        id_equipo = None
+        valor_round = None
+        slugJson = None
+
+        self.output_textedit.append(f"________________________________________________________________________________________")
+        self.output_textedit.append("Obteniendo id del equipo de LaLiga...")
+
+        response = requests.get(url, headers=headers, params={"name": selected_team})
+        data = response.json()
+        if data['teams']:
+            id_equipo = data['teams'][0]['id']
+            self.output_textedit.append(f"GET ID {selected_team}: {id_equipo}")  
+
+        #######################################################################################################################################################
+        #  PARTE 2 : Mediante una request a la API de Sofaescore obtenemos informacion de todos los equipos de LaLiga                                         #
+        #######################################################################################################################################################
+        time.sleep(1)
+        url = "https://sofascore.p.rapidapi.com/teams/get-last-matches"
+        ultimo_partido_equipos = None
+        liga="LaLiga"
+        ulimo_partido=None
+
+        self.output_textedit.append(f"________________________________________________________________________________________")  
+        self.output_textedit.append(f"Obteniendo partido de la jornada {jornada} del {liga}...")
+
+        querystring = {"teamId": str(id_equipo), "pageIndex": "0"}
+
+        response = requests.get(url, headers=headers, params=querystring)
+
+        if response.status_code == 200:
+            data = response.json()
+            partido=0
+            while True: 
+                valor_round = data['events'][partido]['roundInfo']['round']
+                tournament = data['events'][partido]['tournament']['name']
+                        
+                if valor_round==jornada and tournament==liga:
+                    nombre=data['events'][partido]['slug']
+                    self.output_textedit.append(f"GET partido: {nombre}")
+                    
+                    ulimo_partido=data['events'][partido]
+
+                    valor_round = data['events'][partido]['roundInfo']['round']
+                    break
+                partido+=1
+        else:
+             self.output_textedit.append(f"Error al obtener datos para el equipo {selected_team}. Código de estado: {response.status_code}")
+                
+        nombre_carpeta_jornada = "jornada_" + str(valor_round)
+        self.ruta_jornada = os.path.join(ruta_output, nombre_carpeta_jornada,"json")
+        
+        ##########################################3!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1revisar nombre output
+
+        #######################################################################################################################################################       
+        #  PARTE 3 : Mediante los datos obtenidos de la API cosntruimos la url de cada patido de todos los equipos de LaLiga                                  #
+        #######################################################################################################################################################
+        time.sleep(1)
+        #Obtener componenets de la url   
+        id = ulimo_partido.get('id')
+        slug = ulimo_partido.get('slug')
+        customId = ulimo_partido.get('customId')
+
+        base_url = "https://www.sofascore.com/{}/{}#{}"
+
+        self.output_textedit.append(f"________________________________________________________________________________________")  
+        self.output_textedit.append("Generando urls del último partido de cada equipo...")
+
+        #Fusionar elementos de la url
+        url = base_url.format(id,customId,slug)
+        self.output_textedit.append(url)
 
 class PlayerScraperWindowMF(QDialog, QWidget):
     def __init__(self, window_title):

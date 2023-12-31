@@ -905,13 +905,13 @@ class dataset_predecir(QWidget):
         grid_layout.addWidget(label_text, 0, 0)
 
         # LABEL SUBTÍTULO
-        label_subtext = QLabel("Crea un dataset con los jugaodores en mi plantilla / en el mercado para realizar prediciones sobre su puntuación / valor de mercado en la prócima jornada")
+        label_subtext = QLabel("Crea un dataset con los jugaodores en mi plantilla o del mercado para realizar prediciones sobre su puntuación / valor de mercado en la prócima jornada")
         grid_layout.addWidget(label_subtext, 1, 0, 1, 2)
 
 
-        ### SELECCIONAR RUTA DATASET DE ENTRADA SOFAESCORE #########################################################################
+        ### SELECCIONAR DATASET DE JUGAODRES DEL MERCADO O MI PLANTILLA #########################################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Selecionar fichero con los jugaodres en el mercado/ en mi plantilla : ")
+        label_text = QLabel("Selecionar fichero con los jugaodres en el mercado o de mi plantilla : ")
         grid_layout.addWidget(label_text, 2, 0)
 
         # INPUT DE TEXTO
@@ -919,13 +919,67 @@ class dataset_predecir(QWidget):
         # Alineación
         grid_layout.addWidget(self.text_input, 3, 0)
 
+        # BOTÓN PARA SELECCIONAR ARCHIVO
+        select_file_button = QPushButton("Seleccionar Archivo")
+        select_file_button.clicked.connect(lambda: select_file(self))
+        # Alineación
+        grid_layout.addWidget(select_file_button, 3, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        # Estilos
+        select_file_button.setMinimumWidth(140)
+        
+        ### SELECCIONAR RUTA DATASET DE ENTRADA SOFAESCORE #########################################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Selecionar carpeta donde se encuentran todos los ficheros de estadisticas de todos los jugaores de LaLiga: ")
+        grid_layout.addWidget(label_text, 4, 0)
+
+        # INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 5, 0)
+
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
         select_folder_button.clicked.connect(lambda: select_file(self))
         # Alineación
-        grid_layout.addWidget(select_folder_button, 4, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        grid_layout.addWidget(select_folder_button, 5, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         # Estilos
         select_folder_button.setMinimumWidth(140)
+
+        #####  VENTANA OUTPUT  ####################################################
+        # Crear un QTextEdit para la salida
+        self.output_textedit = QTextEdit(self)
+        grid_layout.addWidget(self.output_textedit, 6, 0, 5, 0)  # row, column, rowSpan, columnSpan
+
+        ##### SELECCIONAR RUTA DONDE GUARDAR EL EXCEL CON LOS ATRIBUTOS PROCESADOS PARA INTRODUCIR AL MODELO #################################################
+        ### LABEL DE TEXTO
+        label_text = QLabel("Guardar dataset de los jugaodres a predecir:")
+        grid_layout.addWidget(label_text, 15, 0)
+
+        ### INPUT DE TEXTO
+        self.text_input = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input, 16, 0)
+
+        ### BOTÓN PARA SELECCIONAR CARPETA
+        select_folder_button = QPushButton("Seleccionar Carpeta")
+        select_folder_button.clicked.connect(lambda: select_folder(self))
+        # Alineación
+        grid_layout.addWidget(select_folder_button, 16, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        select_folder_button.setMinimumWidth(140)
+
+        ### BOTÓN PARA GUARDAR DATASET ############
+        # Crear un botón
+        self.save_button = QPushButton("Guardar dataset generado")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        #self.save_button.clicked.connect(self.guardar_excell)
+
+        # Alineación
+        grid_layout.addWidget(self.save_button, 17, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+
+        # Estilos
+        self.save_button.setMaximumWidth(170)
 
 
 class scrapear_datos(QWidget):

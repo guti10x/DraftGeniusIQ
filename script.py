@@ -20,6 +20,7 @@ import pandas as pd
 from unidecode import unidecode
 import Levenshtein
 import glob
+from difflib import get_close_matches
 
 headers = {
     "X-RapidAPI-Key": "11822210cdmsha855c4a12c471b5p18100fjsn3972b17b3be8",
@@ -908,16 +909,15 @@ class dataset_predecir(QWidget):
         label_subtext = QLabel("Crea un dataset con los jugaodores en mi plantilla o del mercado para realizar prediciones sobre su puntuación / valor de mercado en la prócima jornada")
         grid_layout.addWidget(label_subtext, 1, 0, 1, 2)
 
-
         ### SELECCIONAR DATASET DE JUGAODRES DEL MERCADO O MI PLANTILLA #########################################################################
         # LABEL DE TEXTO
         label_text = QLabel("Selecionar fichero con los jugaodres en el mercado o de mi plantilla : ")
         grid_layout.addWidget(label_text, 2, 0)
 
         # INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
+        self.text_file_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 3, 0)
+        grid_layout.addWidget(self.text_file_input, 3, 0)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar Archivo")
@@ -926,8 +926,8 @@ class dataset_predecir(QWidget):
         grid_layout.addWidget(select_file_button, 3, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         # Estilos
         select_file_button.setMinimumWidth(140)
-        
-        ### SELECCIONAR RUTA DATASET DE ENTRADA SOFAESCORE #########################################################################
+
+        ### SELECCIONAR RUTA EXCELLS ESTADISTCAS JUGAODRES #########################################################################
         # LABEL DE TEXTO
         label_text = QLabel("Selecionar carpeta donde se encuentran todos los ficheros de estadisticas de todos los jugaores de LaLiga: ")
         grid_layout.addWidget(label_text, 4, 0)
@@ -939,7 +939,7 @@ class dataset_predecir(QWidget):
 
         # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(lambda: select_file(self))
+        select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
         grid_layout.addWidget(select_folder_button, 5, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         # Estilos
@@ -956,30 +956,118 @@ class dataset_predecir(QWidget):
         grid_layout.addWidget(label_text, 15, 0)
 
         ### INPUT DE TEXTO
-        self.text_input = QLineEdit(self)
+        self.text_input2 = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 16, 0)
+        grid_layout.addWidget(self.text_input2, 16, 0)
 
         ### BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(lambda: select_folder(self))
+        select_folder_button.clicked.connect(lambda: select_folder2(self))
         # Alineación
         grid_layout.addWidget(select_folder_button, 16, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
         ### BOTÓN PARA GUARDAR DATASET ############
-        # Crear un botón
-        self.save_button = QPushButton("Guardar dataset generado")
+        # Crear un botóns
+        self.save_button = QPushButton("Generar dataset")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.save_button.clicked.connect(self.guardar_excell)
+        self.save_button.clicked.connect(self.generar_excell_predecir)
 
         # Alineación
         grid_layout.addWidget(self.save_button, 17, 0, alignment=Qt.AlignmentFlag.AlignLeft)
 
         # Estilos
         self.save_button.setMaximumWidth(170)
+
+    def generar_excell_predecir(self):
+
+        def encontrar_coincidencias(valores_Historico, valores_Mercado,ruta_archivo):
+            self.output_textedit.insertPlainText("\n" + "=" * 100 + "\n")
+            self.output_textedit.insertPlainText(f"Buscando coincidencias en {ruta_archivo}. \n")
+            posiciones = []
+
+            for pos, nombre_completo in enumerate(valores_Historico):
+                coincidencias_iniciales = [nombre_abreviado for nombre_abreviado in valores_Mercado if nombre_abreviado.startswith(nombre_completo[0])]
+
+                coincidencias_texto = get_close_matches(nombre_completo, coincidencias_iniciales)
+
+                if coincidencias_texto:
+                    posiciones.append(pos)
+                    self.output_textedit.insertPlainText(f"Coincidencia en la fila {pos} para '{nombre_completo}'\n")
+    
+            return posiciones
+
+        #### PARTE 1: ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA 
+        # Ruta al archivo Excel
+        self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
+        self.output_textedit.insertPlainText(f"Abriendo fichero de jugadores selecioandos...\n")
+        self.output_textedit.insertPlainText("\n" + "" * 100 + "\n")
+        archivo_excel = self.text_file_input.text()
+
+        # Lee el archivo Excel con pandas y especifica que no hay encabezado
+        df = pd.read_excel(archivo_excel, header=None)
+
+        # Obtén los valores de la primera columna (columna 0)
+        valores_Mercado = df.iloc[:, 0].tolist()
+
+        # Imprime o utiliza los valores según sea necesario
+        self.output_textedit.insertPlainText(f"Total de jugadores encontrados: {len(valores_Mercado)}\n")
+
+        for valor in valores_Mercado:
+            self.output_textedit.insertPlainText(valor)
+        self.output_textedit.insertPlainText(f"\n") 
+        
+        #### PARTE : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
+        # Ruta a la carpeta que contiene los archivos Excel
+        carpeta_excel = self.text_input.text()
+
+        # Lista global para almacenar todas las filas seleccionadas
+        filas_jugadores = []
+
+        # Lista todos los archivos en la carpeta con extensión .xlsx
+        archivos_excel = [archivo for archivo in os.listdir(carpeta_excel) if archivo.endswith(".xlsx")]
+        self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
+        self.output_textedit.insertPlainText("Buscando coincidencias...\n")
+        
+        # Itera sobre cada archivo Excel en la carpeta
+        for archivo in archivos_excel:
+            
+            # Ruta al archivo Excel actual
+            ruta_archivo = os.path.join(carpeta_excel, archivo)
+
+            # Lee el archivo Excel con pandas y especifica que no hay encabezado
+            df = pd.read_excel(ruta_archivo, header=None)
+
+            # Obtén los valores de la primera columna (o cualquier columna que desees)
+            valores_Historico = df.iloc[:, 0].tolist()
+
+            # Llama a la función encontrar_coincidencias y actualiza los valores de los índices
+            posiciones_coincidentes = encontrar_coincidencias(valores_Historico, valores_Mercado, ruta_archivo)
+            
+            # Accede a las filas correspondientes a los índices proporcionados
+            filas_seleccionadas = df.iloc[posiciones_coincidentes]
+
+            # Convierte las filas seleccionadas a una lista de diccionarios para un fácil acceso a los atributos
+            datos_filas = filas_seleccionadas.to_dict(orient='records')
+
+            # Agrega las filas seleccionadas a la lista global
+
+            filas_jugadores.extend(datos_filas)
+
+                
+        # Leer y almacenar cabecera
+        df = pd.read_excel(ruta_archivo, header=None, nrows=1)
+
+        # Almacena los nombres de las columnas en una lista
+        nombres_columnas = list(df.iloc[0])
+
+        self.output_textedit.insertPlainText("\nObteniendo cabezera...\n")
+        # Imprime los nombres de las columnas
+        self.output_textedit.insertPlainText(f"{nombres_columnas}")
+
+
 
 
 class scrapear_datos(QWidget):

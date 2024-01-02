@@ -21,6 +21,7 @@ from unidecode import unidecode
 import Levenshtein
 import glob
 from difflib import get_close_matches
+import re
 
 headers = {
     "X-RapidAPI-Key": "11822210cdmsha855c4a12c471b5p18100fjsn3972b17b3be8",
@@ -1019,7 +1020,7 @@ class dataset_predecir(QWidget):
             self.output_textedit.insertPlainText(valor)
         self.output_textedit.insertPlainText(f"\n") 
         
-        #### PARTE : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
+        #### PARTE 2 : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
         # Ruta a la carpeta que contiene los archivos Excel
         carpeta_excel = self.text_input.text()
 
@@ -1055,20 +1056,573 @@ class dataset_predecir(QWidget):
             # Agrega las filas seleccionadas a la lista global
 
             filas_jugadores.extend(datos_filas)
-
-                
+ 
         # Leer y almacenar cabecera
         df = pd.read_excel(ruta_archivo, header=None, nrows=1)
 
         # Almacena los nombres de las columnas en una lista
         nombres_columnas = list(df.iloc[0])
 
+        self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
         self.output_textedit.insertPlainText("\nObteniendo cabezera...\n")
         # Imprime los nombres de las columnas
-        self.output_textedit.insertPlainText(f"{nombres_columnas}")
+        self.output_textedit.insertPlainText(f"{nombres_columnas}\n")
 
+        #### PARTE 3 : CREAR EXCELL FINAL PARA PASAR AL MODELO Y PREDECIR
+        # Obtener la fecha actual
+        fecha_actual = datetime.now()
+        # Formatear la fecha como una cadena (opcional)
+        fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
 
+        ruta_output = self.text_input2.text()
+        nombre_archivo= ruta_output +"/jugadores a predecir"+fecha_actual_str+".xlsx"
 
+        # Verificar si el archivo existe y eliminarlo si es necesario
+        if os.path.exists(nombre_archivo):
+            os.remove(nombre_archivo)
+
+        # Crear un nuevo libro de trabajo (Workbook)
+        wb = openpyxl.Workbook()
+
+        # Seleccionar la hoja activa
+        sheet = wb.active
+
+        # Agregar los nombres de las columnas a la primera fila de la hoja
+        sheet.append(nombres_columnas)
+
+        # Guardar el libro de trabajo en el archivo especificado
+        wb.save(nombre_archivo)
+
+        #### PARTE 4 : #### Acceder a las estadisticas de cada jugaodor del mercado/plantilla en todos los datasets(partidos de cada jornada de LaLiga) donde se han encontrado registros de este, para: 
+        ## - Generar medias, porcentajes... de valores numéricos estadisticos alamcenados en todos los dataset (Ej: media de goles)
+        ## - Acceder a la web de Mister Fantasy par inicializar ciertos atributos (Ej: proximo rival al que se enfrentará un jugaodor)
+
+        self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
+        self.output_textedit.insertPlainText(f"Generando datos de cada jugaodor selecionado...\n")
+
+        # Diccionario para almacenar los índices de las filas repetidas
+        indice_nombres = {}
+
+        # Iterar filas para las repetidas
+        for indice, fila_jugador in enumerate(filas_jugadores):
+            # Obtiene el nombre del jugador (asumiendo que está en la primera posición)
+            nombre_jugador = fila_jugador[0]
+            
+            # Verifica si el nombre ya ha sido visto
+            if nombre_jugador in indice_nombres:
+                indice_nombres[nombre_jugador].append(indice)
+            else:
+                indice_nombres[nombre_jugador] = [indice]
+
+        # Gestionar filas repetidas 
+        for nombre, indices in indice_nombres.items():
+            self.output_textedit.insertPlainText("\n" + "_" * 75+ "\n")
+            self.output_textedit.insertPlainText(f"Jugador {nombre}: \n")
+
+            # Acceder al nombre de cada índice repetido
+            for indice in indices:
+                nombre_repetido = filas_jugadores[indice][0]
+                self.output_textedit.insertPlainText(f"   Nombre del jugador detectado en la fila {indice} como {nombre_repetido}\n")
+            
+            self.output_textedit.insertPlainText("\n" + "-" * 60+ "\n")
+            # GENERAR DATAFRAME para cada jugador ###################################################################
+            self.output_textedit.insertPlainText("Datos del jugador: \n")
+            
+            ## NOMBRE #####
+            nombre= filas_jugadores[indice][0]
+            self.output_textedit.insertPlainText(f"Nombre: {nombre}\n")
+            
+            ## VALOR #####
+            valor= 0
+            for indice in indices:
+                valor_jugador1 = str(filas_jugadores[indice][1])
+                valor_duplicado = float(valor_jugador1.replace('.', ''))
+                valor = valor + valor_duplicado
+            valor= valor/len(indices)
+            self.output_textedit.insertPlainText(f"Valor:{valor}\n")
+            
+            ## POSICIÓN #####
+            pos_jugador=filas_jugadores[indice][2]
+            self.output_textedit.insertPlainText(f"Posición: {pos_jugador}\n")
+                
+            ## EQUIPO #####
+            eq_jugador=filas_jugadores[indice][3]
+            self.output_textedit.insertPlainText(f"Equipo: {eq_jugador}\n")
+
+            ## PUNTUACIÓN FANTASY, AS, MARCA, MD #####
+            fantasy= 0
+            ass=0
+            marca=0
+            md=0
+            for indice in indices:
+                mf = filas_jugadores[indice][4]
+                a = filas_jugadores[indice][5]
+                mc = filas_jugadores[indice][6]
+                m = filas_jugadores[indice][7]
+
+                fantasy = fantasy + mf
+                ass = ass + a
+                marca = marca + mc
+                md = md + m
+
+            valor= valor/len(indices)
+            self.output_textedit.insertPlainText(f"Puntuación Mister Fantasy:{fantasy}\n")
+
+            valor= valor/len(indices)
+            self.output_textedit.insertPlainText(f"Puntuación AS: {ass}\n")
+
+            valor= valor/len(indices)
+            self.output_textedit.insertPlainText(f"Puntuación Marca: {marca}\n")
+
+            valor= valor/len(indices)
+            self.output_textedit.insertPlainText(f"Puntuación Mundo Deportivo: {md}\n")
+          
+## ULTIMO RIVAL #####
+            ultimo_equipo_rival = 0
+            self.output_textedit.insertPlainText(f"Último equipo rival: {ultimo_equipo_rival}\n")
+
+## RESULTADO DEL PARTIDO #####
+            resultado_ultimo_partido = 0
+            self.output_textedit.insertPlainText(f"Resultado último partido: {resultado_ultimo_partido}\n")
+
+## PROXIMO RIVAL #####
+            proximo_equipo_rival = 0
+            self.output_textedit.insertPlainText(f"Próximo equipo rival: {proximo_equipo_rival}\n")
+
+## PROXIMO PARTIDO ES LOCAL #####
+            proximo_equipo_local = 0
+            self.output_textedit.insertPlainText(f"Próximo equipo como local: {proximo_equipo_local}\n")
+
+## MEDIA EN CASA #####
+            media_puntos_local = 0
+            self.output_textedit.insertPlainText(f"Media de puntos como local: {media_puntos_local}\n")
+
+## MEDIA FUERA #####
+            media_puntos_fuera = 0
+            self.output_textedit.insertPlainText(f"Media de puntos como visitante: {media_puntos_fuera}\n")
+
+            # EDAD #####
+            edad=filas_jugadores[indice][14]
+            self.output_textedit.insertPlainText(f"Edad: {edad}\n")
+                
+            # ALTURA #####
+            try:
+                altura_jugador = filas_jugadores[indice][15]
+                altura_jugador = float(altura_jugador)
+                self.output_textedit.insertPlainText(f"Altura: {altura_jugador}\n")
+            except (ValueError, TypeError):
+                altura_jugador = filas_jugadores[indice][15].replace('m', '').replace(',', '.')
+                altura_jugador = float(altura_jugador)
+                self.output_textedit.insertPlainText(f"Altura: {altura_jugador}\n")
+
+            # PESO #####
+            try:
+                peso_jugador = filas_jugadores[indice][16]
+                peso_jugador = float(peso_jugador)
+                self.output_textedit.insertPlainText(f"Peso: {peso_jugador}\n")
+            except (ValueError, TypeError):
+                peso_jugador = filas_jugadores[indice][16].replace('kg', '').replace(',', '.')
+                peso_jugador = float(peso_jugador)
+                self.output_textedit.insertPlainText(f"Peso: {peso_jugador}\n")
+
+            ## PUNTUACIÓN SF#####
+            puntuacion= 0
+            for indice in indices:
+                    pts=float(filas_jugadores[indice][17])
+                    puntuacion = puntuacion + pts   
+            puntuacion= puntuacion/len(indices)
+            self.output_textedit.insertPlainText(f"Puntuación SF: {puntuacion}\n")
+                
+            # MINUTES PLAYED #####
+            minutes = 0
+            for indice in indices:
+                try:
+                    mn = int(filas_jugadores[indice][18])
+                except (ValueError, TypeError):
+                    mn = int(str(filas_jugadores[indice][18]).replace("'", ''))
+
+            minutes += mn
+
+            minutes = minutes / len(indices)
+            self.output_textedit.insertPlainText(f"Minutos disputados: {minutes}\n")
+
+            ## EXPECTED ASSISTS 
+            expassists = 0
+            for indice in indices:
+                expa = float(filas_jugadores[indice][19])
+                expassists = expassists + expa
+            expassists = expassists / len(indices)
+            self.output_textedit.insertPlainText(f"Provavilidad de que un pase sea asistencia: {expassists}\n")
+
+            ## ESTADÍSCAS PORTEROS #################################################################
+            ## (XA), SAVES, GOALS PREVENTED, PUNCHES, RUNS OUT (SUCC.), HIGH CLAIMS #####
+            saves = 0
+            golasPrev = 0
+            punches = 0
+            runsOut=0
+            hightClaims=0
+            for indice in indices:   
+                
+                saves = saves + float(filas_jugadores[indice][20])
+                
+                golasPrev = golasPrev + float(filas_jugadores[indice][21])
+                
+                punches = punches + float(filas_jugadores[indice][22])
+                
+                match = re.match(r'(\d+)\s*\((\d+)\)', str(filas_jugadores[indice][23]))
+                if match:
+                    # Extraer los números y convertirlos a enteros
+                    numero_externo = int(match.group(1))
+                    numero_interno = int(match.group(2))
+                    runs = 0
+                    if  numero_interno !=0:
+                        # Realizar la división 
+                        runs = numero_externo / numero_interno
+
+                    runsOut = runsOut + runs
+                
+                hightClaims = hightClaims+ float(filas_jugadores[indice][24])
+                
+            saves = saves / len(indices)
+            self.output_textedit.insertPlainText(f"Paradas (porteros): {saves}\n")
+            
+            golasPrev = golasPrev / len(indices)
+            self.output_textedit.insertPlainText(f"Goles evitados (porteros): {golasPrev}\n")
+                    
+            punches = punches / len(indices)
+            self.output_textedit.insertPlainText(f"Despeje de puños (porteros): {punches}\n")
+            
+            runsOut = runsOut / len(indices)
+            self.output_textedit.insertPlainText(f"Salida con balón esxitosa (porteros): {punches}\n")
+            
+            hightClaims = hightClaims / len(indices)
+            self.output_textedit.insertPlainText(f"Captura de balon en altura exitosa (porteros): {hightClaims}\n")
+            
+            ## TOUCHES #####
+            touches=0
+            for indice in indices:        
+                touch = int(filas_jugadores[indice][25])
+                touches = touches+ touch
+                
+            touches = touches / len(indices)
+            self.output_textedit.insertPlainText(f"Toques de balón: {touches}\n")
+                
+            ## ACC. PASSES #####
+            accpass = 0
+            for indice in indices:        
+                accp_match = re.search(r'\((\d+)%\)', str(filas_jugadores[indice][26]))
+                accp = accp_match.group(1) if accp_match else None
+                if accp:
+                    accpass += float(accp)
+
+            accpass = accpass / len(indices) if len(indices) > 0 else 0
+            accpass = accpass /100
+            self.output_textedit.insertPlainText(f"Pases precisos: {accpass}\n")
+            
+            ## KEY PASSES #####
+            keypass=0
+            for indice in indices:        
+                keypass = keypass+ int(filas_jugadores[indice][27])
+            keypass = keypass / len(indices)
+            self.output_textedit.insertPlainText(f"Pases claves: {keypass}\n")
+            
+            ## CROSSES (ACC.) #####
+            crosses=0
+            for indice in indices: 
+                match = re.match(r'(\d+)\s*\((\d+)\)', str(filas_jugadores[indice][28]))
+                if match:
+                    # Extraer los números y convertirlos a enteros
+                    numero_externo = int(match.group(1))
+                    numero_interno = int(match.group(2))
+                    crs = 0
+                    if  numero_interno !=0:
+                        # Realizar la división y devolver el resultado
+                        crs = numero_externo / numero_interno
+                    
+                    crosses = crs + crosses
+                    
+            crosses = crosses / len(indices)
+            self.output_textedit.insertPlainText(f"Centros precisos: {crosses}\n")
+
+            ## LONG BALLS (ACC.) #####
+            longball = 0
+
+            for indice in indices: 
+                match = re.match(r'(\d+)\s*\((\d+)\)', str(filas_jugadores[indice][29]))
+                if match:
+                    # Extraer los números y convertirlos a enteros
+                    numero_externo = int(match.group(1))
+                    numero_interno = int(match.group(2))
+                    longb = 0
+                    if  numero_interno !=0:
+                        # Realizar la división y devolver el resultado
+                        longb = numero_externo / numero_interno
+                    
+                    longball = longb + longball
+                    
+            longball = longball / len(indices)
+            self.output_textedit.insertPlainText(f"Pase largo preciso: {longball}\n")
+
+            ## CLEARANCES #####
+            clearances=0
+            for indice in indices:        
+                clearances = clearances + int(filas_jugadores[indice][30])
+            clearances = clearances / len(indices)
+            self.output_textedit.insertPlainText(f"Ocasiones evitadas de gol: {clearances}\n")
+            
+            ## BLOCKED SHOTS #####
+            blocketshoots=0
+            for indice in indices:        
+                blocketshoots = blocketshoots + int(filas_jugadores[indice][31])
+            blocketshoots = blocketshoots / len(indices)
+            self.output_textedit.insertPlainText(f"Tiros bloqueados: {blocketshoots}\n")
+            
+            ## INTERCEPTIONS #####
+            interceptions=0
+            for indice in indices:        
+                interceptions = interceptions + int(filas_jugadores[indice][32])
+            interceptions = interceptions / len(indices)
+            self.output_textedit.insertPlainText(f"Pases nterceptados: {interceptions}\n")
+            
+            ## TACKLES #####
+            tackles=0
+            for indice in indices:        
+                tackles = tackles + int(filas_jugadores[indice][33])
+            tackles = tackles / len(indices)
+            self.output_textedit.insertPlainText(f"Robos de balón sin falta: {tackles}\n")
+
+            ## DRIBBLED PAST #####
+            dribbled=0
+            for indice in indices:        
+                dribbled = dribbled + int(filas_jugadores[indice][34])
+            dribbled = dribbled / len(indices)
+            self.output_textedit.insertPlainText(f"Veces regateado: {dribbled}\n")
+            
+            ## GROUND DUELS (WON) #####
+            groundduels=0
+
+            for indice in indices: 
+                match = re.match(r'(\d+)\s*\((\d+)\)', str(filas_jugadores[indice][35]))
+                if match:
+                    # Extraer los números y convertirlos a enteros
+                    numero_externo = int(match.group(1))
+                    numero_interno = int(match.group(2))
+                    grnddu = 0
+                    if  numero_interno !=0:
+                        # Realizar la división y devolver el resultado
+                        grnddu = numero_externo / numero_interno
+
+                    groundduels = groundduels + grnddu
+
+            groundduels = groundduels / len(indices)
+            self.output_textedit.insertPlainText(f"Duelos en el suelo Ganados: {groundduels}\n")
+            
+            ## AERIAL DUELS (WON) #####
+            airduels=0
+
+            for indice in indices: 
+                match = re.match(r'(\d+)\s*\((\d+)\)', str(filas_jugadores[indice][36]))
+                if match:
+                    # Extraer los números y convertirlos a enteros
+                    numero_externo = int(match.group(1))
+                    numero_interno = int(match.group(2))
+                    airdu = 0
+                    if  numero_interno !=0:
+                        # Realizar la división y devolver el resultado
+                        airdu = numero_externo / numero_interno
+
+                    airduels = airduels + airdu
+
+            airduels = airduels / len(indices)
+            self.output_textedit.insertPlainText(f"Duelos aereos ganados: {airduels}\n")
+            
+            ## FOULS #####
+            fouls=0
+            for indice in indices:        
+                dribbled = dribbled + int(filas_jugadores[indice][37])
+            dribbled = dribbled / len(indices)
+            self.output_textedit.insertPlainText(f"Faltas cometidas: {fouls}\n")
+
+            ## WAS FOULED #####
+            fouled=0
+            for indice in indices:        
+                fouled = fouled + int(filas_jugadores[indice][38])
+            fouled = fouled / len(indices)
+            self.output_textedit.insertPlainText(f"Faltas recibidas: {fouled}\n")
+            
+            ## SHOTS ON TARGET #####
+            tarhetshoot=0
+            for indice in indices:        
+                tarhetshoot = tarhetshoot + int(filas_jugadores[indice][39])
+            dribbled = dribbled / len(indices)
+            self.output_textedit.insertPlainText(f"Tiros a puerta: {tarhetshoot}\n")
+            
+            ## SHOTS OFF TARGET #####
+            offtargetshoot=0
+            for indice in indices:        
+                offtargetshoot = offtargetshoot + int(filas_jugadores[indice][40])
+            offtargetshoot = offtargetshoot / len(indices)
+            self.output_textedit.insertPlainText(f"Tiros que no fueron a puerta: {offtargetshoot}\n")
+            
+            ## SHOTS BLOCKED #####
+            blockedshoots=0
+            for indice in indices:        
+                blockedshoots = blockedshoots + int(filas_jugadores[indice][41])
+            blockedshoots = blockedshoots / len(indices)
+            self.output_textedit.insertPlainText(f"Disparos realizados bloqueados : {blockedshoots}\n")
+            
+            ## DRIBBLE ATTEMPTS (SUCC.) #####
+            dribbleatempts=0
+            self.output_textedit.insertPlainText(f"Regates exitosos: {dribbleatempts}\n")
+
+            for indice in indices: 
+                match = re.match(r'(\d+)\s*\((\d+)\)', str(filas_jugadores[indice][42]))
+                if match:
+                    # Extraer los números y convertirlos a enteros
+                    numero_externo = int(match.group(1))
+                    numero_interno = int(match.group(2))
+                    dribs = 0
+                    if  numero_interno !=0:
+                        # Realizar la división y devolver el resultado
+                        dribs = numero_externo / numero_interno
+
+                    dribbleatempts = dribbleatempts + dribs
+
+            airduels = dribbleatempts / len(indices)
+            self.output_textedit.insertPlainText(f"Duelos aereos ganados: {airduels}\n")
+
+            ## GOALS #####
+            goals=0
+            for indice in indices:        
+                goals = goals + int(filas_jugadores[indice][43])
+            goals = goals / len(indices)
+            self.output_textedit.insertPlainText(f"Goles: {goals}\n")
+            
+            ## ASSISTS #####
+            assists=0
+            for indice in indices:        
+                assists = assists + int(filas_jugadores[indice][44])
+            assists = assists / len(indices)
+            self.output_textedit.insertPlainText(f"Asistencias: {assists}\n")
+            
+            ## POSSESSION LOST #####
+            posesion_perdida = 0
+            for indice in indices:        
+                posesion_perdida = posesion_perdida + int(filas_jugadores[indice][45])
+            posesion_perdida = posesion_perdida / len(indices)
+            self.output_textedit.insertPlainText(f"Posesión perdida: {posesion_perdida}\n")
+            
+            ## EXPECTED GOALS (XG) #####
+            xgoals = 0.0
+            for indice in indices:        
+                xgoals = xgoals + float(filas_jugadores[indice][45])
+            xgoals = xgoals / len(indices)
+            self.output_textedit.insertPlainText(f"Provavilidad de que ls disparos se conviertan en goles: {xgoals}\n")
+            
+            ####
+            penalty_miss = 0
+            big_chances_created = 0
+            penalty_won = 0
+            big_chance_miss=0
+            savesBox=0
+            penaltyDone=0   
+            oddside=0
+            palos=0
+            
+            for indice in indices:        
+                penalty_miss = penalty_miss + int(filas_jugadores[indice][47])
+                
+                big_chances_created = big_chances_created + int(filas_jugadores[indice][48])
+                
+                penalty_won = penalty_won + int(filas_jugadores[indice][49])
+                
+                big_chance_miss = big_chance_miss + int(filas_jugadores[indice][50])
+                
+                savesBox = savesBox + int(filas_jugadores[indice][51])
+                
+                penaltyDone = penaltyDone + int(filas_jugadores[indice][52])
+                
+                oddside = oddside + int(filas_jugadores[indice][53])
+                
+                palos = palos + int(filas_jugadores[indice][54])
+            
+            ## PENALTY MISS #####
+            penalty_miss = penalty_miss / len(indices)
+            self.output_textedit.insertPlainText(f"Penaltis fallados : {penalty_miss}\n")
+            
+            ## BIG CHANCES CREATED #####
+            big_chances_created = big_chances_created / len(indices)
+            self.output_textedit.insertPlainText(f"Ocasiones de gol generadas: {big_chances_created}\n")       
+            
+            ## PENALTY WON #####
+            penalty_won = penalty_won / len(indices)
+            self.output_textedit.insertPlainText(f"Penaltys conseguidos: {penalty_won}\n")
+            
+            ## BIG CHANCES MISSED #####
+            big_chance_miss = big_chance_miss / len(indices)
+            self.output_textedit.insertPlainText(f"Ocasiones de gol desperdiciadas: {big_chance_miss}\n")
+            
+            ## SAVES FROM INSIDE BOX #####
+            savesBox = savesBox / len(indices)
+            self.output_textedit.insertPlainText(f"Ocasione sd e gol evitadas desde dentro del area: {savesBox}\n")
+            
+            ## PENALTY COMMITTED #####
+            penaltyDone = penaltyDone / len(indices)
+            self.output_textedit.insertPlainText(f"Penalties cometidos: {penaltyDone}\n")
+            
+            ## OFFSIDES #####      
+            oddside = oddside / len(indices)
+            self.output_textedit.insertPlainText(f"Veces en fuera de juego: {oddside}\n")
+            
+            ## HIT WOODWORK #####
+            palos = palos / len(indices)
+            self.output_textedit.insertPlainText(f"Disparos al paloooo: {palos}\n")
+
+## AUSENCIA #####
+            ausencia=0
+            self.output_textedit.insertPlainText(f"Causa por no estar convocado: {ausencia}\n")
+            
+            ## ERROR LED TO SHOT #####
+            shot_led_error=0
+            for indice in indices:
+                shot_led_error = shot_led_error + float(filas_jugadores[indice][56])
+            shot_led_error = shot_led_error / len(indices)
+            self.output_textedit.insertPlainText(f"Errores que derivan en un disparo del rival: {shot_led_error}\n")
+            
+            ## ERROR LED TO GOAL   ##### 
+            goal_led_error=0
+            for indice in indices:
+                goal_led_error = goal_led_error + float(filas_jugadores[indice][57])
+            goal_led_error = goal_led_error / len(indices)
+            self.output_textedit.insertPlainText(f"Errores que derivan en un gol del rival: {goal_led_error}\n")
+            
+            #########################################################################################################
+            self.output_textedit.insertPlainText("\n")
+            
+            # Cargar excell
+            wb = openpyxl.load_workbook(nombre_archivo)
+            
+            # Seleccionar la hoja activa
+            sheet = wb.active
+                
+            # Lista de variables a almacenar
+            nueva_fila = [
+            nombre, valor, pos_jugador, eq_jugador,
+            fantasy, ass, marca, md, ultimo_equipo_rival, resultado_ultimo_partido, proximo_equipo_rival, proximo_equipo_local,
+            media_puntos_local, media_puntos_fuera, edad, altura_jugador, peso_jugador, puntuacion, minutes, expassists, saves, golasPrev, punches, runsOut,
+            hightClaims, touches, accpass, keypass, crosses, longball, tarhetshoot, offtargetshoot, blockedshoots, dribbleatempts, goals, assists, clearances,
+            blocketshoots, interceptions, tackles, dribbled, groundduels, airduels, fouls, fouled, savesBox, penaltyDone, oddside, palos, ausencia, shot_led_error,
+            goal_led_error, posesion_perdida, xgoals, penalty_miss, big_chances_created, penalty_won, big_chance_miss]
+
+            
+            # Escribir la nueva fila en la hoja de cálculo
+            sheet.append(nueva_fila)
+
+            # Guardar el archivo Excel
+            wb.save(nombre_archivo)
+            
+
+        self.output_textedit.insertPlainText(f"Se han generado exitosamente el dataset en {nombre_archivo} para realizar la sprediciones sobre los jugadores selecionados.\n")
 
 class scrapear_datos(QWidget):
   def __init__(self):
@@ -1492,7 +2046,7 @@ class PlayerScraperWindowMF(QDialog, QWidget):
             masMenu.click()
         except (ElementNotInteractableException, NoSuchElementException):
             # Maneja la excepción y espera antes de intentar nuevamente
-            print("Anuncio detectado, reiniciando driver...")
+            self.output_textedit.insertPlainText("Anuncio detectado, reiniciando driver...")
             self.driver.refresh()
             time.sleep(3) 
             masMenu.click()
@@ -1584,7 +2138,7 @@ class PlayerScraperWindowMF(QDialog, QWidget):
                             if src_img1 == equipo_url:
                                 proximo_rival=equipo_nombre
                 else:
-                    print("No se encontro el próximo partido")
+                    self.output_textedit.insertPlainText("No se encontro el próximo partido")
                 
 
         #### OBTENER POSICIÓN DEL JUGADOR ####

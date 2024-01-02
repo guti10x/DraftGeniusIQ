@@ -999,13 +999,40 @@ class dataset_predecir(QWidget):
                     self.output_textedit.insertPlainText(f"Coincidencia en la fila {pos} para '{nombre_completo}'\n")
     
             return posiciones
+        
+        #### PARTE 0: LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS
+        # Fichero con los futbolistas a procesae
+        archivo_excel = self.text_file_input.text()
+        # Ruta a la carpeta que contiene los archivos Excel
+        carpeta_excel = self.text_input.text()
+        # Ruta de la carpeta donde guardar el excell generado
+        ruta_output = self.text_input2.text()
+        if not archivo_excel or not carpeta_excel or not ruta_output:
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            self.output_textedit.mergeCurrentCharFormat(formato_rojo)
+
+            ## Comprobar si las variables han sido inicializadas
+            if not archivo_excel:
+                self.output_textedit.insertPlainText("El fichero de los jugaodres del mercado o de la plantilla no se ha inicializado.\n")
+                
+            if not carpeta_excel:
+                self.output_textedit.insertPlainText("La ruta de la carpeta donde encontrar todos los ficheros de estadisticas de todos los jugaores de LaLiga no se ha inicializada.\n")
+                
+            if not ruta_output:
+                self.output_textedit.insertPlainText("La ruta de la carpeta donde guardar el datatset generado no ha sido inicializada.\n")
+            
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            self.output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
 
         #### PARTE 1: ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA 
         # Ruta al archivo Excel
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
         self.output_textedit.insertPlainText(f"Abriendo fichero de jugadores selecioandos...\n")
         self.output_textedit.insertPlainText("\n" + "" * 100 + "\n")
-        archivo_excel = self.text_file_input.text()
 
         # Lee el archivo Excel con pandas y especifica que no hay encabezado
         df = pd.read_excel(archivo_excel, header=None)
@@ -1021,8 +1048,6 @@ class dataset_predecir(QWidget):
         self.output_textedit.insertPlainText(f"\n") 
         
         #### PARTE 2 : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
-        # Ruta a la carpeta que contiene los archivos Excel
-        carpeta_excel = self.text_input.text()
 
         # Lista global para almacenar todas las filas seleccionadas
         filas_jugadores = []
@@ -1074,7 +1099,6 @@ class dataset_predecir(QWidget):
         # Formatear la fecha como una cadena (opcional)
         fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
 
-        ruta_output = self.text_input2.text()
         nombre_archivo= ruta_output +"/jugadores a predecir"+fecha_actual_str+".xlsx"
 
         # Verificar si el archivo existe y eliminarlo si es necesario
@@ -1098,7 +1122,7 @@ class dataset_predecir(QWidget):
         ## - Acceder a la web de Mister Fantasy par inicializar ciertos atributos (Ej: proximo rival al que se enfrentará un jugaodor)
 
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
-        self.output_textedit.insertPlainText(f"Generando datos de cada jugaodor selecionado...\n")
+        self.output_textedit.insertPlainText(f"Procesando datos de cada jugaodor selecionado...\n")
 
         # Diccionario para almacenar los índices de las filas repetidas
         indice_nombres = {}

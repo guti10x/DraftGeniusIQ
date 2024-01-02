@@ -502,7 +502,7 @@ class marketWindow(QWidget):
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText("\n¡La plantilla no se puede guardar porque no esta inicializada")
+            output_textedit.insertPlainText(f"\n¡La plantilla no se puede guardar porque no esta inicializada")
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -632,38 +632,40 @@ class dataset_entrenamiento(QWidget):
         grid_layout.addWidget(label_text, 0, 0)
 
         # LABEL SUBTÍTULO
-        label_subtext = QLabel("Crea un dataset para entrenar un modelo de predicción")
+        label_subtext = QLabel("Una vez scrapeado los partidos de la jornada de Sofaescore y las estadisticas de los jugaodres del Mister Fantasy,crea un dataset para entrenar un modelo con todos")
+        label_subtext2 = QLabel("los datos fusionados y preprocesados.")
         grid_layout.addWidget(label_subtext, 1, 0, 1, 2)
-
+        grid_layout.addWidget(label_subtext2, 2, 0, 1, 2)
+           
         ### SELECCIONAR JORNADA INPUT ####################################################
         # INPUT NÚMERO JORNADA 
-        label_number = QLabel("Jornada a scrapear:")
-        grid_layout.addWidget(label_number, 2, 0)
+        label_number = QLabel("Jornada del dataset:")
+        grid_layout.addWidget(label_number, 3, 0)
         # Estilos 
         self.number_input = QSpinBox(self)
         self.number_input.setMinimum(1)  # Establecer el valor mínimo (jornada 1)
-        self.number_input.setMaximum(38)  # Establecer el valor máximo (Jornada 36)
+        self.number_input.setMaximum(44)  # Establecer el valor máximo (Jornada 36)
         self.number_input.setSingleStep(2)  # Establecer el paso
-        self.number_input.setMaximumSize(38, 20)
-        self.number_input.setMinimumSize(38, 20)
+        self.number_input.setMaximumSize(44, 20)
+        self.number_input.setMinimumSize(44, 20)
         # Aliniación
-        grid_layout.addWidget(self.number_input, 3, 0)
+        grid_layout.addWidget(self.number_input, 4, 0)
 
         ### SELECCIONAR RUTA DATASET DE ENTRADA SOFAESCORE #########################################################################
         # LABEL DE TEXTO
         label_text = QLabel("Selecionar carpeta donde se almacenaron tododos los partidos scrapeados de la jornada de la web de Sofaescore: ")
-        grid_layout.addWidget(label_text, 4, 0)
+        grid_layout.addWidget(label_text, 5, 0)
 
         # INPUT DE TEXTO
         self.text_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 5, 0)
+        grid_layout.addWidget(self.text_input, 6, 0)
 
         # BOTÓN PARA SELECCIONAR CARPETA
-        select_folder_button = QPushButton("Seleccionar Carpeta")
+        select_folder_button = QPushButton("Seleccionar carpeta")
         select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
-        grid_layout.addWidget(select_folder_button, 6, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_folder_button, 6, 1, alignment=Qt.AlignmentFlag.AlignLeft)
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
@@ -682,7 +684,7 @@ class dataset_entrenamiento(QWidget):
         select_file_button.clicked.connect(lambda: select_file(self))
 
         # Alineación
-        grid_layout.addWidget(select_file_button, 9, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_file_button, 8, 1, alignment=Qt.AlignmentFlag.AlignLeft)
 
         # Estilos
         select_file_button.setMinimumWidth(140)
@@ -690,22 +692,22 @@ class dataset_entrenamiento(QWidget):
         ### SELECCIONAR RUTA DONDE GUARDAR DATASET RESULTANTE #####################################################################
         # LABEL DE TEXTO
         label_text = QLabel("Selecionar ruta donde guardar el dataset generado de la jornada: ")
-        grid_layout.addWidget(label_text, 10, 0)
+        grid_layout.addWidget(label_text, 9, 0)
 
         # INPUT DE TEXTO
         self.text_input2 = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input2, 11, 0)
+        grid_layout.addWidget(self.text_input2, 10, 0)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_folder_button = QPushButton("Seleccionar carpeta")
         select_folder_button.clicked.connect(lambda: select_folder2(self))
 
         # Alineación
-        grid_layout.addWidget(select_folder_button, 12, 0, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_folder_button, 10, 1, alignment=Qt.AlignmentFlag.AlignLeft)
 
         # Estilos
-        select_file_button.setMinimumWidth(140)
+        select_folder_button.setMinimumWidth(140)
 
         ### BOTÓN PARA EJECUTAR FUNCIÓN PARA FUSIONAR EXCELLS ######################################################################
         # Crear un botón
@@ -715,15 +717,14 @@ class dataset_entrenamiento(QWidget):
         self.generate_button.clicked.connect(self.iniciar_thread_function)
 
         # Alineación
-        grid_layout.addWidget(self.generate_button, 13, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        grid_layout.addWidget(self.generate_button, 14, 0, alignment=Qt.AlignmentFlag.AlignLeft)
         # Estilos
-        self.generate_button.setMinimumWidth(100)
-        self.generate_button.setMaximumWidth(150)
+        self.generate_button.setMinimumWidth(150)
 
         # VENTANA OUTPUT SCRAPER #####################################################################################
         # Crear un QTextEdit para la salida
         self.output_textedit = QTextEdit(self)
-        grid_layout.addWidget(self.output_textedit,14, 0, 2, 2)  # row, column, rowSpan, columnSpan
+        grid_layout.addWidget(self.output_textedit,15, 0, 2, 2)  # row, column, rowSpan, columnSpan
     
     def iniciar_thread_function(self):  
         # Crear un hilo y ejecutar la función en segundo plano
@@ -928,9 +929,9 @@ class dataset_predecir(QWidget):
         # Estilos
         select_file_button.setMinimumWidth(140)
 
-        ### SELECCIONAR RUTA EXCELLS ESTADISTCAS JUGAODRES #########################################################################
+        ### SELECCIONAR RUTA DATASET DE ENTRADA SOFAESCORE #########################################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Selecionar carpeta donde se encuentran todos los ficheros de estadisticas de todos los jugaores de LaLiga: ")
+        label_text = QLabel("Selecionar carpeta donde se almacenaron tododos los partidos scrapeados de la jornada de la web de Sofaescore: ")
         grid_layout.addWidget(label_text, 4, 0)
 
         # INPUT DE TEXTO
@@ -942,45 +943,70 @@ class dataset_predecir(QWidget):
         select_folder_button = QPushButton("Seleccionar Carpeta")
         select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
-        grid_layout.addWidget(select_folder_button, 5, 1, alignment=Qt.AlignmentFlag.AlignLeft)
+        grid_layout.addWidget(select_folder_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         select_folder_button.setMinimumWidth(140)
+
+        ### SELECCIONAR RUTA DATASET DE ENTRADA MISTER FANTASY #####################################################################
+        # LABEL DE TEXTO
+        label_text = QLabel("Selecionar archivo resultante del scrapeo de la jornada de la web de Mister Fantasy Mundo Deportivo: ")
+        grid_layout.addWidget(label_text, 6, 0)
+
+        # INPUT DE TEXTO
+        self.text_file_input= QLineEdit(self)  
+        # Alineación
+        grid_layout.addWidget(self.text_file_input, 7, 0)
+
+        # BOTÓN PARA SELECCIONAR ARCHIVO
+        select_file_button = QPushButton("Seleccionar archivo")
+        select_file_button.clicked.connect(lambda: select_file(self))
+
+        # Alineación
+        grid_layout.addWidget(select_file_button, 7, 1, alignment=Qt.AlignmentFlag.AlignRight)
+
+        # Estilos
+        select_file_button.setMinimumWidth(140)
 
         #####  VENTANA OUTPUT  ####################################################
         # Crear un QTextEdit para la salida
         self.output_textedit = QTextEdit(self)
-        grid_layout.addWidget(self.output_textedit, 6, 0, 5, 0)  # row, column, rowSpan, columnSpan
+        grid_layout.addWidget(self.output_textedit, 8, 0, 5, 0)  # row, column, rowSpan, columnSpan
 
         ##### SELECCIONAR RUTA DONDE GUARDAR EL EXCEL CON LOS ATRIBUTOS PROCESADOS PARA INTRODUCIR AL MODELO #################################################
         ### LABEL DE TEXTO
         label_text = QLabel("Guardar dataset de los jugaodres a predecir:")
-        grid_layout.addWidget(label_text, 15, 0)
+        grid_layout.addWidget(label_text, 14, 0)
 
         ### INPUT DE TEXTO
         self.text_input2 = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input2, 16, 0)
+        grid_layout.addWidget(self.text_input2, 15, 0)
 
         ### BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar Carpeta")
         select_folder_button.clicked.connect(lambda: select_folder2(self))
         # Alineación
-        grid_layout.addWidget(select_folder_button, 16, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_folder_button, 15, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
         ### BOTÓN PARA GUARDAR DATASET ############
-        # Crear un botóns
+        # Crear un botón
         self.save_button = QPushButton("Generar dataset")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        self.save_button.clicked.connect(self.generar_excell_predecir)
+        self.save_button.clicked.connect(self.iniciar_scrapear_thread)
 
         # Alineación
-        grid_layout.addWidget(self.save_button, 17, 0, alignment=Qt.AlignmentFlag.AlignLeft)
+        grid_layout.addWidget(self.save_button, 16, 0, alignment=Qt.AlignmentFlag.AlignLeft)
 
         # Estilos
-        self.save_button.setMaximumWidth(170)
+        self.save_button.setMaximumWidth(200)
+
+    def iniciar_scrapear_thread(self):  
+        # Crear un hilo y ejecutar la función en segundo plano
+        thread = threading.Thread(target=self.generar_excell_predecir)
+        thread.start()
 
     def generar_excell_predecir(self):
 
@@ -1202,6 +1228,9 @@ class dataset_predecir(QWidget):
             self.output_textedit.insertPlainText(f"Puntuación Mundo Deportivo: {md}\n")
           
 ## ULTIMO RIVAL #####
+            #self.driver = webdriver.Chrome()
+            #realizar_login(self.driver)
+            #time.sleep(5)
             ultimo_equipo_rival = 0
             self.output_textedit.insertPlainText(f"Último equipo rival: {ultimo_equipo_rival}\n")
 
@@ -1647,6 +1676,7 @@ class dataset_predecir(QWidget):
             
 
         self.output_textedit.insertPlainText(f"Se han generado exitosamente el dataset en {nombre_archivo} para realizar la sprediciones sobre los jugadores selecionados.\n")
+
 
 class scrapear_datos(QWidget):
   def __init__(self):

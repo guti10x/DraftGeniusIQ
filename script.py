@@ -1145,11 +1145,13 @@ class dataset_entrenamiento(QWidget):
         # Guardar el DataFrame modificado en un nuevo archivo Excel
         df.to_excel(output_archivo, index=False)
 
-
 class dataset_predecir(QWidget):
     
     def __init__(self):
         super().__init__()
+
+        self.jugadoresS_noencontrados = ["Marc-André ter Stegen", "Adria Miquel Bosch Sanchis", "Sergio Ruiz Alonso", "Abderrahman Rebbach", "Kaiky", "Alejandro Pozo", "Lázaro", "Luis Javier Suárez", "Abdessamad Ezzalzouli", "Iván Cuéllar", "Djené", "Maximiliano Gómez", "Mamadou Mbaye", "Fali", "Anthony Lozano", "José María Giménez", "Sandro Ramírez", "Reinildo Isnard Mandava", "Chimy Ávila", "Pablo Ibáñez Lumbreras", "Portu", "Juan Carlos", "José Manuel Arnáiz", "Federico Valverde", "Alfonso Espino", "Ismaila Ciss", "Josep Chavarría", "José Pozo", "Imanol García de Albéniz", "Peru Nolaskoain Esnal", "Malcom Ares"] 
+        self.jugadoresMD_noencontrados = ["Ter Stegen", "Miki Bosch", "Sergio Ruiz", "Abde Rebbach", "Kaiky Fernandes", "Álex Pozo", "Lázaro Vinicius", "Luis Suárez", "Abde Ezzalzouli", "Pichu Cuéllar", "Dakonam Djené", "Maxi Gómez", "Momo Mbaye", "Fali Giménez", "Choco Lozano", "José Giménez", "Sandro", "Reinildo Mandava", "Ezequiel Ávila", "Pablo Ibáñez", "Cristian Portu", "Juan Carlos Martín", "José Arnaiz", "Fede Valverde", "Pacha Espino", "Pathé Ciss", "Pep Chavarría", "José Ángel Pozo", "Imanol García", "Peru Nolaskoain", "Malcom Adu Ares"]
 
         # Crear un diseño de cuadrícula dentro del QVBoxLayout
         grid_layout = QGridLayout(self)
@@ -1222,13 +1224,13 @@ class dataset_predecir(QWidget):
         grid_layout.addWidget(label_text, 8, 0)
 
         # INPUT DE TEXTO
-        self.text_file_input= QLineEdit(self)  
+        self.text_file2_input= QLineEdit(self)  
         # Alineación
-        grid_layout.addWidget(self.text_file_input, 9, 0)
+        grid_layout.addWidget(self.text_file2_input, 9, 0)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar archivo")
-        select_file_button.clicked.connect(lambda: select_file(self))
+        select_file_button.clicked.connect(lambda: select_file2(self))
 
         # Alineación
         grid_layout.addWidget(select_file_button, 9, 1, alignment=Qt.AlignmentFlag.AlignRight)
@@ -1278,6 +1280,164 @@ class dataset_predecir(QWidget):
         thread = threading.Thread(target=self.generar_excell_predecir)
         thread.start()
 
+    def json_a_excel(self):
+
+        def guardar_en_excell():
+
+            output = self.text_input2.text()
+            numero_jornada = str(self.number_input.value())
+            output_archivo=output+"/dataset_predecir_jornada"+numero_jornada+".xlsx"
+
+            # Obtener las listas de las filas
+            fila_excel1 = df1.iloc[index_df1, :].tolist()
+            fila_excel2 = df2.iloc[index_df2, :].tolist()
+
+            # Concatenar las listas
+            fila_concatenada = fila_excel2 + fila_excel1
+
+            # Crear un DataFrame de pandas con una sola fila y múltiples columnas
+            df_nueva_fila = pd.DataFrame([fila_concatenada])
+
+            # Leer el archivo Excel existente
+            df_existente = pd.read_excel(output_archivo, header=None)
+
+            # Concatenar el DataFrame existente con la nueva fila
+            df_final = pd.concat([df_existente, df_nueva_fila], ignore_index=True)
+
+            # Escribir el DataFrame final en el archivo Excel
+            df_final.to_excel(output_archivo, index=False, header=False)
+            
+        # Parte 1: fusionar todos los jsons de todos los partidos scrapeados de la jornada ##############################################
+        # Rutas globales
+        carpeta_json = self.text_input.text()
+        nombre_archivo_excel = 'todos_los_partidos_de_la_jornada.xlsx'
+
+        # Lista para almacenar los DataFrames de cada archivo JSON
+        dfs = []
+
+        # Iterar sobre cada archivo en la carpeta
+        for archivo_json in os.listdir(carpeta_json):
+            if archivo_json.endswith(".json"):
+                with open(os.path.join(carpeta_json, archivo_json), "r") as file:
+                    data = json.load(file)
+
+                # Crear un DataFrame vacío para cada archivo JSON
+                df = pd.DataFrame()
+
+                # Iterar sobre los elementos del JSON y agregarlos al DataFrame
+                for jugador, estadisticas in data.items():
+                    df = pd.concat([df, pd.DataFrame([[jugador, estadisticas["puntuacion"]] + [stat[key] for stat in estadisticas["estadisticas"] for key in stat.keys()]], columns=["Nombre", "Puntuación"] + [key for stat in estadisticas["estadisticas"] for key in stat.keys()])], ignore_index=True)
+
+                # Agregar el DataFrame a la lista
+                dfs.append(df)
+
+        # Concatenar todos los DataFrames en uno solo
+        df_final = pd.concat(dfs, ignore_index=True)
+
+        # Guardar el DataFrame en un archivo Excel
+        ruta_excel = os.path.join(carpeta_json, nombre_archivo_excel)
+        df_final.to_excel(ruta_excel, index=False)
+
+
+        # Parte 2: Fusionar MD con SC por nombre ########################################################################################
+        # Rutas de los archivos Excel
+        excel1_path = ruta_excel
+        excel2_path = self.text_file2_input.text()
+        output = self.text_input2.text()
+        numero_jornada = str(self.number_input.value())
+        output_archivo=output+"/dataset_predecir_jornada"+numero_jornada+".xlsx"
+        
+        # Leer los datos de los archivos Excel
+        df1 = pd.read_excel(excel1_path, header=None)
+        df2 = pd.read_excel(excel2_path, header=None)
+        
+        # Obtener todas las celdas de la fila 1 (que ahora es la segunda fila después de desactivar el encabezado)
+        fila_excel1 = df1.iloc[0, :].dropna().tolist()
+        fila_excel2 = df2.iloc[0, :].dropna().tolist()
+
+        # Concatenar las listas
+        fila_concatenada =  fila_excel2 + fila_excel1
+
+        # Crear un DataFrame de pandas con una sola fila y múltiples columnas
+        df = pd.DataFrame([fila_concatenada])
+
+        # Escribir el DataFrame en un archivo Excel
+        df.to_excel(output_archivo, index=False, header=False)
+
+        # Inicializar el conjunto de valores encontrados
+        valores_encontrados = set()
+        df_fusionado = pd.DataFrame()
+        encabezado=0
+        contador_coincidencias=0
+        contador_manual=0
+        contador_global=0
+        
+        self.output_textedit.insertPlainText("_____________________________________________________________________________________________________\n")   
+        self.output_textedit.insertPlainText("Buscando coincidencia entre jugadores...\n")
+        
+        # Iterar sobre las filas de df1 y comparar con las filas de df2
+        for index_df1, row_df1 in df1.iterrows():
+            value_to_compare1o =row_df1.iloc[0] 
+            value_to_compare1 =value_to_compare1o.lower()
+            value_to_compare1 =unidecode(value_to_compare1)
+            value_to_compare1 =unidecode(value_to_compare1)
+            value_to_compare1=value_to_compare1.replace(" ", "")
+            
+            coincidencia_encontrada = False
+            contador_global+=1
+            # Iterar sobre las filas de df2
+            for index_df2, row_df2 in df2.iterrows():
+                #print("-----",value_to_compare1,"-----",value_to_compare2,"-----")
+                value_to_compare2o =row_df2.iloc[0]
+                value_to_compare2 =value_to_compare2o.lower()
+                value_to_compare2 =unidecode(value_to_compare2)
+                value_to_compare2 = unidecode(value_to_compare2)
+                value_to_compare2=value_to_compare2.replace(" ", "")
+                
+                # Calcular la distancia de Levenshtein
+                distancia = Levenshtein.distance(value_to_compare1, value_to_compare2)
+                # Establecer un umbral para considerar coincidencias
+                umbral = 2  
+
+                if distancia <= umbral:
+                    self.output_textedit.insertPlainText(f"Coincidencia encontrada: excell1-fila-{index_df1} <-> excell2-fila.{index_df2} , {value_to_compare1} == {value_to_compare2}\n")
+                    valores_encontrados.add(value_to_compare1) 
+
+                    guardar_en_excell()
+
+                    contador_coincidencias +=1
+                    coincidencia_encontrada = True
+                    time.sleep(0.02)
+
+            # Imprimir si no se encontró ninguna coincidencia
+            if not coincidencia_encontrada:
+                if value_to_compare1!="nombre":
+                    self.output_textedit.insertPlainText("------------------------------------------------------------------------------------------------\n")
+                    self.output_textedit.insertPlainText(f"Coincidencia NO encontrada: excell1-fila-{index_df1} en {value_to_compare1}\n")
+                    self.output_textedit.insertPlainText("------------------------------------------------------------------------------------------------\n")
+        
+        #Estadisticas de la fusion de los datasets
+        self.output_textedit.insertPlainText("_____________________________________________________________________________________________________\n")       
+        self.output_textedit.insertPlainText("Buscando jugaodres manualmente que no hicieron match...\n")
+        for jugadorS, jugadorMD in zip(self.jugadoresS_noencontrados, self.jugadoresMD_noencontrados):
+            for index_df1, row_df1 in df1.iterrows():
+                value_to_compare1o = row_df1.iloc[0]
+                for index_df2, row_df2 in df2.iterrows():
+                    value_to_compare2o = row_df2.iloc[0]
+
+                    if value_to_compare1o == jugadorS and value_to_compare2o == jugadorMD:
+                        self.output_textedit.insertPlainText(f"Coincidencia encontrada: {jugadorS}\n")
+                        guardar_en_excell()
+                        contador_manual+=1
+            
+        #Resultados de la fusión de datasets
+        self.output_textedit.insertPlainText("\n_____________________________________________________________________________________________________\n")
+        self.output_textedit.insertPlainText(f"Total coincidencias: {contador_coincidencias} / {contador_global-1}\n")
+        self.output_textedit.insertPlainText(f"Añadidos manualmente: {contador_manual}\n")
+        self.output_textedit.insertPlainText(f"Jugadores no disponibles en MisterFantasy: {((contador_global-1)-(contador_coincidencias+contador_manual))}\n")
+        self.output_textedit.insertPlainText(f"Precisión: {(((contador_coincidencias+contador_manual)/(contador_global-1))*100)} %\n")
+        self.output_textedit.insertPlainText("Dataset generado correctamente\n")
+
     def generar_excell_predecir(self):
 
         def encontrar_coincidencias(valores_Historico, valores_Mercado,ruta_archivo):
@@ -1298,25 +1458,38 @@ class dataset_predecir(QWidget):
         
         #### PARTE 0: LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS
         # Fichero con los futbolistas a procesae
-        archivo_excel = self.text_file_input.text()
+        archivo_excel_selected_players = self.text_file_input.text()
+        # Fichero con los futbolistas a procesae
+        archivo_excel_MF = self.text_file2_input.text()
+
         # Ruta a la carpeta que contiene los archivos Excel
-        carpeta_excel = self.text_input.text()
+        carpeta_SF = self.text_input.text()
+        # Ruta a la carpeta donde guardar dataset generado
+        carpeta_save = self.text_input2.text()
+
+        output = self.text_input2.text()
+        numero_jornada = str(self.number_input.value())
+        output_archivo=output+"/dataset_predecir_jornada"+numero_jornada+".xlsx"
+
         # Ruta de la carpeta donde guardar el excell generado
         ruta_output = self.text_input2.text()
-        if not archivo_excel or not carpeta_excel or not ruta_output:
+        if not archivo_excel_selected_players or not archivo_excel_MF or not carpeta_SF or not carpeta_save:
             color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             self.output_textedit.mergeCurrentCharFormat(formato_rojo)
 
             ## Comprobar si las variables han sido inicializadas
-            if not archivo_excel:
+            if not archivo_excel_selected_players:
                 self.output_textedit.insertPlainText("El fichero de los jugaodres del mercado o de la plantilla no se ha inicializado.\n")
                 
-            if not carpeta_excel:
-                self.output_textedit.insertPlainText("La ruta de la carpeta donde encontrar todos los ficheros de estadisticas de todos los jugaores de LaLiga no se ha inicializada.\n")
+            if not archivo_excel_MF:
+                self.output_textedit.insertPlainText("La ruta de la carpeta donde encontrar todos los ficheros de estadisticas de Sofaecore de todos los jugaores de LaLiga no se ha inicializada.\n")
                 
-            if not ruta_output:
+            if not carpeta_SF:
+                self.output_textedit.insertPlainText("La ruta de la carpeta donde encontrar todos los ficheros de estadisticas de Mister Fantasy de todos los jugaores de LaLiga no se ha inicializada.\n")
+            
+            if not carpeta_save:
                 self.output_textedit.insertPlainText("La ruta de la carpeta donde guardar el datatset generado no ha sido inicializada.\n")
             
             formato_negro = QTextCharFormat()
@@ -1324,14 +1497,17 @@ class dataset_predecir(QWidget):
             self.output_textedit.mergeCurrentCharFormat(formato_negro)
             return
 
-        #### PARTE 1: ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA 
+        ### PARTE 1: GENERAR DATASET resultate de fusionar los daasets de Sofaescore y Mister Fantasy
+        self.json_a_excel()
+
+        #### PARTE 2: ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA 
         # Ruta al archivo Excel
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
         self.output_textedit.insertPlainText(f"Abriendo fichero de jugadores selecioandos...\n")
         self.output_textedit.insertPlainText("\n" + "" * 100 + "\n")
 
         # Lee el archivo Excel con pandas y especifica que no hay encabezado
-        df = pd.read_excel(archivo_excel, header=None)
+        df = pd.read_excel(archivo_excel_selected_players, header=None)
 
         # Obtén los valores de la primera columna (columna 0)
         valores_Mercado = df.iloc[:, 0].tolist()
@@ -1343,13 +1519,17 @@ class dataset_predecir(QWidget):
             self.output_textedit.insertPlainText(valor)
         self.output_textedit.insertPlainText(f"\n") 
         
-        #### PARTE 2 : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
 
+        #### PARTE 3 : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
         # Lista global para almacenar todas las filas seleccionadas
         filas_jugadores = []
 
+        output = self.text_input2.text()
+        numero_jornada = str(self.number_input.value())
+        output_archivo=output+"/dataset_predecir_jornada"+numero_jornada+".xlsx"
+
         # Lista todos los archivos en la carpeta con extensión .xlsx
-        archivos_excel = [archivo for archivo in os.listdir(carpeta_excel) if archivo.endswith(".xlsx")]
+        archivos_excel = [output_archivo]
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
         self.output_textedit.insertPlainText("Buscando coincidencias...\n")
         
@@ -1357,7 +1537,7 @@ class dataset_predecir(QWidget):
         for archivo in archivos_excel:
             
             # Ruta al archivo Excel actual
-            ruta_archivo = os.path.join(carpeta_excel, archivo)
+            ruta_archivo = os.path.join(output_archivo, archivo)
 
             # Lee el archivo Excel con pandas y especifica que no hay encabezado
             df = pd.read_excel(ruta_archivo, header=None)
@@ -1375,7 +1555,6 @@ class dataset_predecir(QWidget):
             datos_filas = filas_seleccionadas.to_dict(orient='records')
 
             # Agrega las filas seleccionadas a la lista global
-
             filas_jugadores.extend(datos_filas)
  
         # Leer y almacenar cabecera
@@ -1389,7 +1568,8 @@ class dataset_predecir(QWidget):
         # Imprime los nombres de las columnas
         self.output_textedit.insertPlainText(f"{nombres_columnas}\n")
 
-        #### PARTE 3 : CREAR EXCELL FINAL PARA PASAR AL MODELO Y PREDECIR
+
+        #### PARTE 4 : CREAR EXCELL FINAL PARA PASAR AL MODELO Y PREDECIR
         # Obtener la fecha actual
         fecha_actual = datetime.now()
         # Formatear la fecha como una cadena (opcional)
@@ -1413,7 +1593,8 @@ class dataset_predecir(QWidget):
         # Guardar el libro de trabajo en el archivo especificado
         wb.save(nombre_archivo)
 
-        #### PARTE 4 : #### Acceder a las estadisticas de cada jugaodor del mercado/plantilla en todos los datasets(partidos de cada jornada de LaLiga) donde se han encontrado registros de este, para: 
+
+        #### PARTE 5 : #### Acceder a las estadisticas de cada jugaodor del mercado/plantilla en todos los datasets(partidos de cada jornada de LaLiga) donde se han encontrado registros de este, para: 
         ## - Generar medias, porcentajes... de valores numéricos estadisticos alamcenados en todos los dataset (Ej: media de goles)
         ## - Acceder a la web de Mister Fantasy par inicializar ciertos atributos (Ej: proximo rival al que se enfrentará un jugaodor)
 
@@ -1470,15 +1651,15 @@ class dataset_predecir(QWidget):
             self.output_textedit.insertPlainText(f"Equipo: {eq_jugador}\n")
 
             ## PUNTUACIÓN FANTASY, AS, MARCA, MD #####
-            fantasy= 0
-            ass=0
-            marca=0
-            md=0
+            fantasy = 0.0
+            ass = 0.0
+            marca = 0.0
+            md = 0.0
             for indice in indices:
-                mf = filas_jugadores[indice][4]
-                a = filas_jugadores[indice][5]
-                mc = filas_jugadores[indice][6]
-                m = filas_jugadores[indice][7]
+                mf = float(filas_jugadores[indice][4])
+                a = float(filas_jugadores[indice][5])
+                mc = float(filas_jugadores[indice][6])
+                m = float(filas_jugadores[indice][7])
 
                 fantasy = fantasy + mf
                 ass = ass + a
@@ -1944,8 +2125,9 @@ class dataset_predecir(QWidget):
             # Guardar el archivo Excel
             wb.save(nombre_archivo)
             
-
+        os.remove(output_archivo)
         self.output_textedit.insertPlainText(f"Se han generado exitosamente el dataset en {nombre_archivo} para realizar la sprediciones sobre los jugadores selecionados.\n")
+
 
 
 class scrapear_datos(QWidget):

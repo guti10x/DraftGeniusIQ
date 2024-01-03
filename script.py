@@ -758,6 +758,19 @@ class dataset_entrenamiento(QWidget):
             # Escribir el DataFrame final en el archivo Excel
             df_final.to_excel(output_archivo, index=False, header=False)
 
+        def procesar_cadena(cadena):
+            match = re.match(r'(\d+)\s*\((\d+)\)', str(cadena))
+            if match:
+                numerator = int(match.group(1))
+                denominator = int(match.group(2))
+                if denominator != 0:
+                    result = numerator / denominator
+                    return float(result)  # Asegurarse de que el resultado sea float
+                else:
+                    return 0.0
+            else:
+                return 0.0
+            
         # Parte 1: fusionar todos los jsons de todos los partidos scrapeados de la jornada ##############################################
         # Rutas globales
         carpeta_json = self.text_input.text()
@@ -789,8 +802,6 @@ class dataset_entrenamiento(QWidget):
         # Guardar el DataFrame en un archivo Excel
         ruta_excel = os.path.join(carpeta_xlsx, nombre_archivo_excel)
         df_final.to_excel(ruta_excel, index=False)
-
-        self.output_textedit.insertPlainText(f"Archivo Excel con todos los partidos scrpaeados de la jornada fusionado y guardado correctamente en: {ruta_excel}\n")
 
         # Parte 2: Fusionar MD con SC por nombre ########################################################################################
         # Rutas de los archivos Excel
@@ -896,6 +907,7 @@ class dataset_entrenamiento(QWidget):
         # Cargar el archivo Excel en un DataFrame
         df = pd.read_excel(output_archivo)
 
+        #### Atributos Mister Fantasy
         ## NOMBRE #####
         # Verificar y convertir a str la columna 
         df.iloc[:, 0] = df.iloc[:, 0].apply(lambda x: str(x) if not isinstance(x, str) else x)
@@ -967,7 +979,167 @@ class dataset_entrenamiento(QWidget):
         # Verificar y convertir a float la columna 
         df.iloc[:, 16] = df.iloc[:, 16].apply(lambda x: float(str(x).replace('kg', '').replace(',', '.')) if isinstance(x, (str, float)) else x)
 
+        #### Atributos Sofaescore
+        ## PUNTUACIÓN SF#####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 18] = df.iloc[:, 18].apply(lambda x: float(str(x).replace(',', '.')) if not isinstance(x, float) else x)
 
+        # MINUTES PLAYED #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 19] = df.iloc[:, 19].apply(lambda x: float(str(x).replace("'", '')) if not isinstance(x, (float, int)) else x)
+
+        ## EXPECTED ASSISTS
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 20] = df.iloc[:, 20].apply(lambda x: float(str(x).replace(',', '.')) if not isinstance(x, float) else x)
+
+        ## (XA) SAVES
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 21] = df.iloc[:, 21].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## GOALS PREVENTED
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 22] = df.iloc[:, 22].apply(lambda x: float(str(x).replace(',', '.')) if not isinstance(x, float) else x)
+
+        ## PUNCHES 
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 23] = df.iloc[:, 23].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## RUNS OUT (SUCC.) 
+        # Aplica la función a toda la columna 
+        df.iloc[:, 24] = df.iloc[:, 24].apply(procesar_cadena)
+
+        ## HIGH CLAIMS 
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 25] = df.iloc[:, 25].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## TOUCHES #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 26] = df.iloc[:, 26].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## ACC. PASSES #####
+        # Aplica la lógica de la expresión regular a toda la columna 
+        df.iloc[:, 27] = df.iloc[:, 27].apply(lambda x: re.search(r'\((\d+)%\)', str(x)).group(1) if re.search(r'\((\d+)%\)', str(x)) else None)
+
+        ## KEY PASSES ####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 28] = df.iloc[:, 28].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## CROSSES (ACC.) #####
+        df.iloc[:, 29] = df.iloc[:, 29].apply(procesar_cadena)
+
+        ## LONG BALLS (ACC.) #####
+        df.iloc[:, 30] = df.iloc[:, 30].apply(procesar_cadena)
+
+        ## CLEARANCES #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 31] = df.iloc[:, 31].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## BLOCKED SHOTS #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 32] = df.iloc[:, 32].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## INTERCEPTIONS #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 33] = df.iloc[:, 33].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## TACKLES #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 34] = df.iloc[:, 34].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## DRIBBLED PAST #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 35] = df.iloc[:, 35].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## GROUND DUELS (WON) ##### 
+        # Apply the function to transform the column 
+        df.iloc[:, 36] = df.iloc[:, 36].apply(procesar_cadena)
+
+        ## AERIAL DUELS (WON) #####
+        # Apply the function to transform the column 
+        df.iloc[:, 37] = df.iloc[:, 37].apply(procesar_cadena)
+
+        ## FOULS #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 38] = df.iloc[:, 38].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## WAS FOULED #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 39] = df.iloc[:, 39].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## SHOTS ON TARGET #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 40] = df.iloc[:, 40].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## SHOTS OFF TARGET #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 41] = df.iloc[:, 41].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## SHOTS BLOCKED #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 42] = df.iloc[:, 42].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## DRIBBLE ATTEMPTS (SUCC.) #####
+        df.iloc[:, 43] = df.iloc[:, 43].apply(procesar_cadena)
+
+        ## GOALS #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 44] = df.iloc[:, 44].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## ASSISTS #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 45] = df.iloc[:, 45].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## POSSESSION LOST #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 46] = df.iloc[:, 46].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## EXPECTED GOALS (XG) #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 47] = df.iloc[:, 47].apply(lambda x: float(str(x).replace(',', '.')) if not isinstance(x, float) else x)
+
+        ## PENALTY MISS #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 48] = df.iloc[:, 48].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## BIG CHANCES CREATED #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 49] = df.iloc[:, 49].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## PENALTY WON #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 50] = df.iloc[:, 50].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## BIG CHANCES MISSED #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 51] = df.iloc[:, 51].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## SAVES FROM INSIDE BOX #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 52] = df.iloc[:, 52].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## PENALTY COMMITTED #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 53] = df.iloc[:, 53].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## OFFSIDES #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 54] = df.iloc[:, 54].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## HIT WOODWORK #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 55] = df.iloc[:, 55].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## AUSENCIA #####
+        # Verificar y convertir a str la columna 
+        df.iloc[:, 56] = df.iloc[:, 56].apply(lambda x: str(x) if not isinstance(x, str) else x)
+
+        ## ERROR LED TO SHOT #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 57] = df.iloc[:, 57].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## ERROR LED TO GOAL   #####
+        # Verificar y convertir a float la columna
+        df.iloc[:, 58] = df.iloc[:, 58].apply(lambda x: float(x) if not isinstance(x, float) else x)
 
 
         # Guardar el DataFrame modificado en un nuevo archivo Excel

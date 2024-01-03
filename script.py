@@ -737,7 +737,7 @@ class dataset_entrenamiento(QWidget):
 
             output = self.text_input2.text()
             numero_jornada = str(self.number_input.value())
-            output_archivo=output+"/dataset_completo_jornada"+numero_jornada+".xlsx"
+            output_archivo=output+"/dataset_entrenamiento_jornada"+numero_jornada+".xlsx"
 
             # Obtener las listas de las filas
             fila_excel1 = df1.iloc[index_df1, :].tolist()
@@ -798,7 +798,7 @@ class dataset_entrenamiento(QWidget):
         excel2_path = self.text_file_input.text()
         output = self.text_input2.text()
         numero_jornada = str(self.number_input.value())
-        output_archivo=output+"/dataset_completo_jornada"+numero_jornada+".xlsx"
+        output_archivo=output+"/dataset_entrenamiento_jornada"+numero_jornada+".xlsx"
         
         # Leer los datos de los archivos Excel
         df1 = pd.read_excel(excel1_path, header=None)
@@ -891,6 +891,88 @@ class dataset_entrenamiento(QWidget):
         self.output_textedit.insertPlainText(f"Jugadores no disponibles en MisterFantasy: {((contador_global-1)-(contador_coincidencias+contador_manual))}\n")
         self.output_textedit.insertPlainText(f"Precisión: {(((contador_coincidencias+contador_manual)/(contador_global-1))*100)} %\n")
         self.output_textedit.insertPlainText("Dataset generado correctamente\n")
+
+        # PROCESAR DATOS DE LAS COLUMNAS
+        # Cargar el archivo Excel en un DataFrame
+        df = pd.read_excel(output_archivo)
+
+        ## NOMBRE #####
+        # Verificar y convertir a str la columna 
+        df.iloc[:, 0] = df.iloc[:, 0].apply(lambda x: str(x) if not isinstance(x, str) else x)
+
+        ## VALOR #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 1] = df.iloc[:, 1].apply(lambda x: float(str(x).replace('.', '')) if isinstance(x, (int, float)) else x)
+
+        ## POSICIÓN #####
+        # Verificar y convertir a str la columna 
+        df.iloc[:, 2] = df.iloc[:, 2].apply(lambda x: str(x) if not isinstance(x, str) else x)
+
+        ## EQUIPO #####
+        # Verificar y convertir a str la columna 
+        df.iloc[:, 3] = df.iloc[:, 3].apply(lambda x: str(x) if not isinstance(x, str) else x)
+
+        ## PUNTUACIÓN FANTASY
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 4] = pd.to_numeric(df.iloc[:, 4], errors='coerce')
+        # Llenar los valores NaN con 0
+        df.iloc[:, 4] = df.iloc[:, 4].fillna(0)
+
+        ## AS
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 5] = df.iloc[:, 5].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## MARCA
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 6] = df.iloc[:, 6].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## MD 
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 7] = df.iloc[:, 7].apply(lambda x: float(x) if not isinstance(x, float) else x)
+
+        ## ULTIMO RIVAL #####
+        # Verificar y convertir a str la columna 
+        df.iloc[:, 8] = df.iloc[:, 8].apply(lambda x: str(x) if not isinstance(x, str) else x)
+
+        ## RESULTADO DEL PARTIDO #####
+        # Verificar y convertir "Win" a 1 y cualquier otro valor a 0 en toda la columna 9
+        df.iloc[:, 9] = df.iloc[:, 9].apply(lambda x: 1 if x == "Win" else 0)
+
+        ## PROXIMO RIVAL #####
+        # Verificar y convertir a str la columna 
+        df.iloc[:, 10] = df.iloc[:, 10].apply(lambda x: str(x) if not isinstance(x, str) else x)
+
+        ## PROXIMO PARTIDO ES LOCAL #####
+        # Verificar y convertir "VERDADERO" a 1 y cualquier otro valor a 0 en toda la columna 11
+        df.iloc[:, 11] = df.iloc[:, 11].apply(lambda x: 1 if x == "VERDADERO" else 0)
+
+        ## MEDIA EN CASA #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 12] = df.iloc[:, 12].apply(lambda x: float(str(x).replace(',', '.')) if isinstance(x, str) else x)
+
+        ## MEDIA FUERA #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 13] = df.iloc[:, 13].apply(lambda x: float(str(x).replace(',', '.')) if isinstance(x, str) else x)
+
+        # EDAD #####
+        # Verificar y convertir a entero la columna 19
+        df.iloc[:, 19] = pd.to_numeric(df.iloc[:, 19], errors='coerce').fillna(0).astype(int)
+
+
+        # ALTURA #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 15] = df.iloc[:, 15].apply(lambda x: float(str(x).replace('m', '').replace(',', '.')) if isinstance(x, (str, float)) else x)
+
+        # PESO #####
+        # Verificar y convertir a float la columna 
+        df.iloc[:, 16] = df.iloc[:, 16].apply(lambda x: float(str(x).replace('kg', '').replace(',', '.')) if isinstance(x, (str, float)) else x)
+
+
+
+
+        # Guardar el DataFrame modificado en un nuevo archivo Excel
+        df.to_excel(output_archivo, index=False)
+
 
 class dataset_predecir(QWidget):
     

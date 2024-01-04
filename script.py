@@ -770,7 +770,46 @@ class dataset_entrenamiento(QWidget):
                     return 0.0
             else:
                 return 0.0
+        
+        #### PARTE 0: LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS
             
+        # Número de la jornada
+        num_jornada = self.number_input.text()
+
+        # Ruta a la carpeta que contiene los archivos json de Sofaescore
+        carpeta_SF = self.text_input.text()
+
+        # Ruta del excell del fichero Mister Fantasy
+        file_mf = self.text_file_input.text()
+
+        # Ruta de la carpeta donde guardar el excell generado
+        ruta_output = self.text_input2.text()
+
+        if not num_jornada or not carpeta_SF or not file_mf or not ruta_output:
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            self.output_textedit.mergeCurrentCharFormat(formato_rojo)
+
+            ## Comprobar si las variables han sido inicializadas
+            if not num_jornada:
+                self.output_textedit.insertPlainText("El número de la jornada no ha sido inicializado.\n")
+
+            if not carpeta_SF:
+                self.output_textedit.insertPlainText("La ruta de la carpeta donde encontrar todos los ficheros de estadisticas de todos los jugaores de LaLiga de Sofaescore no se ha inicializada.\n")
+
+            if not file_mf:
+                self.output_textedit.insertPlainText("La ruta del fichero donde encontrar todos las estadisticas de todos los jugaores de LaLiga de Mister Fantasy no se ha inicializada.\n")
+
+            if not ruta_output:
+                self.output_textedit.insertPlainText("La ruta de la carpeta donde guardar el datatset generado no ha sido inicializada.\n")
+
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            self.output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
+
+
         # Parte 1: fusionar todos los jsons de todos los partidos scrapeados de la jornada ##############################################
         # Rutas globales
         carpeta_json = self.text_input.text()
@@ -1457,13 +1496,19 @@ class dataset_predecir(QWidget):
             return posiciones
         
         #### PARTE 0: LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS
-        # Fichero con los futbolistas a procesae
+
+        # Número de la jornada
+        num_jornada = self.number_input.text()
+
+        # Fichero con los futbolistas (mercado/planilla) a procesar
         archivo_excel_selected_players = self.text_file_input.text()
-        # Fichero con los futbolistas a procesae
+
+        # Ruta del excell del fichero Mister Fantasy
         archivo_excel_MF = self.text_file2_input.text()
 
-        # Ruta a la carpeta que contiene los archivos Excel
+        # Ruta a la carpeta que contiene los archivos json de Sofaescore
         carpeta_SF = self.text_input.text()
+
         # Ruta a la carpeta donde guardar dataset generado
         carpeta_save = self.text_input2.text()
 
@@ -1473,13 +1518,16 @@ class dataset_predecir(QWidget):
 
         # Ruta de la carpeta donde guardar el excell generado
         ruta_output = self.text_input2.text()
-        if not archivo_excel_selected_players or not archivo_excel_MF or not carpeta_SF or not carpeta_save:
+        if not num_jornada or not archivo_excel_selected_players or not archivo_excel_MF or not carpeta_SF or not carpeta_save:
             color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             self.output_textedit.mergeCurrentCharFormat(formato_rojo)
 
             ## Comprobar si las variables han sido inicializadas
+            if not num_jornada:
+                self.output_textedit.insertPlainText("El número de la jornada no ha sido inicializado.\n")
+
             if not archivo_excel_selected_players:
                 self.output_textedit.insertPlainText("El fichero de los jugaodres del mercado o de la plantilla no se ha inicializado.\n")
                 

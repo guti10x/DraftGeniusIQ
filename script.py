@@ -1191,6 +1191,28 @@ class dataset_predecir(QWidget):
 
         self.jugadoresS_noencontrados = ["Marc-André ter Stegen", "Adria Miquel Bosch Sanchis", "Sergio Ruiz Alonso", "Abderrahman Rebbach", "Kaiky", "Alejandro Pozo", "Lázaro", "Luis Javier Suárez", "Abdessamad Ezzalzouli", "Iván Cuéllar", "Djené", "Maximiliano Gómez", "Mamadou Mbaye", "Fali", "Anthony Lozano", "José María Giménez", "Sandro Ramírez", "Reinildo Isnard Mandava", "Chimy Ávila", "Pablo Ibáñez Lumbreras", "Portu", "Juan Carlos", "José Manuel Arnáiz", "Federico Valverde", "Alfonso Espino", "Ismaila Ciss", "Josep Chavarría", "José Pozo", "Imanol García de Albéniz", "Peru Nolaskoain Esnal", "Malcom Ares"] 
         self.jugadoresMD_noencontrados = ["Ter Stegen", "Miki Bosch", "Sergio Ruiz", "Abde Rebbach", "Kaiky Fernandes", "Álex Pozo", "Lázaro Vinicius", "Luis Suárez", "Abde Ezzalzouli", "Pichu Cuéllar", "Dakonam Djené", "Maxi Gómez", "Momo Mbaye", "Fali Giménez", "Choco Lozano", "José Giménez", "Sandro", "Reinildo Mandava", "Ezequiel Ávila", "Pablo Ibáñez", "Cristian Portu", "Juan Carlos Martín", "José Arnaiz", "Fede Valverde", "Pacha Espino", "Pathé Ciss", "Pep Chavarría", "José Ángel Pozo", "Imanol García", "Peru Nolaskoain", "Malcom Adu Ares"]
+        self.teams_data = {
+        "Real Madrid": "https://cdn.gomister.com/file/cdn-common/teams/15.png?version=20231117",
+        "Real Sociedad": "https://cdn.gomister.com/file/cdn-common/teams/16.png?version=20231117",
+        "Atlético de Madrid": "https://cdn.gomister.com/file/cdn-common/teams/2.png?version=20231117",
+        "Girona": "https://cdn.gomister.com/file/cdn-common/teams/222.png?version=20231117",
+        "Osasuna": "https://cdn.gomister.com/file/cdn-common/teams/50.png?version=20231117",
+        "Athletic Club": "https://cdn.gomister.com/file/cdn-common/teams/1.png?version=20231117",
+        "Valencia": "https://cdn.gomister.com/file/cdn-common/teams/19.png?version=20231117",
+        "Granada": "https://cdn.gomister.com/file/cdn-common/teams/10.png?version=20231117",
+        "Getafe": "https://cdn.gomister.com/file/cdn-common/teams/9.png?version=20231117",
+        "Villarreal": "https://cdn.gomister.com/file/cdn-common/teams/20.png?version=20231117",
+        "Las Palmas": "https://cdn.gomister.com/file/cdn-common/teams/11.png?version=20231117",
+        "Mallorca": "https://cdn.gomister.com/file/cdn-common/teams/408.png?version=20231117",
+        "Rayo Vallecano": "https://cdn.gomister.com/file/cdn-common/teams/14.png?version=20231117",
+        "Barcelona": "https://cdn.gomister.com/file/cdn-common/teams/3.png?version=20231117",
+        "Celta de Vigo": "https://cdn.gomister.com/file/cdn-common/teams/5.png?version=20231117",
+        "Cádiz": "https://cdn.gomister.com/file/cdn-common/teams/499.png?version=20231117",
+        "Alavés": "https://cdn.gomister.com/file/cdn-common/teams/48.png?version=20231117",
+        "Almería": "https://cdn.gomister.com/file/cdn-common/teams/21.png?version=20231117",
+        "Sevilla": "https://cdn.gomister.com/file/cdn-common/teams/17.png?version=20231117",
+        "Betis": "https://cdn.gomister.com/file/cdn-common/teams/4.png?version=20231117",
+        }
 
         # Crear un diseño de cuadrícula dentro del QVBoxLayout
         grid_layout = QGridLayout(self)
@@ -1494,8 +1516,26 @@ class dataset_predecir(QWidget):
                     self.output_textedit.insertPlainText(f"Coincidencia en la fila {pos} para '{nombre_completo}'\n")
     
             return posiciones
-        
-        #### PARTE 0: LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS
+       
+        def actualizar_version(self,version):
+            for equipo, url in self.teams_data.items():
+                # Dividir la URL en base al signo de interrogación
+                partes = url.split('?')
+                
+                # Verificar si hay una parte después del signo de interrogación y actualizar la versión
+                if len(partes) > 1:
+                    partes[1] = f"version={version}"
+                    
+                    # Volver a unir las partes para formar la URL actualizada
+                    nueva_url = '?'.join(partes)
+                    
+                    # Actualizar la URL en el diccionario
+                    self.teams_data[equipo] = nueva_url
+
+                #print(version)
+                #print("nuevaaaa url-->  ",nueva_url)
+
+        #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS
 
         # Número de la jornada
         num_jornada = self.number_input.text()
@@ -1545,10 +1585,10 @@ class dataset_predecir(QWidget):
             self.output_textedit.mergeCurrentCharFormat(formato_negro)
             return
 
-        ### PARTE 1: GENERAR DATASET resultate de fusionar los daasets de Sofaescore y Mister Fantasy
+        ### PARTE 1 : GENERAR DATASET resultate de fusionar los daasets de Sofaescore y Mister Fantasy
         self.json_a_excel()
 
-        #### PARTE 2: ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA 
+        #### PARTE 2 : ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA 
         # Ruta al archivo Excel
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
         self.output_textedit.insertPlainText(f"Abriendo fichero de jugadores selecioandos...\n")
@@ -1566,9 +1606,34 @@ class dataset_predecir(QWidget):
         for valor in valores_Mercado:
             self.output_textedit.insertPlainText(valor)
         self.output_textedit.insertPlainText(f"\n") 
-        
 
-        #### PARTE 3 : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
+        # PARTE 3 : SCRAPING DE DATOS DE MISTER FATASY DE JUGAODRES 
+        self.output_textedit.insertPlainText(f"Accediendo a la web de Mister Fnatasy para scrapear datos de los jugadores que se almacenaán en el dataset  \n")
+        self.driver = webdriver.Chrome()
+        realizar_login(self.driver)
+        time.sleep(5)
+        
+        # Analizamso si el fichero para comprobar si contiene jugaodres del mercado o de mi plantilla y en consecuencia scrapear en el apartado de "mi plantilla" o "mercado"
+
+        # Obtener el nombre del archivo sin la extensión
+        nombre_archivo = os.path.splitext(os.path.basename(archivo_excel_selected_players))[0]
+
+        # Convierte el nombre del archivo a minúsculas para facilitar la comparación
+        nombre_archivo = nombre_archivo.lower()
+
+        # Verifica si el nombre del archivo contiene la palabra "mercado"
+        if 'mercado' in nombre_archivo:
+            self.output_textedit.insertPlainText("Scrapeando datos de jugadores del mercado.")
+            # PARTE 3.1 : SCRAPEAR MERCADO
+
+
+        # Verifica si el nombre del archivo contiene la palabra "plantilla"
+        if 'plantilla' in nombre_archivo:
+            self.output_textedit.insertPlainText("Scrapeando datos de jugadores de mi plantilla.")
+            # PARTE 3.2 : SCRAPEAR PLANTILLA
+
+
+        #### PARTE 4 : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
         # Lista global para almacenar todas las filas seleccionadas
         filas_jugadores = []
 
@@ -1617,7 +1682,7 @@ class dataset_predecir(QWidget):
         self.output_textedit.insertPlainText(f"{nombres_columnas}\n")
 
 
-        #### PARTE 4 : CREAR EXCELL FINAL PARA PASAR AL MODELO Y PREDECIR
+        #### PARTE 5 : CREAR EXCELL FINAL PARA PASAR AL MODELO Y PREDECIR
         # Obtener la fecha actual
         fecha_actual = datetime.now()
         # Formatear la fecha como una cadena (opcional)
@@ -1642,7 +1707,7 @@ class dataset_predecir(QWidget):
         wb.save(nombre_archivo)
 
 
-        #### PARTE 5 : #### Acceder a las estadisticas de cada jugaodor del mercado/plantilla en todos los datasets(partidos de cada jornada de LaLiga) donde se han encontrado registros de este, para: 
+        #### PARTE 6 : #### Acceder a las estadisticas de cada jugaodor del mercado/plantilla en todos los datasets(partidos de cada jornada de LaLiga) donde se han encontrado registros de este, para: 
         ## - Generar medias, porcentajes... de valores numéricos estadisticos alamcenados en todos los dataset (Ej: media de goles)
         ## - Acceder a la web de Mister Fantasy par inicializar ciertos atributos (Ej: proximo rival al que se enfrentará un jugaodor)
 
@@ -1761,11 +1826,9 @@ class dataset_predecir(QWidget):
             valor= valor/len(indices)
             self.output_textedit.insertPlainText(f"Puntuación Mundo Deportivo: {md}\n")
             
-            time.sleep(0.5)         
-## ULTIMO RIVAL #####
-            #self.driver = webdriver.Chrome()
-            #realizar_login(self.driver)
-            #time.sleep(5)
+            time.sleep(0.5) 
+
+## ULTIMO RIVAL ##### 
             ultimo_equipo_rival = 0
             self.output_textedit.insertPlainText(f"Último equipo rival: {ultimo_equipo_rival}\n")
 

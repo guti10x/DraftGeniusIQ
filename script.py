@@ -1618,7 +1618,7 @@ class dataset_predecir(QWidget):
 
         # Gestionar filas repetidas 
         for nombre, indices in indice_nombres.items():
-            print("Here we go again")
+            #print("Vuelta Done")
             self.output_textedit.insertPlainText("\n" + "_" * 75+ "\n")
             self.output_textedit.insertPlainText(f"Jugador {nombre}: \n")
 
@@ -1630,11 +1630,15 @@ class dataset_predecir(QWidget):
             self.output_textedit.insertPlainText("\n" + "-" * 60+ "\n")
             # GENERAR DATAFRAME para cada jugador ###################################################################
             self.output_textedit.insertPlainText("Datos del jugador: \n")
-            
+
+            time.sleep(0.5) 
+
             ## NOMBRE #####
             nombre= filas_jugadores[indice][0]
             self.output_textedit.insertPlainText(f"Nombre: {nombre}\n")
-            
+
+            time.sleep(0.5) 
+
             ## VALOR #####
             valor= 0.0
             try:
@@ -1646,20 +1650,24 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Valor:{valor}\n")
             except:
                 valor= None
-            
+
+            time.sleep(0.5) 
+
             ## POSICIÓN #####
             try:
                 pos_jugador=filas_jugadores[indice][2]
                 self.output_textedit.insertPlainText(f"Posición: {pos_jugador}\n")
             except:
                 pos_jugador= ""
-                
+            time.sleep(0.5)    
             ## EQUIPO #####
             try:
                 eq_jugador=filas_jugadores[indice][3]
                 self.output_textedit.insertPlainText(f"Equipo: {eq_jugador}\n")
             except:
                 pos_jugador= ""
+
+            time.sleep(0.5)    
 
             ## PUNTUACIÓN FANTASY, AS, MARCA, MD #####
             fantasy = 0.0
@@ -1689,18 +1697,23 @@ class dataset_predecir(QWidget):
                 marca = marca + mc
                 md = md + m
 
+            time.sleep(0.5) 
             valor= valor/len(indices)
             self.output_textedit.insertPlainText(f"Puntuación Mister Fantasy:{fantasy}\n")
 
+            time.sleep(0.5) 
             valor= valor/len(indices)
             self.output_textedit.insertPlainText(f"Puntuación AS: {ass}\n")
 
+            time.sleep(0.5) 
             valor= valor/len(indices)
             self.output_textedit.insertPlainText(f"Puntuación Marca: {marca}\n")
 
+            time.sleep(0.5) 
             valor= valor/len(indices)
             self.output_textedit.insertPlainText(f"Puntuación Mundo Deportivo: {md}\n")
-          
+            
+            time.sleep(0.5)         
 ## ULTIMO RIVAL #####
             #self.driver = webdriver.Chrome()
             #realizar_login(self.driver)
@@ -1708,33 +1721,41 @@ class dataset_predecir(QWidget):
             ultimo_equipo_rival = 0
             self.output_textedit.insertPlainText(f"Último equipo rival: {ultimo_equipo_rival}\n")
 
+            time.sleep(0.5) 
 ## RESULTADO DEL PARTIDO #####
             resultado_ultimo_partido = 0
             self.output_textedit.insertPlainText(f"Resultado último partido: {resultado_ultimo_partido}\n")
 
+            time.sleep(0.5) 
 ## PROXIMO RIVAL #####
             proximo_equipo_rival = 0
             self.output_textedit.insertPlainText(f"Próximo equipo rival: {proximo_equipo_rival}\n")
 
+            time.sleep(0.5) 
 ## PROXIMO PARTIDO ES LOCAL #####
             proximo_equipo_local = 0
             self.output_textedit.insertPlainText(f"Próximo equipo como local: {proximo_equipo_local}\n")
 
+            time.sleep(0.5) 
 ## MEDIA EN CASA #####
             media_puntos_local = 0
             self.output_textedit.insertPlainText(f"Media de puntos como local: {media_puntos_local}\n")
 
+            time.sleep(0.5) 
 ## MEDIA FUERA #####
             media_puntos_fuera = 0
             self.output_textedit.insertPlainText(f"Media de puntos como visitante: {media_puntos_fuera}\n")
 
+            time.sleep(0.5) 
             # EDAD #####
             try:
                 edad=filas_jugadores[indice][14]
                 self.output_textedit.insertPlainText(f"Edad: {edad}\n")
             except:
                 edad=None
-                
+
+            time.sleep(0.5)  
+            
             # ALTURA #####
             try:
                 try:
@@ -1747,6 +1768,8 @@ class dataset_predecir(QWidget):
                     self.output_textedit.insertPlainText(f"Altura: {altura_jugador}\n")
             except:
                 altura_jugador=None
+
+            time.sleep(0.5) 
 
             # PESO #####
             try:
@@ -1761,6 +1784,8 @@ class dataset_predecir(QWidget):
             except:
                 peso_jugador=None
 
+            time.sleep(0.5) 
+
             ## PUNTUACIÓN SF#####
             puntuacion= 0.0
             try:
@@ -1771,7 +1796,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Puntuación SF: {puntuacion}\n")
             except:
                 puntuacion=None
-                
+
+            time.sleep(0.5) 
+
             # MINUTES PLAYED #####
             minutes = 0.0
             try:
@@ -1788,6 +1815,8 @@ class dataset_predecir(QWidget):
             except:
                 minutes=None
 
+            time.sleep(0.5) 
+            
             ## EXPECTED ASSISTS 
             expassists = 0
             try:
@@ -1798,6 +1827,8 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Provavilidad de que un pase sea asistencia: {expassists}\n")
             except:
                 expassists=None
+
+            time.sleep(0.5) 
 
             ## ESTADÍSCAS PORTEROS #################################################################
             ## (XA), SAVES, GOALS PREVENTED, PUNCHES, RUNS OUT (SUCC.), HIGH CLAIMS #####
@@ -1838,22 +1869,29 @@ class dataset_predecir(QWidget):
                     hightClaims = hightClaims+ float(filas_jugadores[indice][25])
                 except:
                     hightClaims=None
-                
+
+            time.sleep(0.5)    
             saves = saves / len(indices)
             self.output_textedit.insertPlainText(f"Paradas (porteros): {saves}\n")
-            
+
+            time.sleep(0.5) 
             golasPrev = golasPrev / len(indices)
             self.output_textedit.insertPlainText(f"Goles evitados (porteros): {golasPrev}\n")
-                    
+
+            time.sleep(0.5)       
             punches = punches / len(indices)
             self.output_textedit.insertPlainText(f"Despeje de puños (porteros): {punches}\n")
-            
+
+            time.sleep(0.5) 
             runsOut = runsOut / len(indices)
             self.output_textedit.insertPlainText(f"Salida con balón esxitosa (porteros): {punches}\n")
-            
+
+            time.sleep(0.5) 
             hightClaims = hightClaims / len(indices)
             self.output_textedit.insertPlainText(f"Captura de balon en altura exitosa (porteros): {hightClaims}\n")
-            
+
+            time.sleep(0.5) 
+
             ## TOUCHES #####
             touches=0
             try:
@@ -1865,6 +1903,8 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Toques de balón: {touches}\n")
             except:
                 touches=None
+
+            time.sleep(0.5) 
 
             ## ACC. PASSES #####
             accpass = 0
@@ -1880,7 +1920,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Pases precisos: {accpass}\n")
             except:
                accpass=None 
-            
+
+            time.sleep(0.5) 
+
             ## KEY PASSES #####
             keypass=0
             try:
@@ -1890,7 +1932,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Pases claves: {keypass}\n")
             except:
                 keypass=None
-            
+
+            time.sleep(0.5) 
+
             ## CROSSES (ACC.) #####
             crosses=0
             try:
@@ -1911,6 +1955,8 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Centros precisos: {crosses}\n")
             except:
                 crosses=None
+
+            time.sleep(0.5) 
 
             ## LONG BALLS (ACC.) #####
             longball = 0.0
@@ -1933,6 +1979,9 @@ class dataset_predecir(QWidget):
             except:
                 longball=None
 
+            time.sleep(0.5) 
+
+
             ## CLEARANCES #####
             clearances= 0.0
             try:
@@ -1942,7 +1991,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Ocasiones evitadas de gol: {clearances}\n")
             except:
                 clearances=None
-            
+
+            time.sleep(0.5) 
+
             ## BLOCKED SHOTS #####
             blocketshoots= 0.0
             try:
@@ -1952,7 +2003,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Tiros bloqueados: {blocketshoots}\n")
             except:
                 blocketshoots=None
-            
+
+            time.sleep(0.5) 
+
             ## INTERCEPTIONS #####
             interceptions= 0.0
             try:
@@ -1962,7 +2015,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Pases nterceptados: {interceptions}\n")
             except:
                 interceptions=None
-            
+
+            time.sleep(0.5) 
+
             ## TACKLES #####
             tackles=0.0
             try:
@@ -1973,6 +2028,8 @@ class dataset_predecir(QWidget):
             except:
                 tackles=None
 
+            time.sleep(0.5) 
+
             ## DRIBBLED PAST #####
             dribbled=0.0
             try:
@@ -1982,7 +2039,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Veces regateado: {dribbled}\n")
             except:
                 dribbled=None
-            
+
+            time.sleep(0.5) 
+
             ## GROUND DUELS (WON) #####
             groundduels=0.0
             try:
@@ -2003,7 +2062,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Duelos en el suelo Ganados: {groundduels}\n")
             except:
                 groundduels=None
-            
+
+            time.sleep(0.5) 
+
             ## AERIAL DUELS (WON) #####
             airduels=0.0
             try:
@@ -2024,7 +2085,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Duelos aereos ganados: {airduels}\n")
             except:
                 airduels=None
-            
+
+            time.sleep(0.5) 
+
             ## FOULS #####
             fouls=0.0
             try:
@@ -2035,6 +2098,8 @@ class dataset_predecir(QWidget):
             except:
                 fouls=None
 
+            time.sleep(0.5) 
+
             ## WAS FOULED #####
             fouled=0.0
             try:
@@ -2044,7 +2109,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Faltas recibidas: {fouled}\n")
             except:
                 fouled=None
-            
+
+            time.sleep(0.5)
+
             ## SHOTS ON TARGET #####
             tarhetshoot=0.0
             try:
@@ -2054,7 +2121,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Tiros a puerta: {tarhetshoot}\n")
             except:
                 tarhetshoot=None
-            
+
+            time.sleep(0.5) 
+
             ## SHOTS OFF TARGET #####
             offtargetshoot=0.0
             try:
@@ -2064,7 +2133,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Tiros que no fueron a puerta: {offtargetshoot}\n")
             except:
                 offtargetshoot=None
-            
+
+            time.sleep(0.5) 
+
             ## SHOTS BLOCKED #####
             blockedshoots=0.0
             try:
@@ -2074,7 +2145,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Disparos realizados bloqueados : {blockedshoots}\n")
             except:
                 blockedshoots=None
-            
+
+            time.sleep(0.5) 
+
             ## DRIBBLE ATTEMPTS (SUCC.) #####
             dribbleatempts=0.0
             try:
@@ -2095,7 +2168,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Regates exitosos: {dribbleatempts}\n")
             except:
                 dribbleatempts=None
-            
+
+            time.sleep(0.5) 
+
             ## GOALS #####
             goals=0.0
             try:
@@ -2105,7 +2180,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Goles: {goals}\n")
             except:
                 goals=None
-            
+
+            time.sleep(0.5) 
+
             ## ASSISTS #####
             assists=0.0
             try:
@@ -2115,7 +2192,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Asistencias: {assists}\n")
             except:
                 assists=None
-            
+
+            time.sleep(0.5) 
+
             ## POSSESSION LOST #####
             posesion_perdida = 0.0
             try:
@@ -2125,7 +2204,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Posesión perdida: {posesion_perdida}\n")
             except:
                 posesion_perdida=None
-            
+
+            time.sleep(0.5)
+
             ## EXPECTED GOALS (XG) #####
             xgoals = 0.0
             try:
@@ -2135,7 +2216,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Provavilidad de que ls disparos se conviertan en goles: {xgoals}\n")
             except:
                 xgoals=None
-            
+
+            time.sleep(0.5)
+
             ####
             penalty_miss =0.0
             big_chances_created =0.0
@@ -2190,31 +2273,38 @@ class dataset_predecir(QWidget):
             ## PENALTY MISS #####
             penalty_miss = penalty_miss / len(indices)
             self.output_textedit.insertPlainText(f"Penaltis fallados : {penalty_miss}\n")
-            
+            time.sleep(0.5) 
+
             ## BIG CHANCES CREATED #####
             big_chances_created = big_chances_created / len(indices)
             self.output_textedit.insertPlainText(f"Ocasiones de gol generadas: {big_chances_created}\n")       
-            
+            time.sleep(0.5) 
+
             ## PENALTY WON #####
             penalty_won = penalty_won / len(indices)
             self.output_textedit.insertPlainText(f"Penaltys conseguidos: {penalty_won}\n")
-            
+            time.sleep(0.5) 
+
             ## BIG CHANCES MISSED #####
             big_chance_miss = big_chance_miss / len(indices)
             self.output_textedit.insertPlainText(f"Ocasiones de gol desperdiciadas: {big_chance_miss}\n")
-            
+            time.sleep(0.5) 
+
             ## SAVES FROM INSIDE BOX #####
             savesBox = savesBox / len(indices)
             self.output_textedit.insertPlainText(f"Ocasione sd e gol evitadas desde dentro del area: {savesBox}\n")
-            
+            time.sleep(0.5) 
+
             ## PENALTY COMMITTED #####
             penaltyDone = penaltyDone / len(indices)
             self.output_textedit.insertPlainText(f"Penalties cometidos: {penaltyDone}\n")
-            
+            time.sleep(0.5) 
+
             ## OFFSIDES #####      
             oddside = oddside / len(indices)
             self.output_textedit.insertPlainText(f"Veces en fuera de juego: {oddside}\n")
-            
+            time.sleep(0.5) 
+
             ## HIT WOODWORK #####
             palos = palos / len(indices)
             self.output_textedit.insertPlainText(f"Disparos al paloooo: {palos}\n")
@@ -2222,7 +2312,9 @@ class dataset_predecir(QWidget):
 ## AUSENCIA #####
             ausencia=0
             self.output_textedit.insertPlainText(f"Causa por no estar convocado: {ausencia}\n")
-            
+
+            time.sleep(0.5)  
+
             ## ERROR LED TO SHOT #####
             shot_led_error=0
             try:
@@ -2232,7 +2324,9 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Errores que derivan en un disparo del rival: {shot_led_error}\n")
             except:
                 shot_led_error=None
-                
+
+            time.sleep(0.5)  
+
             ## ERROR LED TO GOAL   ##### 
             goal_led_error=0
             try:
@@ -2250,7 +2344,9 @@ class dataset_predecir(QWidget):
             
             # Cargar excell
             wb = openpyxl.load_workbook(nombre_archivo)
-            
+
+            time.sleep(0.5)
+
             # Seleccionar la hoja activa
             sheet = wb.active
                 
@@ -2266,6 +2362,8 @@ class dataset_predecir(QWidget):
             
             # Escribir la nueva fila en la hoja de cálculo
             sheet.append(nueva_fila)
+
+            time.sleep(0.5)
 
             # Guardar el archivo Excel
             wb.save(nombre_archivo)

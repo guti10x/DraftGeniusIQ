@@ -1573,10 +1573,11 @@ class dataset_predecir(QWidget):
         #### PARTE 2 : ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA 
         # Ruta al archivo Excel
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
-        time.sleep(0.5)
+        time.sleep(1)
         self.output_textedit.insertPlainText(f"Abriendo fichero de jugadores selecioandos...\n")
-        time.sleep(0.5)
+        time.sleep(1)
         self.output_textedit.insertPlainText("\n" + "" * 100 + "\n")
+        time.sleep(1)
 
         # Lee el archivo Excel con pandas y especifica que no hay encabezado
         df = pd.read_excel(archivo_excel_selected_players, header=None)
@@ -1589,6 +1590,7 @@ class dataset_predecir(QWidget):
 
         for valor in valores_Mercado:
             self.output_textedit.insertPlainText(valor)
+            time.sleep(0.5)
         time.sleep(1)
         self.output_textedit.insertPlainText(f"\n") 
 
@@ -1755,13 +1757,75 @@ class dataset_predecir(QWidget):
 
                 time.sleep(1)
                 self.output_textedit.insertPlainText(f"Próximo equipo que enfrentará: {proximo_rival}\n")
+                time.sleep(0.5)
                 self.output_textedit.insertPlainText(f"Juega como local el próximo pártido: {local}\n")
-        
 
-                time.sleep(1)
+                try:
+                    # Encuentra el elemento utilizando el XPath proporcionado con By
+                    try:
+                        localizador = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div[1]/div[4]")
+                        # Desplázate hacia el elemento
+                        localizador.location_once_scrolled_into_view
+                    except:
+                        localizador = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div[1]/div[6]")
+                        # Desplázate hacia el elemento
+                        localizador.location_once_scrolled_into_view
+
+                    # Encuentra el primer div con la clase "box box-scores"
+                    box_scores_div = self.driver.find_element(By.CLASS_NAME, 'box-scores')
+                    # Dentro de ese div, encuentra el primer div con la clase "line btn btn-player-gw"
+                    first_line_div = box_scores_div.find_element(By.CLASS_NAME, 'line.btn.btn-player-gw')
+
+
+                    # Interactúa con el elemento (por ejemplo, haz clic en él)
+                    first_line_div.click()
+
+                    # Encontrar el div principal con la clase "player-match"
+                    player_match_div = self.driver.find_element(By.CLASS_NAME, "player-match")
+
+                    # Encontrar los subelementos dentro del div principal
+                    team_1 = player_match_div.find_element(By.CLASS_NAME, "left").find_element(By.CLASS_NAME, "team").text
+                    goals_team_1 = [int(goal.text) for goal in player_match_div.find_elements(By.CLASS_NAME, "goals")][0]  
+                    goals_team_2 = [int(goal.text) for goal in player_match_div.find_elements(By.CLASS_NAME, "goals")][1]  
+                    team_2 = player_match_div.find_element(By.CLASS_NAME, "right").find_element(By.CLASS_NAME, "team").text
+
+                    if team_1 == equipo:
+                        ultimo_rival=team_2
+
+                        if goals_team_1 > goals_team_2:
+                            result = 2 #Win
+                        elif goals_team_1 < goals_team_2:  
+                            result = 0 #Loss
+                        else:
+                            result = 1 #Draw
+
+                    else:
+                        ultimo_rival=team_1
+
+                        if goals_team_1 > goals_team_2:
+                            result = 0 #Loss
+                        elif goals_team_1 < goals_team_2:  
+                            result = 2 #Win
+                        else:
+                            result = 1 #Draw
+                            
+                    time.sleep(1)
+                
+                    self.driver.back()
+                    
+                except:
+                    result=None
+                    ultimo_rival=""
+                        
+                self.output_textedit.insertPlainText(f"Último equipo enfrentado: {ultimo_rival}\n")
+                time.sleep(0.5)
+                self.output_textedit.insertPlainText(f"Resultado último partido: {result}\n")
+                
+                time.sleep(4)
                 self.driver.back()
-
-            self.driver.quit()
+                time.sleep(4)
+        
+        self.driver.quit()
 
         #### PARTE 4 : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
         # Lista global para almacenar todas las filas seleccionadas

@@ -1516,7 +1516,7 @@ class dataset_predecir(QWidget):
                     self.output_textedit.insertPlainText(f"Coincidencia en la fila {pos} para '{nombre_completo}'\n")
     
             return posiciones
-       
+
         def actualizar_version(self,version):
             for equipo, url in self.teams_data.items():
                 # Dividir la URL en base al signo de interrogación
@@ -1531,9 +1531,7 @@ class dataset_predecir(QWidget):
                     
                     # Actualizar la URL en el diccionario
                     self.teams_data[equipo] = nueva_url
-
-                #print(version)
-                #print("nuevaaaa url-->  ",nueva_url)
+        
 
         #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS
 
@@ -1591,7 +1589,9 @@ class dataset_predecir(QWidget):
         #### PARTE 2 : ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA 
         # Ruta al archivo Excel
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
+        time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Abriendo fichero de jugadores selecioandos...\n")
+        time.sleep(0.5)
         self.output_textedit.insertPlainText("\n" + "" * 100 + "\n")
 
         # Lee el archivo Excel con pandas y especifica que no hay encabezado
@@ -1605,16 +1605,22 @@ class dataset_predecir(QWidget):
 
         for valor in valores_Mercado:
             self.output_textedit.insertPlainText(valor)
+        time.sleep(1)
         self.output_textedit.insertPlainText(f"\n") 
 
         # PARTE 3 : SCRAPING DE DATOS DE MISTER FATASY DE JUGAODRES 
+        time.sleep(0.5)
+        self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
+        time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Accediendo a la web de Mister Fnatasy para scrapear datos de los jugadores que se almacenaán en el dataset  \n")
+        
+        #Creamos driver con la url del fantasy y nos logueamos
         self.driver = webdriver.Chrome()
+        time.sleep(10)
         realizar_login(self.driver)
-        time.sleep(5)
+        time.sleep(10)
         
         # Analizamso si el fichero para comprobar si contiene jugaodres del mercado o de mi plantilla y en consecuencia scrapear en el apartado de "mi plantilla" o "mercado"
-
         # Obtener el nombre del archivo sin la extensión
         nombre_archivo = os.path.splitext(os.path.basename(archivo_excel_selected_players))[0]
 
@@ -1625,13 +1631,72 @@ class dataset_predecir(QWidget):
         if 'mercado' in nombre_archivo:
             self.output_textedit.insertPlainText("Scrapeando datos de jugadores del mercado.")
             # PARTE 3.1 : SCRAPEAR MERCADO
-
-
+            
         # Verifica si el nombre del archivo contiene la palabra "plantilla"
         if 'plantilla' in nombre_archivo:
-            self.output_textedit.insertPlainText("Scrapeando datos de jugadores de mi plantilla.")
             # PARTE 3.2 : SCRAPEAR PLANTILLA
+            time.sleep(2)
+            self.output_textedit.insertPlainText("Scrapeando datos de jugadores de mi plantilla.\n")
+            time.sleep(2)
+            
+            # Pinchar en el botón Market
+            market = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[3]/a')
+            
+            time.sleep(2)
 
+            try:
+                market.click()
+                time.sleep(3)
+            except (ElementNotInteractableException, NoSuchElementException):
+                # Maneja la excepción y espera antes de intentar nuevamente
+                print("Anuncio detectado, reiniciando driver...")
+                self.driver.refresh()
+                time.sleep(6) 
+                market.click()
+
+            time.sleep(3)
+            
+            div = self.driver.find_element(By.XPATH, '//*[@id="content"]/div[2]/div[4]/ul')
+
+            time.sleep(3)
+
+            # Encuentra todos los elementos li dentro de la ul
+            li_elementos = div.find_elements(By.TAG_NAME, "li")
+ 
+            # Itera sobre los elementos li
+            for li_elemento in li_elementos:
+
+                self.output_textedit.insertPlainText("\n" + "-" * 40 + "\n")
+                time.sleep(0.5)
+
+                # Encuentra el elemento 'div' con la clase 'name'
+                nombre_elemento = li_elemento.find_element(By.CLASS_NAME, "name")
+                time.sleep(1)
+                # Extrae el texto del elemento 'div' con la clase 'name'
+                nombre_jugador = nombre_elemento.text.strip()
+                # Imprime el nombre del jugador
+                self.output_textedit.insertPlainText(f"Nombre: {nombre_jugador}\n")
+                time.sleep(1)
+                nombre_elemento.click()
+
+                time.sleep(2)
+                
+                label_deseado= "Media en casa"
+                elemento = self.driver.find_element(By.XPATH, f"//div[@class='item']//div[@class='label' and text()='{label_deseado}']/following-sibling::div[@class='value']")
+                media_puntos_local = elemento.text
+                self.output_textedit.insertPlainText(f"Media de puntos como local {media_puntos_local}\n")
+
+                time.sleep(1)
+
+                label_deseado= "Media fuera"
+                elemento = self.driver.find_element(By.XPATH, f"//div[@class='item']//div[@class='label' and text()='{label_deseado}']/following-sibling::div[@class='value']")
+                media_puntos_visitante = elemento.text
+                self.output_textedit.insertPlainText(f"Media de puntos como visitante {media_puntos_visitante}\n")
+                
+                time.sleep(1)
+                self.driver.back()
+
+            self.driver.quit()
 
         #### PARTE 4 : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
         # Lista global para almacenar todas las filas seleccionadas
@@ -3812,7 +3877,7 @@ class login(QWidget):
 
                 self.driver.quit()
 
-                self.output_textedit.insertPlainText('Usuario o contraseña correctos.\n')
+                self.output_textedit.insertPlainText('Credenciales correctos.\n')
 
                 # Acceder a las variables globales desde la clase
                 global usuario, contrasena

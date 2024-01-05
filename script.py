@@ -1589,7 +1589,7 @@ class dataset_predecir(QWidget):
         self.output_textedit.insertPlainText(f"Total de jugadores encontrados: {len(valores_Mercado)}\n")
 
         for valor in valores_Mercado:
-            self.output_textedit.insertPlainText(valor)
+            self.output_textedit.insertPlainText(f"{valor}\n")
             time.sleep(0.5)
         time.sleep(1)
         self.output_textedit.insertPlainText(f"\n") 
@@ -1612,6 +1612,8 @@ class dataset_predecir(QWidget):
 
         # Convierte el nombre del archivo a minúsculas para facilitar la comparación
         nombre_archivo = nombre_archivo.lower()
+
+        lista_jugadores_datos_scrapeados = []
 
         # Verifica si el nombre del archivo contiene la palabra "mercado"
         if 'mercado' in nombre_archivo:
@@ -1718,10 +1720,13 @@ class dataset_predecir(QWidget):
                 team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[1]/a/img")
                 image_url = team_logo_element.get_attribute("src")
 
-                # Comparar la URL de la imagen con las URLs en teams_data
                 equipo = None
                 proximo_rival=None
                 local= False
+                result=0
+                ultimo_rival=None
+                # Lista que contendrá múltiples jugadores
+                # Comparar la URL de la imagen con las URLs en teams_data
                 for equipo_nombre, equipo_url in self.teams_data.items():
                     if image_url == equipo_url:
                         equipo = equipo_nombre
@@ -1820,12 +1825,32 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Último equipo enfrentado: {ultimo_rival}\n")
                 time.sleep(0.5)
                 self.output_textedit.insertPlainText(f"Resultado último partido: {result}\n")
+
+                # Crea un diccionario para el jugador actual
+                jugador = {"Nombre": nombre_jugador,
+                        "ultimo_rival": ultimo_rival,
+                        "resultado_partido": result, 
+                        "prximo_rival": proximo_rival, 
+                        "prximo_partido_local": local,
+                        "media_casa": media_puntos_local,
+                        "media_fuera": media_puntos_visitante,
+                        "ausencia": "Valor",
+                        }
+                lista_jugadores_datos_scrapeados.append(jugador)
                 
                 time.sleep(4)
                 self.driver.back()
                 time.sleep(4)
-        
+
+        # Imprimir la información de cada jugador en la lista
+        for jugador in lista_jugadores_datos_scrapeados:
+            print("Nombre:", jugador["Nombre"])
+            print("Último rival:", jugador["ultimo_rival"])
+            time.sleep(0.5)
+            print(jugador)
         self.driver.quit()
+
+        print("peneclaiente")
 
         #### PARTE 4 : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
         # Lista global para almacenar todas las filas seleccionadas

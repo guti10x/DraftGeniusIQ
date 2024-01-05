@@ -1009,7 +1009,6 @@ class dataset_entrenamiento(QWidget):
         # Verificar y convertir a entero la columna 19
         df.iloc[:, 19] = pd.to_numeric(df.iloc[:, 19], errors='coerce').fillna(0).astype(int)
 
-
         # ALTURA #####
         # Verificar y convertir a float la columna 
         df.iloc[:, 15] = df.iloc[:, 15].apply(lambda x: float(str(x).replace('m', '').replace(',', '.')) if isinstance(x, (str, float)) else x)
@@ -1517,7 +1516,7 @@ class dataset_predecir(QWidget):
     
             return posiciones
 
-        #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS
+        #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS ########################################################################################
 
         # Número de la jornada
         num_jornada = self.number_input.text()
@@ -1567,10 +1566,10 @@ class dataset_predecir(QWidget):
             self.output_textedit.mergeCurrentCharFormat(formato_negro)
             return
 
-        ### PARTE 1 : GENERAR DATASET resultate de fusionar los daasets de Sofaescore y Mister Fantasy
+        #### PARTE 1 : GENERAR DATASET resultate de fusionar los daasets de Sofaescore y Mister Fantasy ########################################################################################
         self.json_a_excel()
 
-        #### PARTE 2 : ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA 
+        #### PARTE 2 : ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA #####################################################################################################################
         # Ruta al archivo Excel
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
         time.sleep(1)
@@ -1594,7 +1593,7 @@ class dataset_predecir(QWidget):
         time.sleep(1)
         self.output_textedit.insertPlainText(f"\n") 
 
-        # PARTE 3 : SCRAPING DE DATOS DE MISTER FATASY DE JUGAODRES 
+        #### PARTE 3 : SCRAPING DE DATOS DE MISTER FATASY DE JUGAODRES #########################################################################################################################
         time.sleep(0.5)
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
         time.sleep(0.5)
@@ -1722,7 +1721,7 @@ class dataset_predecir(QWidget):
 
                 equipo = None
                 proximo_rival=None
-                local= False
+                local= 0
                 result=0
                 ultimo_rival=None
                 # Lista que contendrá múltiples jugadores
@@ -1748,12 +1747,12 @@ class dataset_predecir(QWidget):
                             src_img1 = img_elements[0].get_attribute('src')
                             src_img2 = img_elements[1].get_attribute('src')
                             if src_img1 == image_url:
-                                local = True
+                                local = 1
                                 for equipo_nombre, equipo_url in self.teams_data.items():
                                     if src_img2 == equipo_url:
                                         proximo_rival=equipo_nombre
                             else:
-                                local=False
+                                local= 0
                                 for equipo_nombre, equipo_url in self.teams_data.items():
                                     if src_img1 == equipo_url:
                                         proximo_rival=equipo_nombre
@@ -1844,13 +1843,9 @@ class dataset_predecir(QWidget):
 
         # Imprimir la información de cada jugador en la lista
         for jugador in lista_jugadores_datos_scrapeados:
-            print("Nombre:", jugador["Nombre"])
-            print("Último rival:", jugador["ultimo_rival"])
             time.sleep(0.5)
             print(jugador)
         self.driver.quit()
-
-        print("peneclaiente")
 
         #### PARTE 4 : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
         # Lista global para almacenar todas las filas seleccionadas
@@ -1901,7 +1896,7 @@ class dataset_predecir(QWidget):
         self.output_textedit.insertPlainText(f"{nombres_columnas}\n")
 
 
-        #### PARTE 5 : CREAR EXCELL FINAL PARA PASAR AL MODELO Y PREDECIR
+        #### PARTE 5 : CREAR EXCELL FINAL PARA PASAR AL MODELO Y PREDECIR  ####################################################################################################
         # Obtener la fecha actual
         fecha_actual = datetime.now()
         # Formatear la fecha como una cadena (opcional)
@@ -2047,36 +2042,60 @@ class dataset_predecir(QWidget):
             
             time.sleep(0.5) 
 
-## ULTIMO RIVAL ##### 
-            ultimo_equipo_rival = 0
+            ## ULTIMO RIVAL ##### 
+            try:
+                ultimo_equipo_rival = lista_jugadores_datos_scrapeados[indice]['ultimo_rival']
+            except:
+                ultimo_equipo_rival = None
             self.output_textedit.insertPlainText(f"Último equipo rival: {ultimo_equipo_rival}\n")
 
             time.sleep(0.5) 
-## RESULTADO DEL PARTIDO #####
-            resultado_ultimo_partido = 0
+
+            ## RESULTADO DEL PARTIDO #####
+            try:
+                resultado_ultimo_partido = lista_jugadores_datos_scrapeados[indice]['resultado_partido']
+            except:
+                resultado_ultimo_partido = None
             self.output_textedit.insertPlainText(f"Resultado último partido: {resultado_ultimo_partido}\n")
 
             time.sleep(0.5) 
-## PROXIMO RIVAL #####
-            proximo_equipo_rival = 0
+
+            ## PROXIMO RIVAL #####
+            try:
+                proximo_equipo_rival = lista_jugadores_datos_scrapeados[indice]['prximo_rival']
+            except:
+                proximo_equipo_rival = None
             self.output_textedit.insertPlainText(f"Próximo equipo rival: {proximo_equipo_rival}\n")
 
             time.sleep(0.5) 
-## PROXIMO PARTIDO ES LOCAL #####
-            proximo_equipo_local = 0
+
+            ## PROXIMO PARTIDO ES LOCAL #####
+            try:
+                proximo_equipo_local = lista_jugadores_datos_scrapeados[indice]['prximo_partido_local']
+            except:
+                proximo_equipo_local = None
             self.output_textedit.insertPlainText(f"Próximo equipo como local: {proximo_equipo_local}\n")
 
             time.sleep(0.5) 
-## MEDIA EN CASA #####
-            media_puntos_local = 0
-            self.output_textedit.insertPlainText(f"Media de puntos como local: {media_puntos_local}\n")
 
+            ## MEDIA EN CASA #####
+            try:
+                media_puntos_local = lista_jugadores_datos_scrapeados[indice]['media_casa']
+            except:
+                media_puntos_local = None
+            self.output_textedit.insertPlainText(f"Media de puntos como local: {media_puntos_local}\n")
+            
             time.sleep(0.5) 
-## MEDIA FUERA #####
-            media_puntos_fuera = 0
+
+            ## MEDIA FUERA #####
+            try:
+                media_puntos_fuera = lista_jugadores_datos_scrapeados[indice]['media_fuera']
+            except:
+                media_puntos_fuera = None
             self.output_textedit.insertPlainText(f"Media de puntos como visitante: {media_puntos_fuera}\n")
 
             time.sleep(0.5) 
+
             # EDAD #####
             try:
                 edad=filas_jugadores[indice][14]

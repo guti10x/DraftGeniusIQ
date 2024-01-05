@@ -987,7 +987,7 @@ class dataset_entrenamiento(QWidget):
 
         ## RESULTADO DEL PARTIDO #####
         # Verificar y convertir "Win" a 1 y cualquier otro valor a 0 en toda la columna 9
-        df.iloc[:, 9] = df.iloc[:, 9].apply(lambda x: 1 if x == "Win" else 0)
+        df.iloc[:, 9] = df.iloc[:, 9].map({"Win": 2, "Loss": 0, "Draw": 1}).fillna(0).astype(int)
 
         ## PROXIMO RIVAL #####
         # Verificar y convertir a str la columna 
@@ -1517,22 +1517,6 @@ class dataset_predecir(QWidget):
     
             return posiciones
 
-        def actualizar_version(self,version):
-            for equipo, url in self.teams_data.items():
-                # Dividir la URL en base al signo de interrogación
-                partes = url.split('?')
-                
-                # Verificar si hay una parte después del signo de interrogación y actualizar la versión
-                if len(partes) > 1:
-                    partes[1] = f"version={version}"
-                    
-                    # Volver a unir las partes para formar la URL actualizada
-                    nueva_url = '?'.join(partes)
-                    
-                    # Actualizar la URL en el diccionario
-                    self.teams_data[equipo] = nueva_url
-        
-
         #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS
 
         # Número de la jornada
@@ -1692,7 +1676,58 @@ class dataset_predecir(QWidget):
                 elemento = self.driver.find_element(By.XPATH, f"//div[@class='item']//div[@class='label' and text()='{label_deseado}']/following-sibling::div[@class='value']")
                 media_puntos_visitante = elemento.text
                 self.output_textedit.insertPlainText(f"Media de puntos como visitante {media_puntos_visitante}\n")
+
+                print("check 1 ")
+                try:
+                    team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[1]/a/img")
+                except:
+                    try:
+                        team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div/div[3]/div/div[1]/div[2]/img[1]")
+                    except:
+                        team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div/div[3]/div/div[1]/div[2]/img[2]")
+                time.sleep(5)
+                print("check 2 ")   
+                image_url = team_logo_element.get_attribute("src")
+                # Dividir la URL utilizando el signo de igual como delimitador
+                parts = image_url.split('=')
+                # El valor de version está en la segunda parte después del =
+                version = parts[1]
+
+                time.sleep(5)
+                print("check 3 ")
+                for equipo, url in self.teams_data.items():
+                    # Dividir la URL en base al signo de interrogación
+                    partes = url.split('?')
                 
+                    # Verificar si hay una parte después del signo de interrogación y actualizar la versión
+                    if len(partes) > 1:
+                        partes[1] = f"version={version}"
+                        
+                        # Volver a unir las partes para formar la URL actualizada
+                        nueva_url = '?'.join(partes)
+                        
+                        # Actualizar la URL en el diccionario
+                        self.teams_data[equipo] = nueva_url
+                    
+                time.sleep(5)
+                print("check 4 ")
+
+                # Obtener src del equipo
+                team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[1]/a/img")
+                image_url = team_logo_element.get_attribute("src")
+
+                # Comparar la URL de la imagen con las URLs en teams_data
+                equipo = None
+                proximo_rival=None
+                local= False
+                for equipo_nombre, equipo_url in self.teams_data.items():
+                    if image_url == equipo_url:
+                        equipo = equipo_nombre
+
+                time.sleep(1)
+                self.output_textedit.insertPlainText(f"{equipo}")
+        
+
                 time.sleep(1)
                 self.driver.back()
 

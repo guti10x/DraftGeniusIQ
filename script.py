@@ -1596,7 +1596,7 @@ class dataset_predecir(QWidget):
         time.sleep(0.5)
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
         time.sleep(0.5)
-        self.output_textedit.insertPlainText(f"Accediendo a la web de Mister Fnatasy para scrapear datos de los jugadores que se almacenaán en el dataset  \n")
+        self.output_textedit.insertPlainText(f"Accediendo a la web de Mister Fnatasy para scrapear datos de los jugadores que se almacenaán en el dataset...\n")
         
         #Creamos driver con la url del fantasy y nos logueamos
         self.driver = webdriver.Chrome()
@@ -1613,14 +1613,14 @@ class dataset_predecir(QWidget):
 
         # Verifica si el nombre del archivo contiene la palabra "mercado"
         if 'mercado' in nombre_archivo:
-            self.output_textedit.insertPlainText("Scrapeando datos de jugadores del mercado.")
+            self.output_textedit.insertPlainText("Scrapeando datos de jugadores del mercado...\n")
             # PARTE 3.1 : SCRAPEAR MERCADO
             
         # Verifica si el nombre del archivo contiene la palabra "plantilla"
         if 'plantilla' in nombre_archivo:
             # PARTE 3.2 : SCRAPEAR PLANTILLA
             time.sleep(2)
-            self.output_textedit.insertPlainText("Scrapeando datos de jugadores de mi plantilla.\n")
+            self.output_textedit.insertPlainText("Scrapeando datos de jugadores de mi plantilla...\n")
             time.sleep(2)
             
             # Pinchar en el botón Market
@@ -1724,8 +1724,38 @@ class dataset_predecir(QWidget):
                     if image_url == equipo_url:
                         equipo = equipo_nombre
 
+                        #### OBTENER RESULTADO ÚLTIMO PARTIDO ####
+                        try:
+                            divpartido = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div[1]/div[3]/div")
+                        except:
+                            divpartido = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div/div[2]/div")
+                        
+                        # Encuentra el div del partido
+                        item_elements = divpartido.find_elements(By.CLASS_NAME, 'item')
+                    
+                        # Encuentra las imágenes dentro del div partido
+                        img_elements = item_elements[0].find_elements(By.CLASS_NAME, 'team-logo')
+
+                        # Guarda las src de las imágenes en variables
+                        if len(img_elements) >= 2:
+                            src_img1 = img_elements[0].get_attribute('src')
+                            src_img2 = img_elements[1].get_attribute('src')
+                            if src_img1 == image_url:
+                                local = True
+                                for equipo_nombre, equipo_url in self.teams_data.items():
+                                    if src_img2 == equipo_url:
+                                        proximo_rival=equipo_nombre
+                            else:
+                                local=False
+                                for equipo_nombre, equipo_url in self.teams_data.items():
+                                    if src_img1 == equipo_url:
+                                        proximo_rival=equipo_nombre
+                        else:
+                            print("No se encontro el próximo partido")
+
                 time.sleep(1)
-                self.output_textedit.insertPlainText(f"{equipo}")
+                self.output_textedit.insertPlainText(f"Próximo equipo que enfrentará: {proximo_rival}\n")
+                self.output_textedit.insertPlainText(f"Juega como local el próximo pártido: {local}\n")
         
 
                 time.sleep(1)

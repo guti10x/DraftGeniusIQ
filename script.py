@@ -2045,6 +2045,9 @@ class dataset_predecir(QWidget):
             ## ULTIMO RIVAL ##### 
             try:
                 ultimo_equipo_rival = lista_jugadores_datos_scrapeados[indice]['ultimo_rival']
+                # Comprobar si es str y convertir si no lo es
+                if not isinstance(ultimo_equipo_rival, str):
+                    ultimo_equipo_rival = str(ultimo_equipo_rival)
             except:
                 ultimo_equipo_rival = None
             self.output_textedit.insertPlainText(f"Último equipo rival: {ultimo_equipo_rival}\n")
@@ -2054,8 +2057,19 @@ class dataset_predecir(QWidget):
             ## RESULTADO DEL PARTIDO #####
             try:
                 resultado_ultimo_partido = lista_jugadores_datos_scrapeados[indice]['resultado_partido']
+                # Comprobar si es int y convertir si no lo es
+                if not isinstance(resultado_ultimo_partido, int):
+                    try:
+                        resultado_ultimo_partido = int(resultado_ultimo_partido)
+                        # Comprobar si está en el rango esperado (0, 1, o 2)
+                        if resultado_ultimo_partido not in {0, 1, 2}:
+                            resultado_ultimo_partido = None
+                            print("El resultado no está en el rango esperado (0, 1, o 2). Se estableció como nulo.")
+                    except (ValueError, TypeError):
+                        print("No se puede convertir a entero.")
             except:
                 resultado_ultimo_partido = None
+
             self.output_textedit.insertPlainText(f"Resultado último partido: {resultado_ultimo_partido}\n")
 
             time.sleep(0.5) 
@@ -2063,6 +2077,9 @@ class dataset_predecir(QWidget):
             ## PROXIMO RIVAL #####
             try:
                 proximo_equipo_rival = lista_jugadores_datos_scrapeados[indice]['prximo_rival']
+                # Comprobar si es str y convertir si no lo es
+                if not isinstance(proximo_equipo_rival, str):
+                    proximo_equipo_rival = str(proximo_equipo_rival)
             except:
                 proximo_equipo_rival = None
             self.output_textedit.insertPlainText(f"Próximo equipo rival: {proximo_equipo_rival}\n")
@@ -2072,6 +2089,15 @@ class dataset_predecir(QWidget):
             ## PROXIMO PARTIDO ES LOCAL #####
             try:
                 proximo_equipo_local = lista_jugadores_datos_scrapeados[indice]['prximo_partido_local']
+                if not isinstance(proximo_equipo_local, int):
+                    try:
+                        proximo_equipo_local = int(proximo_equipo_local)
+                        # Comprobar si está en el rango esperado (0 o 1)
+                        if proximo_equipo_local not in {0, 1}:
+                            proximo_equipo_local = None
+                            print("El valor no está en el rango esperado (0 o 1). Se estableció como nulo.")
+                    except (ValueError, TypeError):
+                        print("No se puede convertir a entero.")
             except:
                 proximo_equipo_local = None
             self.output_textedit.insertPlainText(f"Próximo equipo como local: {proximo_equipo_local}\n")
@@ -2081,6 +2107,12 @@ class dataset_predecir(QWidget):
             ## MEDIA EN CASA #####
             try:
                 media_puntos_local = lista_jugadores_datos_scrapeados[indice]['media_casa']
+                # Comprobar si es float y convertir si no lo es
+                if not isinstance(media_puntos_local, float):
+                    try:
+                        media_puntos_local = float(media_puntos_local.replace(',', '.'))  # Reemplazar ',' por '.' para manejar decimales
+                    except (ValueError, TypeError):
+                        print("No se puede convertir a punto flotante.")
             except:
                 media_puntos_local = None
             self.output_textedit.insertPlainText(f"Media de puntos como local: {media_puntos_local}\n")
@@ -2090,6 +2122,12 @@ class dataset_predecir(QWidget):
             ## MEDIA FUERA #####
             try:
                 media_puntos_fuera = lista_jugadores_datos_scrapeados[indice]['media_fuera']
+                # Comprobar si es float y convertir si no lo es
+                if not isinstance(media_puntos_fuera, float):
+                    try:
+                        media_puntos_fuera = float(media_puntos_fuera.replace(',', '.'))  # Reemplazar ',' por '.' para manejar decimales
+                    except (ValueError, TypeError):
+                        print("No se puede convertir a punto flotante.")
             except:
                 media_puntos_fuera = None
             self.output_textedit.insertPlainText(f"Media de puntos como visitante: {media_puntos_fuera}\n")

@@ -356,8 +356,17 @@ class squadWindow(QWidget):
 
                 # Iterar sobre los elementos encontrados e imprimir el texto
                 for name_element in names_elements:
-                    self.output_textedit.append(name_element.text)
-                    self.nombres_jugadores.append(name_element.text)
+                    name_element.click() 
+
+                    nombre = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[2]")
+                    apellido = self.driver.find_element(By.XPATH, " /html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[3]")
+
+                    jugador = nombre.text + " " + apellido.text
+
+                    self.output_textedit.append(jugador)
+                    self.nombres_jugadores.append(jugador)
+
+                    self.driver.back()
 
                 self.driver.quit()
 
@@ -558,9 +567,26 @@ class marketWindow(QWidget):
                 # Itera sobre los elementos <div> encontrados e imprime el nombre del jugador
                 for div_element in div_elements:
                     # Obtener el contenido del elemento <div>
-                    name_element = div_element.text.strip()  # Utiliza strip() para eliminar espacios en blanco adicionales
-                    output_textedit.insertPlainText(f"{name_element}\n")
-                    self.nombres_jugadores.append(name_element)
+                    time.sleep(3)
+                    try:
+                        div_element.click()
+                    except:
+                        self.driver.execute_script("window.scrollBy(0, arguments[0]);", 300)  
+                        time.sleep(0.5)
+                        div_element.click()
+                    time.sleep(2)
+
+                    nombre = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[2]")
+                    apellido = self.driver.find_element(By.XPATH, " /html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[3]")
+
+                    jugador = nombre.text + " " + apellido.text
+
+                    output_textedit.insertPlainText(f"{jugador}\n")
+                    self.nombres_jugadores.append(jugador)  
+
+
+                    self.driver.back()
+
             except:
                 output_textedit = self.output_textedit
                 color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
@@ -1661,9 +1687,9 @@ class dataset_predecir(QWidget):
                 # Extrae el texto del elemento 'div' con la clase 'name'
                 nombre_jugador = nombre_elemento.text.strip()
                 # Imprime el nombre del jugador
-                self.output_textedit.insertPlainText(f"Nombre: {nombre_jugador}\n")
+                self.output_textedit.insertPlainText(f"{nombre_jugador}:\n")
                 time.sleep(1)
-                
+
                 try:
                     nombre_elemento.click()
                 except (ElementNotInteractableException, NoSuchElementException):
@@ -1672,6 +1698,11 @@ class dataset_predecir(QWidget):
                     self.driver.refresh()
 
                 time.sleep(2)
+
+                nombre = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[2]")
+                apellido = self.driver.find_element(By.XPATH, " /html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[3]")
+                jugador = nombre.text + " " + apellido.text
+                self.output_textedit.insertPlainText(f"Nombre: {jugador}\n")
                 
                 label_deseado= "Media en casa"
                 elemento = self.driver.find_element(By.XPATH, f"//div[@class='item']//div[@class='label' and text()='{label_deseado}']/following-sibling::div[@class='value']")
@@ -1845,7 +1876,7 @@ class dataset_predecir(QWidget):
                 self.output_textedit.insertPlainText(f"Resultado último partido: {result}\n")
 
                 # Crea un diccionario para el jugador actual
-                jugador = {"Nombre": nombre_jugador,
+                jugador = {"Nombre": jugador,
                         "ultimo_rival": ultimo_rival,
                         "resultado_partido": result, 
                         "prximo_rival": proximo_rival, 
@@ -2061,9 +2092,19 @@ class dataset_predecir(QWidget):
             
             time.sleep(0.5) 
 
+            # Buscar el nombre en el diccionario
+            posicion = next((index for (index, jugador) in enumerate(lista_jugadores_datos_scrapeados) if jugador['Nombre'] == nombre), None)
+            guardar=0
+
+            if posicion is not None:
+                guardar=1
+                print(f"El nombre '{nombre}' se encuentra en la posición {posicion} del diccionario.")
+            else:
+                print(f"El nombre '{nombre}' no se encontró en el diccionario.")
+
             ## ULTIMO RIVAL ##### 
             try:
-                ultimo_equipo_rival = lista_jugadores_datos_scrapeados[indice]['ultimo_rival']
+                ultimo_equipo_rival = lista_jugadores_datos_scrapeados[posicion]['ultimo_rival']
                 # Comprobar si es str y convertir si no lo es
                 if not isinstance(ultimo_equipo_rival, str):
                     ultimo_equipo_rival = str(ultimo_equipo_rival)
@@ -2075,7 +2116,7 @@ class dataset_predecir(QWidget):
 
             ## RESULTADO DEL PARTIDO #####
             try:
-                resultado_ultimo_partido = lista_jugadores_datos_scrapeados[indice]['resultado_partido']
+                resultado_ultimo_partido = lista_jugadores_datos_scrapeados[posicion]['resultado_partido']
                 # Comprobar si es int y convertir si no lo es
                 if not isinstance(resultado_ultimo_partido, int):
                     try:
@@ -2095,7 +2136,7 @@ class dataset_predecir(QWidget):
 
             ## PROXIMO RIVAL #####
             try:
-                proximo_equipo_rival = lista_jugadores_datos_scrapeados[indice]['prximo_rival']
+                proximo_equipo_rival = lista_jugadores_datos_scrapeados[posicion]['prximo_rival']
                 # Comprobar si es str y convertir si no lo es
                 if not isinstance(proximo_equipo_rival, str):
                     proximo_equipo_rival = str(proximo_equipo_rival)
@@ -2107,7 +2148,7 @@ class dataset_predecir(QWidget):
 
             ## PROXIMO PARTIDO ES LOCAL #####
             try:
-                proximo_equipo_local = lista_jugadores_datos_scrapeados[indice]['prximo_partido_local']
+                proximo_equipo_local = lista_jugadores_datos_scrapeados[posicion]['prximo_partido_local']
                 if not isinstance(proximo_equipo_local, int):
                     try:
                         proximo_equipo_local = int(proximo_equipo_local)
@@ -2125,7 +2166,7 @@ class dataset_predecir(QWidget):
 
             ## MEDIA EN CASA #####
             try:
-                media_puntos_local = lista_jugadores_datos_scrapeados[indice]['media_casa']
+                media_puntos_local = lista_jugadores_datos_scrapeados[posicion]['media_casa']
                 # Comprobar si es float y convertir si no lo es
                 if not isinstance(media_puntos_local, float):
                     try:
@@ -2140,7 +2181,7 @@ class dataset_predecir(QWidget):
 
             ## MEDIA FUERA #####
             try:
-                media_puntos_fuera = lista_jugadores_datos_scrapeados[indice]['media_fuera']
+                media_puntos_fuera = lista_jugadores_datos_scrapeados[posicion]['media_fuera']
                 # Comprobar si es float y convertir si no lo es
                 if not isinstance(media_puntos_fuera, float):
                     try:
@@ -2716,10 +2757,10 @@ class dataset_predecir(QWidget):
             self.output_textedit.insertPlainText(f"Disparos al paloooo: {palos}\n")
 
             time.sleep(0.5) 
-            print("Check ausencia  1")
+
             ## AUSENCIA #####    
             try:
-                ausencia = lista_jugadores_datos_scrapeados[indice]['ausencia']
+                ausencia = lista_jugadores_datos_scrapeados[posicion]['ausencia']
                 # Comprobar si es str y convertir si no lo es
                 if not isinstance(ausencia, str):
                     ausencia = str(ausencia)
@@ -2728,7 +2769,7 @@ class dataset_predecir(QWidget):
             self.output_textedit.insertPlainText(f"Causa por no estar convocado: {ausencia}\n")
 
             time.sleep(0.5)  
-            print("check ausencia 2")
+            print("check ausencia")
 
             ## ERROR LED TO SHOT #####
             shot_led_error=0
@@ -2756,36 +2797,36 @@ class dataset_predecir(QWidget):
             
             self.output_textedit.insertPlainText("\n")
             time.sleep(20)
-            
-            # Cargar excell
-            wb = openpyxl.load_workbook(nombre_archivo)
 
-            time.sleep(0.5)
+            if guardar == 1:
+                # Cargar excell
+                wb = openpyxl.load_workbook(nombre_archivo)
 
-            # Seleccionar la hoja activa
-            sheet = wb.active
+                time.sleep(0.5)
+
+                # Seleccionar la hoja activa
+                sheet = wb.active
+                    
+                # Lista de variables a almacenar
+                nueva_fila = [
+                nombre, valor, pos_jugador, eq_jugador,
+                fantasy, ass, marca, md, ultimo_equipo_rival, resultado_ultimo_partido, proximo_equipo_rival, proximo_equipo_local,
+                media_puntos_local, media_puntos_fuera, edad, altura_jugador, peso_jugador, puntuacion, minutes, expassists, saves, golasPrev, punches, runsOut,
+                hightClaims, touches, accpass, keypass, crosses, longball, tarhetshoot, offtargetshoot, blockedshoots, dribbleatempts, goals, assists, clearances,
+                blocketshoots, interceptions, tackles, dribbled, groundduels, airduels, fouls, fouled, savesBox, penaltyDone, oddside, palos, ausencia, shot_led_error,
+                goal_led_error, posesion_perdida, xgoals, penalty_miss, big_chances_created, penalty_won, big_chance_miss]
+
                 
-            # Lista de variables a almacenar
-            nueva_fila = [
-            nombre, valor, pos_jugador, eq_jugador,
-            fantasy, ass, marca, md, ultimo_equipo_rival, resultado_ultimo_partido, proximo_equipo_rival, proximo_equipo_local,
-            media_puntos_local, media_puntos_fuera, edad, altura_jugador, peso_jugador, puntuacion, minutes, expassists, saves, golasPrev, punches, runsOut,
-            hightClaims, touches, accpass, keypass, crosses, longball, tarhetshoot, offtargetshoot, blockedshoots, dribbleatempts, goals, assists, clearances,
-            blocketshoots, interceptions, tackles, dribbled, groundduels, airduels, fouls, fouled, savesBox, penaltyDone, oddside, palos, ausencia, shot_led_error,
-            goal_led_error, posesion_perdida, xgoals, penalty_miss, big_chances_created, penalty_won, big_chance_miss]
+                # Escribir la nueva fila en la hoja de cálculo
+                sheet.append(nueva_fila)
 
+                time.sleep(0.5)
+
+                # Guardar el archivo Excel
+                wb.save(nombre_archivo)
             
-            # Escribir la nueva fila en la hoja de cálculo
-            sheet.append(nueva_fila)
-
-            time.sleep(0.5)
-
-            # Guardar el archivo Excel
-            wb.save(nombre_archivo)
-            
-        #os.remove(output_archivo)
+        os.remove(output_archivo)
         self.output_textedit.insertPlainText(f"Se han generado exitosamente el dataset en {nombre_archivo} para realizar la sprediciones sobre los jugadores selecionados.\n")
-
 
 
 class scrapear_datos(QWidget):
@@ -4031,7 +4072,7 @@ class login(QWidget):
 
         ### BOTÓN PARA EJECUTAR FUNCIÓN PARA FUSIONAR EXCELLS ###########################################################
         # Crear un botón
-        self.save_button = QPushButton("Guardar credenciales")
+        self.save_button = QPushButton("Loguearte en Mister Fantasy MD")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
         self.save_button.clicked.connect(self.iniciar_scrapear_thread)
@@ -4040,7 +4081,7 @@ class login(QWidget):
         grid_layout.addWidget(self.save_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         self.save_button.setMinimumWidth(100)
-        self.save_button.setMaximumWidth(150)
+        #self.save_button.setMaximumWidth(150)
 
         ###  VENTANA OUTPUT SCRAPER  ####################################################################################
         # Crear un QTextEdit para la salida

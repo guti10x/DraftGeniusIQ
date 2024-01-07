@@ -1626,12 +1626,11 @@ class dataset_predecir(QWidget):
             self.output_textedit.insertPlainText("Scrapeando datos de jugadores de mi plantilla...\n")
             time.sleep(2)
             
-            # Pinchar en el botón Market
-            market = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[3]/a')
-            
-            time.sleep(2)
-
             try:
+                # Pinchar en el botón Market
+                market = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[3]/a')
+
+                time.sleep(2)
                 market.click()
                 time.sleep(3)
             except (ElementNotInteractableException, NoSuchElementException):
@@ -1664,7 +1663,13 @@ class dataset_predecir(QWidget):
                 # Imprime el nombre del jugador
                 self.output_textedit.insertPlainText(f"Nombre: {nombre_jugador}\n")
                 time.sleep(1)
-                nombre_elemento.click()
+                
+                try:
+                    nombre_elemento.click()
+                except (ElementNotInteractableException, NoSuchElementException):
+                    # Maneja la excepción y espera antes de intentar nuevamente
+                    print("Anuncio detectado, reiniciando driver...")
+                    self.driver.refresh()
 
                 time.sleep(2)
                 
@@ -1814,12 +1819,26 @@ class dataset_predecir(QWidget):
                             result = 1 #Draw
                             
                     time.sleep(1)
+
+                    ausencia=""
                 
                     self.driver.back()
                     
                 except:
                     result=None
                     ultimo_rival=""
+
+                    # Encontrar el primer elemento con la clase "line btn btn-player-gw" usando By.CLASS_NAME
+                    elemento_line = self.driver.find_element(By.CLASS_NAME, "line.btn.btn-player-gw")
+
+                    # Obtener el HTML del elemento
+                    html = elemento_line.get_attribute("outerHTML")
+
+                    # Verificar si el div con la clase "status" existe e imprimir su texto
+                    if 'Sancionado' in html:
+                        ausencia="Suspension"
+                    elif 'Lesionado' in html:
+                        ausencia="Injury"
                         
                 self.output_textedit.insertPlainText(f"Último equipo enfrentado: {ultimo_rival}\n")
                 time.sleep(0.5)
@@ -1833,7 +1852,7 @@ class dataset_predecir(QWidget):
                         "prximo_partido_local": local,
                         "media_casa": media_puntos_local,
                         "media_fuera": media_puntos_visitante,
-                        "ausencia": "Valor",
+                        "ausencia": ausencia,
                         }
                 lista_jugadores_datos_scrapeados.append(jugador)
                 
@@ -2066,7 +2085,7 @@ class dataset_predecir(QWidget):
                             resultado_ultimo_partido = None
                             print("El resultado no está en el rango esperado (0, 1, o 2). Se estableció como nulo.")
                     except (ValueError, TypeError):
-                        print("No se puede convertir a entero.")
+                        print("No se puede convertir a entero (1).")
             except:
                 resultado_ultimo_partido = None
 
@@ -2097,7 +2116,7 @@ class dataset_predecir(QWidget):
                             proximo_equipo_local = None
                             print("El valor no está en el rango esperado (0 o 1). Se estableció como nulo.")
                     except (ValueError, TypeError):
-                        print("No se puede convertir a entero.")
+                        print("No se puede convertir a entero (2).")
             except:
                 proximo_equipo_local = None
             self.output_textedit.insertPlainText(f"Próximo equipo como local: {proximo_equipo_local}\n")
@@ -2696,11 +2715,20 @@ class dataset_predecir(QWidget):
             palos = palos / len(indices)
             self.output_textedit.insertPlainText(f"Disparos al paloooo: {palos}\n")
 
-## AUSENCIA #####
-            ausencia=0
+            time.sleep(0.5) 
+            print("Check ausencia  1")
+            ## AUSENCIA #####    
+            try:
+                ausencia = lista_jugadores_datos_scrapeados[indice]['ausencia']
+                # Comprobar si es str y convertir si no lo es
+                if not isinstance(ausencia, str):
+                    ausencia = str(ausencia)
+            except:
+                ausencia = None
             self.output_textedit.insertPlainText(f"Causa por no estar convocado: {ausencia}\n")
 
             time.sleep(0.5)  
+            print("check ausencia 2")
 
             ## ERROR LED TO SHOT #####
             shot_led_error=0

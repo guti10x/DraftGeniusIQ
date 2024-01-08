@@ -1,13 +1,10 @@
 # Dependencias
 from PyQt6.QtWidgets import QApplication, QDialog, QGridLayout, QLabel, QLineEdit, QSpinBox, QPushButton, QFileDialog, QWidget, QTextEdit, QProgressBar, QVBoxLayout, QTextEdit, QMainWindow, QStackedWidget, QHBoxLayout,QComboBox
 from PyQt6.QtGui import QColor, QTextCharFormat
-from PyQt6.QtCore import QMetaObject, Qt, pyqtSignal, Q_ARG
+from PyQt6.QtCore import QMetaObject, Qt, Q_ARG
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-from selenium.webdriver.common.action_chains import ActionChains
-from selenium.webdriver.common.keys import Keys
 from selenium.common.exceptions import ElementNotInteractableException, NoSuchElementException
-from bs4 import BeautifulSoup
 import requests
 import openpyxl
 import time
@@ -17,11 +14,24 @@ import sys
 from datetime import datetime
 import json
 import pandas as pd
+import numpy as np
 from unidecode import unidecode
 import Levenshtein
-import glob
 from difflib import get_close_matches
 import re
+import seaborn as sns
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split, cross_val_score, cross_val_predict, StratifiedKFold
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.preprocessing import StandardScaler
+from sklearn.pipeline import make_pipeline
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
+from sklearn.metrics import make_scorer
+from sklearn.model_selection import train_test_split
+
+from sklearn.neighbors import KNeighborsClassifier
 
 headers = {
     "X-RapidAPI-Key": "11822210cdmsha855c4a12c471b5p18100fjsn3972b17b3be8",
@@ -386,7 +396,7 @@ class squadWindow(QWidget):
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText('No te has iniciado sesion en la aplicación. Loguearte con tus credenciales de Mister Fantasy MD en la ventana Perfil para acceder a tu plantilla.\n')
+            output_textedit.insertPlainText('No has iniciado sesion en la aplicación. Logueate con tus credenciales de Mister Fantasy MD en la ventana Perfil para acceder a tu plantilla.\n')
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -605,7 +615,7 @@ class marketWindow(QWidget):
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText('No te has iniciado sesion en la aplicación. Loguearte con tus credenciales de Mister Fantasy MD en la ventana Perfil para acceder al mercado de jugaodes.\n')
+            output_textedit.insertPlainText('No has iniciado sesion en la aplicación. Logueate con tus credenciales de Mister Fantasy MD en la ventana Perfil para acceder al mercado de jugaodes.\n')
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -759,11 +769,7 @@ class dataset_entrenamiento(QWidget):
 
     def json_a_excel(self):
 
-        def guardar_en_excell():
-
-            output = self.text_input2.text()
-            numero_jornada = str(self.number_input.value())
-            output_archivo=output+"/dataset_entrenamiento_jornada"+numero_jornada+".xlsx"
+        def guardar_en_excell(output_archivo):
 
             # Obtener las listas de las filas
             fila_excel1 = df1.iloc[index_df1, :].tolist()
@@ -874,7 +880,12 @@ class dataset_entrenamiento(QWidget):
         excel2_path = self.text_file_input.text()
         output = self.text_input2.text()
         numero_jornada = str(self.number_input.value())
-        output_archivo=output+"/dataset_entrenamiento_jornada"+numero_jornada+".xlsx"
+        # Obtener la fecha actual
+        fecha_actual = datetime.now()
+        # Formatear la fecha como una cadena (opcional)
+        fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
+
+        output_archivo=output+"/dataset_entrenamiento_jornada"+numero_jornada+"__"+fecha_actual_str+".xlsx"
         
         # Leer los datos de los archivos Excel
         df1 = pd.read_excel(excel1_path, header=None)
@@ -933,7 +944,7 @@ class dataset_entrenamiento(QWidget):
                     self.output_textedit.insertPlainText(f"Coincidencia encontrada: excell1-fila-{index_df1} <-> excell2-fila.{index_df2} , {value_to_compare1} == {value_to_compare2}\n")
                     valores_encontrados.add(value_to_compare1) 
 
-                    guardar_en_excell()
+                    guardar_en_excell(output_archivo)
 
                     contador_coincidencias +=1
                     coincidencia_encontrada = True
@@ -957,7 +968,7 @@ class dataset_entrenamiento(QWidget):
 
                     if value_to_compare1o == jugadorS and value_to_compare2o == jugadorMD:
                         self.output_textedit.insertPlainText(f"Coincidencia encontrada: {jugadorS}\n")
-                        guardar_en_excell()
+                        guardar_en_excell(output_archivo)
                         contador_manual+=1
             
         #Resultados de la fusión de datasets
@@ -966,8 +977,10 @@ class dataset_entrenamiento(QWidget):
         self.output_textedit.insertPlainText(f"Añadidos manualmente: {contador_manual}\n")
         self.output_textedit.insertPlainText(f"Jugadores no disponibles en MisterFantasy: {((contador_global-1)-(contador_coincidencias+contador_manual))}\n")
         self.output_textedit.insertPlainText(f"Precisión: {(((contador_coincidencias+contador_manual)/(contador_global-1))*100)} %\n")
-        self.output_textedit.insertPlainText("Dataset generado correctamente\n")
+        self.output_textedit.insertPlainText("Dataset fusionado correctamente.\n")
 
+        time.sleep(0.5)
+        self.output_textedit.insertPlainText("Procesando atributos...\n")
         # PROCESAR DATOS DE LAS COLUMNAS
         # Cargar el archivo Excel en un DataFrame
         df = pd.read_excel(output_archivo)
@@ -1205,7 +1218,9 @@ class dataset_entrenamiento(QWidget):
         # Verificar y convertir a float la columna
         df.iloc[:, 58] = df.iloc[:, 58].apply(lambda x: float(x) if not isinstance(x, float) else x)
 
-
+        self.output_textedit.insertPlainText("Dataset procesado correctamente.\n")
+        time.sleep(0.5)
+        self.output_textedit.insertPlainText("Dataset guardao correctamente.\n")
         # Guardar el DataFrame modificado en un nuevo archivo Excel
         df.to_excel(output_archivo, index=False)
 
@@ -1365,8 +1380,19 @@ class dataset_predecir(QWidget):
 
     def iniciar_scrapear_thread(self):  
         # Crear un hilo y ejecutar la función en segundo plano
-        thread = threading.Thread(target=self.generar_excell_predecir)
-        thread.start()
+        if usuario!="":
+            thread = threading.Thread(target=self.generar_excell_predecir)
+            thread.start()
+        else:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText('No has iniciado sesion en la aplicación. Logueate con tus credenciales de Mister Fantasy MD en la ventana Perfil para acceder al mercado de jugaodes.\n')
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
 
     def json_a_excel(self):
 
@@ -1380,7 +1406,7 @@ class dataset_predecir(QWidget):
             fila_excel1 = df1.iloc[index_df1, :].tolist()
             fila_excel2 = df2.iloc[index_df2, :].tolist()
 
-            # Concatenar las listas
+            # Concatenar las listasnombre_archivo
             fila_concatenada = fila_excel2 + fila_excel1
 
             # Crear un DataFrame de pandas con una sola fila y múltiples columnas
@@ -1720,6 +1746,9 @@ class dataset_predecir(QWidget):
             self.output_textedit.insertPlainText(f"Último equipo enfrentado: {ultimo_rival}\n")
             time.sleep(0.5)
             self.output_textedit.insertPlainText(f"Resultado último partido: {result}\n")
+            time.sleep(0.5)
+            self.output_textedit.insertPlainText(f"Ausencia en el último partido: {ausencia}\n")
+            
 
             # Crea un diccionario para el jugador actual
             jugador = {"Nombre": jugador,
@@ -1788,7 +1817,7 @@ class dataset_predecir(QWidget):
             return
 
         #### PARTE 1 : GENERAR DATASET resultate de fusionar los daasets de Sofaescore y Mister Fantasy ########################################################################################
-        #self.json_a_excel()
+        self.json_a_excel()
 
         #### PARTE 2 : ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA #####################################################################################################################
         # Ruta al archivo Excel
@@ -1859,11 +1888,14 @@ class dataset_predecir(QWidget):
 
             # Itera sobre los elementos <div> encontrados e imprime el nombre del jugador
             for div_element in div_elements:
+                self.output_textedit.insertPlainText("\n" + "-" * 40 + "\n")
+                time.sleep(0.5)
+
                 #nombre_elemento 
-                #name_element = div_element.text
+                name_element = div_element.text
                 time.sleep(1)
                 #Imprime el nombre del jugador
-                #print(f"{name_element}:\n")
+                self.output_textedit.insertPlainText(f"{name_element}:\n")
                 
                 time.sleep(1)
                 try:

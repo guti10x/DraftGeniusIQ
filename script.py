@@ -1214,6 +1214,8 @@ class dataset_predecir(QWidget):
     def __init__(self):
         super().__init__()
 
+        self.lista_jugadores_datos_scrapeados=[]
+
         self.jugadoresS_noencontrados = ["Marc-André ter Stegen", "Adria Miquel Bosch Sanchis", "Sergio Ruiz Alonso", "Abderrahman Rebbach", "Kaiky", "Alejandro Pozo", "Lázaro", "Luis Javier Suárez", "Abdessamad Ezzalzouli", "Iván Cuéllar", "Djené", "Maximiliano Gómez", "Mamadou Mbaye", "Fali", "Anthony Lozano", "José María Giménez", "Sandro Ramírez", "Reinildo Isnard Mandava", "Chimy Ávila", "Pablo Ibáñez Lumbreras", "Portu", "Juan Carlos", "José Manuel Arnáiz", "Federico Valverde", "Alfonso Espino", "Ismaila Ciss", "Josep Chavarría", "José Pozo", "Imanol García de Albéniz", "Peru Nolaskoain Esnal", "Malcom Ares"] 
         self.jugadoresMD_noencontrados = ["Ter Stegen", "Miki Bosch", "Sergio Ruiz", "Abde Rebbach", "Kaiky Fernandes", "Álex Pozo", "Lázaro Vinicius", "Luis Suárez", "Abde Ezzalzouli", "Pichu Cuéllar", "Dakonam Djené", "Maxi Gómez", "Momo Mbaye", "Fali Giménez", "Choco Lozano", "José Giménez", "Sandro", "Reinildo Mandava", "Ezequiel Ávila", "Pablo Ibáñez", "Cristian Portu", "Juan Carlos Martín", "José Arnaiz", "Fede Valverde", "Pacha Espino", "Pathé Ciss", "Pep Chavarría", "José Ángel Pozo", "Imanol García", "Peru Nolaskoain", "Malcom Adu Ares"]
         self.teams_data = {
@@ -1392,7 +1394,7 @@ class dataset_predecir(QWidget):
 
             # Escribir el DataFrame final en el archivo Excel
             df_final.to_excel(output_archivo, index=False, header=False)
-            
+
         # Parte 1: fusionar todos los jsons de todos los partidos scrapeados de la jornada ##############################################
         # Rutas globales
         carpeta_json = self.text_input.text()
@@ -1542,6 +1544,199 @@ class dataset_predecir(QWidget):
     
             return posiciones
 
+        def scraping_data_selected():
+            nombre = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[2]")
+            apellido = self.driver.find_element(By.XPATH, " /html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[3]")
+            jugador = nombre.text + " " + apellido.text
+            self.output_textedit.insertPlainText(f"Nombre: {jugador}\n")
+                    
+            label_deseado= "Media en casa"
+            elemento = self.driver.find_element(By.XPATH, f"//div[@class='item']//div[@class='label' and text()='{label_deseado}']/following-sibling::div[@class='value']")
+            media_puntos_local = elemento.text
+            self.output_textedit.insertPlainText(f"Media de puntos como local {media_puntos_local}\n")
+
+            time.sleep(1)
+
+            label_deseado= "Media fuera"
+            elemento = self.driver.find_element(By.XPATH, f"//div[@class='item']//div[@class='label' and text()='{label_deseado}']/following-sibling::div[@class='value']")
+            media_puntos_visitante = elemento.text
+            self.output_textedit.insertPlainText(f"Media de puntos como visitante {media_puntos_visitante}\n")
+
+            print("check 1 ")
+            try:
+                team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[1]/a/img")
+            except:
+                try:
+                    team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div/div[3]/div/div[1]/div[2]/img[1]")
+                except:
+                    team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div/div[3]/div/div[1]/div[2]/img[2]")
+            time.sleep(5)
+            print("check 2 ")   
+            image_url = team_logo_element.get_attribute("src")
+            # Dividir la URL utilizando el signo de igual como delimitador
+            parts = image_url.split('=')
+            # El valor de version está en la segunda parte después del =
+            version = parts[1]
+
+            time.sleep(5)
+            print("check 3 ")
+            for equipo, url in self.teams_data.items():
+                # Dividir la URL en base al signo de interrogación
+                partes = url.split('?')
+                    
+                # Verificar si hay una parte después del signo de interrogación y actualizar la versión
+                if len(partes) > 1:
+                    partes[1] = f"version={version}"
+                            
+                    # Volver a unir las partes para formar la URL actualizada
+                    nueva_url = '?'.join(partes)
+                            
+                    # Actualizar la URL en el diccionario
+                    self.teams_data[equipo] = nueva_url
+                        
+            time.sleep(5)
+            print("check 4 ")
+
+            # Obtener src del equipo
+            team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[1]/a/img")
+            image_url = team_logo_element.get_attribute("src")
+
+            equipo = None
+            proximo_rival=None
+            local= 0
+            result=0
+            ultimo_rival=None
+            # Lista que contendrá múltiples jugadores
+            # Comparar la URL de la imagen con las URLs en teams_data
+            for equipo_nombre, equipo_url in self.teams_data.items():
+                if image_url == equipo_url:
+                    equipo = equipo_nombre
+
+                    #### OBTENER RESULTADO ÚLTIMO PARTIDO ####
+                    try:
+                        divpartido = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div[1]/div[3]/div")
+                    except:
+                        divpartido = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div/div[2]/div")
+                            
+                    # Encuentra el div del partido
+                    item_elements = divpartido.find_elements(By.CLASS_NAME, 'item')
+                        
+                    # Encuentra las imágenes dentro del div partido
+                    img_elements = item_elements[0].find_elements(By.CLASS_NAME, 'team-logo')
+
+                    # Guarda las src de las imágenes en variables
+                    if len(img_elements) >= 2:
+                        src_img1 = img_elements[0].get_attribute('src')
+                        src_img2 = img_elements[1].get_attribute('src')
+                        if src_img1 == image_url:
+                            local = 1
+                            for equipo_nombre, equipo_url in self.teams_data.items():
+                                if src_img2 == equipo_url:
+                                    proximo_rival=equipo_nombre
+                        else:
+                            local= 0
+                            for equipo_nombre, equipo_url in self.teams_data.items():
+                                if src_img1 == equipo_url:
+                                    proximo_rival=equipo_nombre
+                    else:
+                        print("No se encontro el próximo partido")
+
+            time.sleep(1)
+            self.output_textedit.insertPlainText(f"Próximo equipo que enfrentará: {proximo_rival}\n")
+            time.sleep(0.5)
+            self.output_textedit.insertPlainText(f"Juega como local el próximo pártido: {local}\n")
+
+            try:
+                # Encuentra el elemento utilizando el XPath proporcionado con By
+                try:
+                    localizador = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div[1]/div[4]")
+                    # Desplázate hacia el elemento
+                    localizador.location_once_scrolled_into_view
+                except:
+                    localizador = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div[1]/div[6]")
+                    # Desplázate hacia el elemento
+                    localizador.location_once_scrolled_into_view
+
+                # Encuentra el primer div con la clase "box box-scores"
+                box_scores_div = self.driver.find_element(By.CLASS_NAME, 'box-scores')
+                # Dentro de ese div, encuentra el primer div con la clase "line btn btn-player-gw"
+                first_line_div = box_scores_div.find_element(By.CLASS_NAME, 'line.btn.btn-player-gw')
+
+
+                # Interactúa con el elemento (por ejemplo, haz clic en él)
+                first_line_div.click()
+
+                # Encontrar el div principal con la clase "player-match"
+                player_match_div = self.driver.find_element(By.CLASS_NAME, "player-match")
+
+                # Encontrar los subelementos dentro del div principal
+                team_1 = player_match_div.find_element(By.CLASS_NAME, "left").find_element(By.CLASS_NAME, "team").text
+                goals_team_1 = [int(goal.text) for goal in player_match_div.find_elements(By.CLASS_NAME, "goals")][0]  
+                goals_team_2 = [int(goal.text) for goal in player_match_div.find_elements(By.CLASS_NAME, "goals")][1]  
+                team_2 = player_match_div.find_element(By.CLASS_NAME, "right").find_element(By.CLASS_NAME, "team").text
+
+                if team_1 == equipo:
+                    ultimo_rival=team_2
+
+                    if goals_team_1 > goals_team_2:
+                        result = 2 #Win
+                    elif goals_team_1 < goals_team_2:  
+                        result = 0 #Loss
+                    else:
+                        result = 1 #Draw
+
+                else:
+                    ultimo_rival=team_1
+
+                    if goals_team_1 > goals_team_2:
+                        result = 0 #Loss
+                    elif goals_team_1 < goals_team_2:  
+                        result = 2 #Win
+                    else:
+                        result = 1 #Draw
+                                
+                time.sleep(1)
+
+                ausencia=""
+                    
+                self.driver.back()
+                        
+            except:
+                result=None
+                ultimo_rival=""
+
+                # Encontrar el primer elemento con la clase "line btn btn-player-gw" usando By.CLASS_NAME
+                elemento_line = self.driver.find_element(By.CLASS_NAME, "line.btn.btn-player-gw")
+
+                # Obtener el HTML del elemento
+                html = elemento_line.get_attribute("outerHTML")
+
+                # Verificar si el div con la clase "status" existe e imprimir su texto
+                if 'Sancionado' in html:
+                    ausencia="Suspension"
+                elif 'Lesionado' in html:
+                    ausencia="Injury"
+                            
+            self.output_textedit.insertPlainText(f"Último equipo enfrentado: {ultimo_rival}\n")
+            time.sleep(0.5)
+            self.output_textedit.insertPlainText(f"Resultado último partido: {result}\n")
+
+            # Crea un diccionario para el jugador actual
+            jugador = {"Nombre": jugador,
+                    "ultimo_rival": ultimo_rival,
+                    "resultado_partido": result, 
+                    "prximo_rival": proximo_rival, 
+                    "prximo_partido_local": local,
+                    "media_casa": media_puntos_local,
+                    "media_fuera": media_puntos_visitante,
+                    "ausencia": ausencia,
+                    }
+            self.lista_jugadores_datos_scrapeados.append(jugador)
+                    
+            time.sleep(4)
+            self.driver.back()
+            time.sleep(4)
+
         #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS ########################################################################################
 
         # Número de la jornada
@@ -1593,7 +1788,7 @@ class dataset_predecir(QWidget):
             return
 
         #### PARTE 1 : GENERAR DATASET resultate de fusionar los daasets de Sofaescore y Mister Fantasy ########################################################################################
-        self.json_a_excel()
+        #self.json_a_excel()
 
         #### PARTE 2 : ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA #####################################################################################################################
         # Ruta al archivo Excel
@@ -1623,7 +1818,7 @@ class dataset_predecir(QWidget):
         time.sleep(0.5)
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
         time.sleep(0.5)
-        self.output_textedit.insertPlainText(f"Accediendo a la web de Mister Fnatasy para scrapear datos de los jugadores que se almacenaán en el dataset...\n")
+        self.output_textedit.insertPlainText(f"Accediendo a la web de Mister Fnatasy para scrapear datos de los jugadores que se almacenarán en el dataset...\n")
         
         #Creamos driver con la url del fantasy y nos logueamos
         self.driver = webdriver.Chrome()
@@ -1638,13 +1833,51 @@ class dataset_predecir(QWidget):
         # Convierte el nombre del archivo a minúsculas para facilitar la comparación
         nombre_archivo = nombre_archivo.lower()
 
-        lista_jugadores_datos_scrapeados = []
-
         # Verifica si el nombre del archivo contiene la palabra "mercado"
         if 'mercado' in nombre_archivo:
+            time.sleep(2)
             self.output_textedit.insertPlainText("Scrapeando datos de jugadores del mercado...\n")
             # PARTE 3.1 : SCRAPEAR MERCADO
+            try:
+                # Pinchar en el botón Market
+                market = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[2]/a')
+                time.sleep(2)
+                market.click()
+                time.sleep(3)
+            except (ElementNotInteractableException, NoSuchElementException):
+                # Maneja la excepción y espera antes de intentar nuevamente
+                self.output_textedit.insertPlainText("Anuncio detectado, reiniciando driver...")
+                self.driver.refresh()
+                time.sleep(6) 
+                market.click()
             
+            # Encuentra el elemento <ul> con el id "list-on-sale"
+            ul_element = self.driver.find_element(By.ID, "list-on-sale")
+
+            # Encuentra los elementos <div> con la clase "name" dentro del elemento <ul>
+            div_elements = ul_element.find_elements(By.CSS_SELECTOR, "div.name")
+
+            # Itera sobre los elementos <div> encontrados e imprime el nombre del jugador
+            for div_element in div_elements:
+                #nombre_elemento 
+                #name_element = div_element.text
+                time.sleep(1)
+                #Imprime el nombre del jugador
+                #print(f"{name_element}:\n")
+                
+                time.sleep(1)
+                try:
+                    div_element.click()
+                except: 
+                    self.driver.execute_script("window.scrollBy(0, arguments[0]);", 300)  
+                    time.sleep(0.5)
+                    div_element.click()
+                    
+                time.sleep(2)
+                scraping_data_selected()
+                time.sleep(2)
+
+
         # Verifica si el nombre del archivo contiene la palabra "plantilla"
         if 'plantilla' in nombre_archivo:
             # PARTE 3.2 : SCRAPEAR PLANTILLA
@@ -1654,30 +1887,31 @@ class dataset_predecir(QWidget):
             
             try:
                 # Pinchar en el botón Market
-                market = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[3]/a')
+                squad = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[3]/a')
 
                 time.sleep(2)
-                market.click()
+                squad.click()
                 time.sleep(3)
             except (ElementNotInteractableException, NoSuchElementException):
                 # Maneja la excepción y espera antes de intentar nuevamente
-                print("Anuncio detectado, reiniciando driver...")
+                self.output_textedit.insertPlainText(f"Anuncio detectado, reiniciando driver...\n")
                 self.driver.refresh()
                 time.sleep(6) 
-                market.click()
+                squad.click()
 
             time.sleep(3)
-            
-            div = self.driver.find_element(By.XPATH, '//*[@id="content"]/div[2]/div[4]/ul')
-
-            time.sleep(3)
+            try:
+                div = self.driver.find_element(By.XPATH, '//*[@id="content"]/div[2]/div[4]/ul')
+            except:
+                self.driver.refresh()
+                time.sleep(3)
+                div = self.driver.find_element(By.XPATH, '//*[@id="content"]/div[2]/div[4]/ul')
 
             # Encuentra todos los elementos li dentro de la ul
             li_elementos = div.find_elements(By.TAG_NAME, "li")
- 
+    
             # Itera sobre los elementos li
             for li_elemento in li_elementos:
-
                 self.output_textedit.insertPlainText("\n" + "-" * 40 + "\n")
                 time.sleep(0.5)
 
@@ -1694,205 +1928,15 @@ class dataset_predecir(QWidget):
                     nombre_elemento.click()
                 except (ElementNotInteractableException, NoSuchElementException):
                     # Maneja la excepción y espera antes de intentar nuevamente
-                    print("Anuncio detectado, reiniciando driver...")
+                    self.output_textedit.insertPlainText(f"Anuncio detectado, reiniciando driver...\n")
                     self.driver.refresh()
 
                 time.sleep(2)
+                scraping_data_selected()
 
-                nombre = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[2]")
-                apellido = self.driver.find_element(By.XPATH, " /html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[3]")
-                jugador = nombre.text + " " + apellido.text
-                self.output_textedit.insertPlainText(f"Nombre: {jugador}\n")
-                
-                label_deseado= "Media en casa"
-                elemento = self.driver.find_element(By.XPATH, f"//div[@class='item']//div[@class='label' and text()='{label_deseado}']/following-sibling::div[@class='value']")
-                media_puntos_local = elemento.text
-                self.output_textedit.insertPlainText(f"Media de puntos como local {media_puntos_local}\n")
-
-                time.sleep(1)
-
-                label_deseado= "Media fuera"
-                elemento = self.driver.find_element(By.XPATH, f"//div[@class='item']//div[@class='label' and text()='{label_deseado}']/following-sibling::div[@class='value']")
-                media_puntos_visitante = elemento.text
-                self.output_textedit.insertPlainText(f"Media de puntos como visitante {media_puntos_visitante}\n")
-
-                print("check 1 ")
-                try:
-                    team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[1]/a/img")
-                except:
-                    try:
-                        team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div/div[3]/div/div[1]/div[2]/img[1]")
-                    except:
-                        team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div/div[3]/div/div[1]/div[2]/img[2]")
-                time.sleep(5)
-                print("check 2 ")   
-                image_url = team_logo_element.get_attribute("src")
-                # Dividir la URL utilizando el signo de igual como delimitador
-                parts = image_url.split('=')
-                # El valor de version está en la segunda parte después del =
-                version = parts[1]
-
-                time.sleep(5)
-                print("check 3 ")
-                for equipo, url in self.teams_data.items():
-                    # Dividir la URL en base al signo de interrogación
-                    partes = url.split('?')
-                
-                    # Verificar si hay una parte después del signo de interrogación y actualizar la versión
-                    if len(partes) > 1:
-                        partes[1] = f"version={version}"
-                        
-                        # Volver a unir las partes para formar la URL actualizada
-                        nueva_url = '?'.join(partes)
-                        
-                        # Actualizar la URL en el diccionario
-                        self.teams_data[equipo] = nueva_url
-                    
-                time.sleep(5)
-                print("check 4 ")
-
-                # Obtener src del equipo
-                team_logo_element = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[2]/div[1]/div/div[1]/div[1]/a/img")
-                image_url = team_logo_element.get_attribute("src")
-
-                equipo = None
-                proximo_rival=None
-                local= 0
-                result=0
-                ultimo_rival=None
-                # Lista que contendrá múltiples jugadores
-                # Comparar la URL de la imagen con las URLs en teams_data
-                for equipo_nombre, equipo_url in self.teams_data.items():
-                    if image_url == equipo_url:
-                        equipo = equipo_nombre
-
-                        #### OBTENER RESULTADO ÚLTIMO PARTIDO ####
-                        try:
-                            divpartido = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div[1]/div[3]/div")
-                        except:
-                            divpartido = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div/div[2]/div")
-                        
-                        # Encuentra el div del partido
-                        item_elements = divpartido.find_elements(By.CLASS_NAME, 'item')
-                    
-                        # Encuentra las imágenes dentro del div partido
-                        img_elements = item_elements[0].find_elements(By.CLASS_NAME, 'team-logo')
-
-                        # Guarda las src de las imágenes en variables
-                        if len(img_elements) >= 2:
-                            src_img1 = img_elements[0].get_attribute('src')
-                            src_img2 = img_elements[1].get_attribute('src')
-                            if src_img1 == image_url:
-                                local = 1
-                                for equipo_nombre, equipo_url in self.teams_data.items():
-                                    if src_img2 == equipo_url:
-                                        proximo_rival=equipo_nombre
-                            else:
-                                local= 0
-                                for equipo_nombre, equipo_url in self.teams_data.items():
-                                    if src_img1 == equipo_url:
-                                        proximo_rival=equipo_nombre
-                        else:
-                            print("No se encontro el próximo partido")
-
-                time.sleep(1)
-                self.output_textedit.insertPlainText(f"Próximo equipo que enfrentará: {proximo_rival}\n")
-                time.sleep(0.5)
-                self.output_textedit.insertPlainText(f"Juega como local el próximo pártido: {local}\n")
-
-                try:
-                    # Encuentra el elemento utilizando el XPath proporcionado con By
-                    try:
-                        localizador = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div[1]/div[4]")
-                        # Desplázate hacia el elemento
-                        localizador.location_once_scrolled_into_view
-                    except:
-                        localizador = self.driver.find_element(By.XPATH, "/html/body/div[6]/div[3]/div[3]/div[1]/div[6]")
-                        # Desplázate hacia el elemento
-                        localizador.location_once_scrolled_into_view
-
-                    # Encuentra el primer div con la clase "box box-scores"
-                    box_scores_div = self.driver.find_element(By.CLASS_NAME, 'box-scores')
-                    # Dentro de ese div, encuentra el primer div con la clase "line btn btn-player-gw"
-                    first_line_div = box_scores_div.find_element(By.CLASS_NAME, 'line.btn.btn-player-gw')
-
-
-                    # Interactúa con el elemento (por ejemplo, haz clic en él)
-                    first_line_div.click()
-
-                    # Encontrar el div principal con la clase "player-match"
-                    player_match_div = self.driver.find_element(By.CLASS_NAME, "player-match")
-
-                    # Encontrar los subelementos dentro del div principal
-                    team_1 = player_match_div.find_element(By.CLASS_NAME, "left").find_element(By.CLASS_NAME, "team").text
-                    goals_team_1 = [int(goal.text) for goal in player_match_div.find_elements(By.CLASS_NAME, "goals")][0]  
-                    goals_team_2 = [int(goal.text) for goal in player_match_div.find_elements(By.CLASS_NAME, "goals")][1]  
-                    team_2 = player_match_div.find_element(By.CLASS_NAME, "right").find_element(By.CLASS_NAME, "team").text
-
-                    if team_1 == equipo:
-                        ultimo_rival=team_2
-
-                        if goals_team_1 > goals_team_2:
-                            result = 2 #Win
-                        elif goals_team_1 < goals_team_2:  
-                            result = 0 #Loss
-                        else:
-                            result = 1 #Draw
-
-                    else:
-                        ultimo_rival=team_1
-
-                        if goals_team_1 > goals_team_2:
-                            result = 0 #Loss
-                        elif goals_team_1 < goals_team_2:  
-                            result = 2 #Win
-                        else:
-                            result = 1 #Draw
-                            
-                    time.sleep(1)
-
-                    ausencia=""
-                
-                    self.driver.back()
-                    
-                except:
-                    result=None
-                    ultimo_rival=""
-
-                    # Encontrar el primer elemento con la clase "line btn btn-player-gw" usando By.CLASS_NAME
-                    elemento_line = self.driver.find_element(By.CLASS_NAME, "line.btn.btn-player-gw")
-
-                    # Obtener el HTML del elemento
-                    html = elemento_line.get_attribute("outerHTML")
-
-                    # Verificar si el div con la clase "status" existe e imprimir su texto
-                    if 'Sancionado' in html:
-                        ausencia="Suspension"
-                    elif 'Lesionado' in html:
-                        ausencia="Injury"
-                        
-                self.output_textedit.insertPlainText(f"Último equipo enfrentado: {ultimo_rival}\n")
-                time.sleep(0.5)
-                self.output_textedit.insertPlainText(f"Resultado último partido: {result}\n")
-
-                # Crea un diccionario para el jugador actual
-                jugador = {"Nombre": jugador,
-                        "ultimo_rival": ultimo_rival,
-                        "resultado_partido": result, 
-                        "prximo_rival": proximo_rival, 
-                        "prximo_partido_local": local,
-                        "media_casa": media_puntos_local,
-                        "media_fuera": media_puntos_visitante,
-                        "ausencia": ausencia,
-                        }
-                lista_jugadores_datos_scrapeados.append(jugador)
-                
-                time.sleep(4)
-                self.driver.back()
-                time.sleep(4)
 
         # Imprimir la información de cada jugador en la lista
-        for jugador in lista_jugadores_datos_scrapeados:
+        for jugador in self.lista_jugadores_datos_scrapeados:
             time.sleep(0.5)
             print(jugador)
         self.driver.quit()
@@ -2006,10 +2050,10 @@ class dataset_predecir(QWidget):
             
             self.output_textedit.insertPlainText("\n" + "-" * 60+ "\n")
             # Buscar el nombre en el diccionario
-            posicion = next((index for (index, jugador) in enumerate(lista_jugadores_datos_scrapeados) if jugador['Nombre'] == nombre), None)
+            posicion = next((index for (index, jugador) in enumerate(self.lista_jugadores_datos_scrapeados) if jugador['Nombre'] == nombre), None)
            
             if posicion is not None:
-                print(f"El nombre '{nombre}' se encuentra en la posición {posicion} del diccionario.")
+                self.output_textedit.insertPlainText(f"El nombre '{nombre}' se encuentra en la posición {posicion} del diccionario.")
 
                 # GENERAR DATAFRAME para cada jugador ###################################################################
                 self.output_textedit.insertPlainText("Datos del jugador: \n")
@@ -2101,7 +2145,7 @@ class dataset_predecir(QWidget):
 
                 ## ULTIMO RIVAL ##### 
                 try:
-                    ultimo_equipo_rival = lista_jugadores_datos_scrapeados[posicion]['ultimo_rival']
+                    ultimo_equipo_rival = self.lista_jugadores_datos_scrapeados[posicion]['ultimo_rival']
                     # Comprobar si es str y convertir si no lo es
                     if not isinstance(ultimo_equipo_rival, str):
                         ultimo_equipo_rival = str(ultimo_equipo_rival)
@@ -2113,7 +2157,7 @@ class dataset_predecir(QWidget):
 
                 ## RESULTADO DEL PARTIDO #####
                 try:
-                    resultado_ultimo_partido = lista_jugadores_datos_scrapeados[posicion]['resultado_partido']
+                    resultado_ultimo_partido = self.lista_jugadores_datos_scrapeados[posicion]['resultado_partido']
                     # Comprobar si es int y convertir si no lo es
                     if not isinstance(resultado_ultimo_partido, int):
                         try:
@@ -2133,7 +2177,7 @@ class dataset_predecir(QWidget):
 
                 ## PROXIMO RIVAL #####
                 try:
-                    proximo_equipo_rival = lista_jugadores_datos_scrapeados[posicion]['prximo_rival']
+                    proximo_equipo_rival = self.lista_jugadores_datos_scrapeados[posicion]['prximo_rival']
                     # Comprobar si es str y convertir si no lo es
                     if not isinstance(proximo_equipo_rival, str):
                         proximo_equipo_rival = str(proximo_equipo_rival)
@@ -2145,7 +2189,7 @@ class dataset_predecir(QWidget):
 
                 ## PROXIMO PARTIDO ES LOCAL #####
                 try:
-                    proximo_equipo_local = lista_jugadores_datos_scrapeados[posicion]['prximo_partido_local']
+                    proximo_equipo_local = self.lista_jugadores_datos_scrapeados[posicion]['prximo_partido_local']
                     if not isinstance(proximo_equipo_local, int):
                         try:
                             proximo_equipo_local = int(proximo_equipo_local)
@@ -2163,7 +2207,7 @@ class dataset_predecir(QWidget):
 
                 ## MEDIA EN CASA #####
                 try:
-                    media_puntos_local = lista_jugadores_datos_scrapeados[posicion]['media_casa']
+                    media_puntos_local = self.lista_jugadores_datos_scrapeados[posicion]['media_casa']
                     # Comprobar si es float y convertir si no lo es
                     if not isinstance(media_puntos_local, float):
                         try:
@@ -2178,7 +2222,7 @@ class dataset_predecir(QWidget):
 
                 ## MEDIA FUERA #####
                 try:
-                    media_puntos_fuera = lista_jugadores_datos_scrapeados[posicion]['media_fuera']
+                    media_puntos_fuera = self.lista_jugadores_datos_scrapeados[posicion]['media_fuera']
                     # Comprobar si es float y convertir si no lo es
                     if not isinstance(media_puntos_fuera, float):
                         try:
@@ -2757,7 +2801,7 @@ class dataset_predecir(QWidget):
 
                 ## AUSENCIA #####    
                 try:
-                    ausencia = lista_jugadores_datos_scrapeados[posicion]['ausencia']
+                    ausencia = self.lista_jugadores_datos_scrapeados[posicion]['ausencia']
                     # Comprobar si es str y convertir si no lo es
                     if not isinstance(ausencia, str):
                         ausencia = str(ausencia)

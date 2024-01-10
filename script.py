@@ -33,9 +33,11 @@ from sklearn.model_selection import train_test_split
 from matplotlib.figure import Figure
 
 from sklearn.neighbors import KNeighborsClassifier
-# Importar QTimer al inicio del archivo
-from PyQt6.QtCore import QTimer
 
+import matplotlib
+matplotlib.use('TkAgg')  # Cambia 'TkAgg' según tus necesidades, 'Agg' es un backend no interactivo
+import seaborn as sns
+import matplotlib.pyplot as plt
 
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 
@@ -3845,13 +3847,13 @@ class trainWindow(QWidget):
         label_choice = QLabel("Seleccionar atributo del jugador predecir:")
         grid_layout.addWidget(label_choice, 6, 0)
 
-        combo_box1 = QComboBox()
-        combo_box1.addItem("Entrenar para predecir valor de mercado que alcanzará un jugaodr en la próxima jornada")
-        combo_box1.addItem("Entrenar para predecir puntos que obtendrá un jugaodr en la próxima jornada")
+        self.combo_box1 = QComboBox()
+        self.combo_box1.addItem("Entrenar para predecir valor de mercado que alcanzará un jugaodr en la próxima jornada")
+        self.combo_box1.addItem("Entrenar para predecir puntos que obtendrá un jugaodr en la próxima jornada")
         
         # Establecer el ancho máximo para la QComboBox
-        combo_box1.setMaximumWidth(500)
-        grid_layout.addWidget(combo_box1, 6, 1)
+        self.combo_box1.setMaximumWidth(500)
+        grid_layout.addWidget(self.combo_box1, 6, 1)
 
         ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
         # Crear un botón
@@ -4038,47 +4040,68 @@ class trainWindow(QWidget):
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
-        # FASE 4:
+        # FASE 4: Analisis de distribución de la variable label
         # Actualizar los datos y volver a dibujar la gráfica
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Generando gráfica de la distribución de la variable a predecir...\n")
-        
-        # Visualizar la distribución de las puntuaciones
-        data = df['Puntuación Fantasy'].dropna()
 
-        sns.set_style("whitegrid")  # Configurar el estilo de la gráfica
-        sns.histplot(data, bins=30, kde=False, ax=self.ax)  # Cambiando kde a False
+        # Obtener el opción predecir valor o puntos
+        index = self.combo_box1.currentIndex()
+        self.selected_option = index + 1
 
-        # Configurar título y etiquetas
-        self.ax.set_title('Distribución puntuaciones jugadores')
-        self.ax.set_xlabel('Puntuación')
-        self.ax.set_ylabel('Frecuencia')
+        # Realizar acciones en función de la opción seleccionada
+        if self.selected_option == 1:
+            print("Valor")
 
-        # Ajustar las propiedades del gráfico de barras para que no estén conectadas
-        bars = self.ax.patches
-        for bar in bars:
-            bar.set_width(0.8)  # Ancho de la barra
-            time.sleep(0.2)
-            bar.set_edgecolor('white')  # Color del borde de la barra
+            # Visualizar la distribución de las puntuaciones
+            data = df['Valor'].dropna()
 
-        # Mostrar la gráfica después de actualizar los datos
-        self.canvas.setVisible(True)
+            sns.set_style("whitegrid")  # Configurar el estilo de la gráfica
+            sns.histplot(data, bins=30, kde=False)  # Cambiando kde a False
 
-        width = int(self.fig.bbox.width)
-        height = int(self.fig.bbox.height)
+            # Configurar título y etiquetas
+            plt.title('Distribución puntuaciones jugadores')
+            plt.xlabel('Valor')
+            plt.ylabel('Frecuencia')
 
-        # Ajustar el tamaño de la gráfica después de dibujarla
-        self.canvas.setFixedSize(width, height)
+            # Ajustar las propiedades del gráfico de barras para que no estén conectadas
+            bars = plt.gca().patches
+            for bar in bars:
+                bar.set_width(0.8)  # Ancho de la barra
+                bar.set_edgecolor('black')  # Color del borde de la barra (ajusta según tus preferencias)
 
-        # Dibujar la gráfica
-        self.canvas.draw()
+            # Mostrar la gráfica
+            plt.show()
+
+        elif self.selected_option == 2:
+            print("Puntos")
+            # Visualizar la distribución de las puntuaciones
+            data = df['Puntuación Fantasy'].dropna()
+
+            sns.set_style("whitegrid")  # Configurar el estilo de la gráfica
+            sns.histplot(data, bins=30, kde=False)  # Cambiando kde a False
+
+            # Configurar título y etiquetas
+            plt.title('Distribución puntuaciones jugadores')
+            plt.xlabel('Puntuación')
+            plt.ylabel('Frecuencia')
+
+            # Ajustar las propiedades del gráfico de barras para que no estén conectadas
+            bars = plt.gca().patches
+            for bar in bars:
+                bar.set_width(0.8)  # Ancho de la barra
+                bar.set_edgecolor('white')  # Color del borde de la barra (ajusta según tus preferencias)
+
+            # Mostrar la gráfica
+            plt.show()
+
+            time.sleep(1)
 
         self.output_textedit.insertPlainText(f"Histograma generado exitosamente.\n")
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
             
-
     def guardar_modeleo(self):
         self.output_textedit.insertPlainText("future guardar modelo\n")
 

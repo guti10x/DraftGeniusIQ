@@ -992,7 +992,9 @@ class dataset_entrenamiento(QWidget):
 
         ## VALOR #####
         # Verificar y convertir a float la columna 
-        df.iloc[:, 1] = df.iloc[:, 1].apply(lambda x: float(str(x).replace('.', '')) if isinstance(x, (int, float)) else x)
+        # Verificar y convertir a float la columna
+        df.iloc[:, 1] = df.iloc[:, 1].apply(lambda x: float(str(x).replace('.', '').replace(',', '.')) if isinstance(x, (int, float, str)) else x)
+
 
         ## POSICIÓN #####
         # Verificar y convertir a str la columna 
@@ -1033,8 +1035,8 @@ class dataset_entrenamiento(QWidget):
         df.iloc[:, 10] = df.iloc[:, 10].apply(lambda x: str(x) if not isinstance(x, str) else x)
 
         ## PROXIMO PARTIDO ES LOCAL #####
-        # Verificar y convertir "VERDADERO" a 1 y cualquier otro valor a 0 en toda la columna 11
-        df.iloc[:, 11] = df.iloc[:, 11].apply(lambda x: 1 if x == "VERDADERO" else 0)
+        # Convertir valores booleanos a 1 y 0 en toda la columna 11
+        df.iloc[:, 11] = df.iloc[:, 11].astype(int)
 
         ## MEDIA EN CASA #####
         # Verificar y convertir a float la columna 
@@ -1815,7 +1817,18 @@ class dataset_predecir(QWidget):
             formato_negro.setForeground(QColor(0, 0, 0))
             self.output_textedit.mergeCurrentCharFormat(formato_negro)
             return
+        
+        # Obtener el nombre del archivo sin la extensión
+        nombre_archivo = os.path.splitext(os.path.basename(archivo_excel_selected_players))[0]
 
+        # Convierte el nombre del archivo a minúsculas para facilitar la comparación
+        nombre_archivo = nombre_archivo.lower()
+        
+        if not ('plantilla' in nombre_archivo or 'mercado' in nombre_archivo):
+            self.output_textedit.insertPlainText("Archivo de jugadores del mercado o plantilla erroneo.")
+            time.sleep(0.5)
+            return
+        
         #### PARTE 1 : GENERAR DATASET resultate de fusionar los daasets de Sofaescore y Mister Fantasy ########################################################################################
         self.json_a_excel()
 
@@ -3917,6 +3930,20 @@ class trainWindow(QWidget):
 
     def train_function(self):
         self.start_progress()
+        #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS ########################################################################################
+        # Ruta a la carpeta que contiene los archivos json de Sofaescore
+        carpeta_datasets = self.text_input.text()
+        if not carpeta_datasets:
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            self.output_textedit.mergeCurrentCharFormat(formato_rojo)
+            self.output_textedit.insertPlainText("La ruta de la carpeta del dataset de entrenamiento no ha sido inicializada.\n")
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            self.output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
+
         # FASE 1: fusionar todos los dataset de entrada de cada jornada selecionados en uno solo #######################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Generando dataset de entrada...\n")

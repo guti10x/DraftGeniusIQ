@@ -3831,7 +3831,7 @@ class trainWindow(QWidget):
         ### SELECCIONAR ALGORITMO ##################################################
         # LABEL DE TEXTO
         label_text = QLabel("Seleciona un algoritmo de entrenamiento: ")
-        grid_layout.addWidget(label_text, 4, 0)
+        grid_layout.addWidget(label_text, 5, 0)
         combo_box = QComboBox()
         combo_box.addItem("Gradient Boosted Tree model")
         combo_box.addItem("Random Forest model")
@@ -3839,11 +3839,11 @@ class trainWindow(QWidget):
         combo_box.addItem("Linear Regresion model")
         # Establecer el ancho máximo para la QComboBox
         combo_box.setMaximumWidth(185)
-        grid_layout.addWidget(combo_box, 4, 1)
+        grid_layout.addWidget(combo_box, 5, 1)
 
 
         label_choice = QLabel("Seleccionar atributo del jugador predecir:")
-        grid_layout.addWidget(label_choice, 5, 0)
+        grid_layout.addWidget(label_choice, 6, 0)
 
         combo_box1 = QComboBox()
         combo_box1.addItem("Entrenar para predecir valor de mercado que alcanzará un jugaodr en la próxima jornada")
@@ -3851,7 +3851,7 @@ class trainWindow(QWidget):
         
         # Establecer el ancho máximo para la QComboBox
         combo_box1.setMaximumWidth(500)
-        grid_layout.addWidget(combo_box1, 5, 1)
+        grid_layout.addWidget(combo_box1, 6, 1)
 
         ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
         # Crear un botón
@@ -3861,24 +3861,24 @@ class trainWindow(QWidget):
         self.scrape_button.clicked.connect(self.iniciar_thread)
 
         # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 6, 0,alignment=Qt.AlignmentFlag.AlignLeft)
-        self.scrape_button.setMaximumWidth(280)
+        grid_layout.addWidget(self.scrape_button, 7, 0,alignment=Qt.AlignmentFlag.AlignLeft)
+        self.scrape_button.setMinimumWidth(225)
 
         ###  BARRA DE PROGRESO  ################################################
         # Crear Barra de progreso
         self.progress_bar = QProgressBar(self)
-        grid_layout.addWidget(self.progress_bar,6,1)
+        grid_layout.addWidget(self.progress_bar,7,1)
 
         ###  VENTANA OUTPUT SCRAPER  ####################################################################################
         # Crear un QTextEdit para la salida
         self.output_textedit = QTextEdit(self)
-        grid_layout.addWidget(self.output_textedit, 7, 0, 5, 0)  # row, column, rowSpan, columnSpan
+        grid_layout.addWidget(self.output_textedit, 8, 0, 6, 0)  # row, column, rowSpan, columnSpan
 
         ###  GRÁFICA  ####################################################################################
         # Crear una instancia de la figura de Matplotlib y el widget de lienzo
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
-        grid_layout.addWidget(self.canvas,7,1,alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(self.canvas,8,1,alignment=Qt.AlignmentFlag.AlignRight)
 
         # Crear un subplot vacío
         self.ax = self.fig.add_subplot(111)
@@ -3893,12 +3893,12 @@ class trainWindow(QWidget):
         ###  SELECCIONAR RUTA DONDE GUARDAR EL MODELO  ###################################
         # LABEL TEXTO 
         label_text = QLabel("Ruta donde guardar el modelo generado:")
-        grid_layout.addWidget(label_text, 12, 0)
+        grid_layout.addWidget(label_text, 15, 0)
 
         # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
         self.text_input2 = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input2, 12, 1)
+        grid_layout.addWidget(self.text_input2, 15, 1)
         # Estilos 
         self.text_input2.setMinimumWidth(350)
 
@@ -3906,7 +3906,7 @@ class trainWindow(QWidget):
         select_folder_button = QPushButton("Seleccionar Carpeta")
         select_folder_button.clicked.connect(lambda: select_folder2(self))
         # Alineación
-        grid_layout.addWidget(select_folder_button, 13, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_folder_button, 16, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
@@ -3918,9 +3918,11 @@ class trainWindow(QWidget):
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
         #self.scrape_button.clicked.connect(self.guardar_modeleo)
 
-        # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 15, 1, alignment=Qt.AlignmentFlag.AlignRight)
-        self.scrape_button.setMaximumWidth(150)
+        # Alineación 
+        grid_layout.addWidget(self.scrape_button, 17, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        self.scrape_button.setMinimumWidth(140)
+
 
         self.selected_option = None
 
@@ -4062,18 +4064,18 @@ class trainWindow(QWidget):
         # Mostrar la gráfica después de actualizar los datos
         self.canvas.setVisible(True)
 
-        time.sleep(1)
-
         width = int(self.fig.bbox.width)
         height = int(self.fig.bbox.height)
-
-        # Dibujar la gráfica
-        self.canvas.draw()
 
         # Ajustar el tamaño de la gráfica después de dibujarla
         self.canvas.setFixedSize(width, height)
 
+        # Dibujar la gráfica
+        self.canvas.draw()
+
         self.output_textedit.insertPlainText(f"Histograma generado exitosamente.\n")
+        self.progress += 1
+        self.invocar_actualizacion(self.progress)
 
             
 

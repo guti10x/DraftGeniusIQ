@@ -30,8 +30,15 @@ from sklearn.pipeline import Pipeline
 from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
 from sklearn.metrics import make_scorer
 from sklearn.model_selection import train_test_split
+from matplotlib.figure import Figure
 
 from sklearn.neighbors import KNeighborsClassifier
+# Importar QTimer al inicio del archivo
+from PyQt6.QtCore import QTimer
+
+
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+
 
 headers = {
     "X-RapidAPI-Key": "11822210cdmsha855c4a12c471b5p18100fjsn3972b17b3be8",
@@ -883,7 +890,7 @@ class dataset_entrenamiento(QWidget):
         # Obtener la fecha actual
         fecha_actual = datetime.now()
         # Formatear la fecha como una cadena (opcional)
-        fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
+        fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-%S")
 
         output_archivo=output+"/dataset_entrenamiento_jornada"+numero_jornada+"__"+fecha_actual_str+".xlsx"
         
@@ -3824,28 +3831,27 @@ class trainWindow(QWidget):
         ### SELECCIONAR ALGORITMO ##################################################
         # LABEL DE TEXTO
         label_text = QLabel("Seleciona un algoritmo de entrenamiento: ")
-        grid_layout.addWidget(label_text, 5, 0)
+        grid_layout.addWidget(label_text, 4, 0)
         combo_box = QComboBox()
         combo_box.addItem("Gradient Boosted Tree model")
         combo_box.addItem("Random Forest model")
         combo_box.addItem("K-NN model")
         combo_box.addItem("Linear Regresion model")
-        combo_box.addItem("Neural Net model")
         # Establecer el ancho máximo para la QComboBox
         combo_box.setMaximumWidth(185)
-        grid_layout.addWidget(combo_box, 5, 1)
+        grid_layout.addWidget(combo_box, 4, 1)
 
 
         label_choice = QLabel("Seleccionar atributo del jugador predecir:")
-        grid_layout.addWidget(label_choice, 6, 0)
+        grid_layout.addWidget(label_choice, 5, 0)
 
-        combo_box = QComboBox()
-        combo_box.addItem("Entrenar para predecir valor de mercado que alcanzará un jugaodr en la próxima jornada")
-        combo_box.addItem("Entrenar para predecir puntos que obtendrá un jugaodr en la próxima jornada")
+        combo_box1 = QComboBox()
+        combo_box1.addItem("Entrenar para predecir valor de mercado que alcanzará un jugaodr en la próxima jornada")
+        combo_box1.addItem("Entrenar para predecir puntos que obtendrá un jugaodr en la próxima jornada")
         
         # Establecer el ancho máximo para la QComboBox
-        combo_box.setMaximumWidth(500)
-        grid_layout.addWidget(combo_box, 6, 1)
+        combo_box1.setMaximumWidth(500)
+        grid_layout.addWidget(combo_box1, 5, 1)
 
         ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
         # Crear un botón
@@ -3855,34 +3861,38 @@ class trainWindow(QWidget):
         self.scrape_button.clicked.connect(self.iniciar_thread)
 
         # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 7, 0,alignment=Qt.AlignmentFlag.AlignLeft)
-        self.scrape_button.setMaximumWidth(210)
+        grid_layout.addWidget(self.scrape_button, 6, 0,alignment=Qt.AlignmentFlag.AlignLeft)
+        self.scrape_button.setMaximumWidth(280)
 
         ###  BARRA DE PROGRESO  ################################################
         # Crear Barra de progreso
         self.progress_bar = QProgressBar(self)
-        grid_layout.addWidget(self.progress_bar,7,1)
+        grid_layout.addWidget(self.progress_bar,6,1)
 
         ###  VENTANA OUTPUT SCRAPER  ####################################################################################
         # Crear un QTextEdit para la salida
         self.output_textedit = QTextEdit(self)
-        grid_layout.addWidget(self.output_textedit, 8, 0, 2, 0)  # row, column, rowSpan, columnSpan
+        grid_layout.addWidget(self.output_textedit, 7, 0, 5, 0)  # row, column, rowSpan, columnSpan
+
+        ###  GRÁFICA  ####################################################################################
+        # Crear una instancia de la figura de Matplotlib y el widget de lienzo
+        self.fig = Figure()
+        self.canvas = FigureCanvas(self.fig)
+        grid_layout.addWidget(self.canvas,7,1,alignment=Qt.AlignmentFlag.AlignRight)
+
+        # Crear un subplot vacío
+        self.ax = self.fig.add_subplot(111)
+
+        # Ajustar el tamaño de la gráfica
+        self.canvas.setFixedSize(250, 200)
+
+        # Ocultar la gráfica inicialmente
+        self.canvas.setVisible(False)
+
 
         ###  SELECCIONAR RUTA DONDE GUARDAR EL MODELO  ###################################
         # LABEL TEXTO 
         label_text = QLabel("Ruta donde guardar el modelo generado:")
-        grid_layout.addWidget(label_text, 11, 0)
-
-        # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
-        self.text_input2 = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(self.text_input2, 11, 1)
-        # Estilos 
-        self.text_input2.setMinimumWidth(350)
-
-        ###  SELECCIONAR NOMBRE MODELO  ###################################
-        # LABEL TEXTO 
-        label_text = QLabel("Nombre del modelo generado:")
         grid_layout.addWidget(label_text, 12, 0)
 
         # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
@@ -3896,7 +3906,7 @@ class trainWindow(QWidget):
         select_folder_button = QPushButton("Seleccionar Carpeta")
         select_folder_button.clicked.connect(lambda: select_folder2(self))
         # Alineación
-        grid_layout.addWidget(select_folder_button, 14, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_folder_button, 13, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
@@ -3911,6 +3921,8 @@ class trainWindow(QWidget):
         # Alineación y estilos
         grid_layout.addWidget(self.scrape_button, 15, 1, alignment=Qt.AlignmentFlag.AlignRight)
         self.scrape_button.setMaximumWidth(150)
+
+        self.selected_option = None
 
     def start_progress(self):
         # Establecer el rango de la barra de progreso según tus necesidades
@@ -4017,14 +4029,53 @@ class trainWindow(QWidget):
             archivo_salida = carpeta_datasets + "/dataset_training_without_Missing_Values_without_Useless_Atributes.xlsx"
             df.to_excel(archivo_salida, index=False)
                         
-            self.output_textedit.insertPlainText(f"Columna '{columna_a_eliminar}' eliminada con éxito.")
+            self.output_textedit.insertPlainText(f"Columna '{columna_a_eliminar}' eliminada con éxito.\n")
         else:
-            self.output_textedit.insertPlainText(f"La columna '{columna_a_eliminar}' no existe en el DataFrame y no se pudo eliminar.")
+            self.output_textedit.insertPlainText(f"La columna '{columna_a_eliminar}' no existe en el DataFrame y no se pudo eliminar.\n")
         
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
         # FASE 4:
+        # Actualizar los datos y volver a dibujar la gráfica
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Generando gráfica de la distribución de la variable a predecir...\n")
+        
+        # Visualizar la distribución de las puntuaciones
+        data = df['Puntuación Fantasy'].dropna()
+
+        sns.set_style("whitegrid")  # Configurar el estilo de la gráfica
+        sns.histplot(data, bins=30, kde=False, ax=self.ax)  # Cambiando kde a False
+
+        # Configurar título y etiquetas
+        self.ax.set_title('Distribución puntuaciones jugadores')
+        self.ax.set_xlabel('Puntuación')
+        self.ax.set_ylabel('Frecuencia')
+
+        # Ajustar las propiedades del gráfico de barras para que no estén conectadas
+        bars = self.ax.patches
+        for bar in bars:
+            bar.set_width(0.8)  # Ancho de la barra
+            time.sleep(0.2)
+            bar.set_edgecolor('white')  # Color del borde de la barra
+
+        # Mostrar la gráfica después de actualizar los datos
+        self.canvas.setVisible(True)
+
+        time.sleep(1)
+
+        width = int(self.fig.bbox.width)
+        height = int(self.fig.bbox.height)
+
+        # Dibujar la gráfica
+        self.canvas.draw()
+
+        # Ajustar el tamaño de la gráfica después de dibujarla
+        self.canvas.setFixedSize(width, height)
+
+        self.output_textedit.insertPlainText(f"Histograma generado exitosamente.\n")
+
+            
 
     def guardar_modeleo(self):
         self.output_textedit.insertPlainText("future guardar modelo\n")

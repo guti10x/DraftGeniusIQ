@@ -36,10 +36,8 @@ from sklearn.neighbors import KNeighborsClassifier
 
 import matplotlib
 matplotlib.use('TkAgg')  # Cambia 'TkAgg' según tus necesidades, 'Agg' es un backend no interactivo
-import seaborn as sns
-import matplotlib.pyplot as plt
-
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+import category_encoders as ce
 
 
 headers = {
@@ -3990,7 +3988,26 @@ class trainWindow(QWidget):
             plt.show()
             time.sleep(1)
         
-     
+        def plot_correlation_matrix(df, title):
+            # Calcular la matriz de correlación
+            correlation_matrix = df.corr()
+
+            # Configurar el estilo de la gráfica
+            sns.set(style='whitegrid')
+
+            # Crear una figura y un eje
+            plt.figure(figsize=(10, 8))
+
+            # Crear la matriz de correlación utilizando seaborn
+            sns.heatmap(correlation_matrix, annot=True, cmap='coolwarm', fmt=".2f", linewidths=.5)
+
+            # Configurar título
+            plt.title(title)
+
+            # Mostrar la gráfica
+            plt.show()
+        
+        
         self.start_progress()
         #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS #####################################################################
         # Ruta a la carpeta que contiene los archivos json de Sofaescore
@@ -4160,18 +4177,31 @@ class trainWindow(QWidget):
         # Mostrar las variables categóricas identificadas
         self.output_textedit.insertPlainText(f"Variables categóricas transformadas: {categoricas}\n")
 
-        # Transformar variables categóricas utilizando codificación one-hot
-        df = pd.get_dummies(df, columns=categoricas)
+        # Aplicar codificación de frecuencia a las variables categóricas
+        encoder = ce.CountEncoder()
+        df[categoricas] = encoder.fit_transform(df[categoricas])
+
 
         # Guardar el nuevo DataFrame en un nuevo archivo Excel
-        #excel_file_encoded = 'ruta_del_nuevo_archivo_encoded.xlsx'  # Cambia esto con la ruta de tu nuevo archivo
-        #df_encoded.to_excel(excel_file_encoded, index=False)
+        #df.to_excel('ruta_del_nuevo_archivo_encoded.xlsx', index=False)
 
         time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Variables categóricas manejadas exitosamente.\n")
         self.progress += 1
         self.invocar_actualizacion(self.progress)
         
+        
+        # FASE 7: Matriz de correlación ###########################################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Generando matriz de correlación...\n")
+
+        hilo = threading.Thread(target=plot_correlation_matrix(df,'Matriz de Correlación'))
+        hilo.start()
+
+        time.sleep(0.5)
+        self.output_textedit.insertPlainText(f"Matriz de correlación generada exitosamente.\n")
+        self.progress += 1
+        self.invocar_actualizacion(self.progress)
 
 
 

@@ -3945,6 +3945,30 @@ class trainWindow(QWidget):
         thread.start()
 
     def train_function(self):
+        def visualizar_distribucion(df, columna, etiqueta_x, titulo, borde_color):
+            print(etiqueta_x)
+
+            # Visualizar la distribución de las puntuaciones
+            data = df[columna].dropna()
+
+            sns.set_style("whitegrid")  # Configurar el estilo de la gráfica
+            sns.histplot(data, bins=30, kde=False)  # Cambiando kde a False
+
+            # Configurar título y etiquetas
+            plt.title(titulo)
+            plt.xlabel(etiqueta_x)
+            plt.ylabel('Frecuencia')
+
+            # Ajustar las propiedades del gráfico de barras para que no estén conectadas
+            bars = plt.gca().patches
+            for bar in bars:
+                bar.set_width(0.8)  # Ancho de la barra
+                bar.set_edgecolor(borde_color)  # Color del borde de la barra (ajusta según tus preferencias)
+
+            # Mostrar la gráfica
+            plt.show()
+            time.sleep(1)
+                       
         self.start_progress()
         #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS ########################################################################################
         # Ruta a la carpeta que contiene los archivos json de Sofaescore
@@ -4051,52 +4075,10 @@ class trainWindow(QWidget):
 
         # Realizar acciones en función de la opción seleccionada
         if self.selected_option == 1:
-            print("Valor")
-
-            # Visualizar la distribución de las puntuaciones
-            data = df['Valor'].dropna()
-
-            sns.set_style("whitegrid")  # Configurar el estilo de la gráfica
-            sns.histplot(data, bins=30, kde=False)  # Cambiando kde a False
-
-            # Configurar título y etiquetas
-            plt.title('Distribución puntuaciones jugadores')
-            plt.xlabel('Valor')
-            plt.ylabel('Frecuencia')
-
-            # Ajustar las propiedades del gráfico de barras para que no estén conectadas
-            bars = plt.gca().patches
-            for bar in bars:
-                bar.set_width(0.8)  # Ancho de la barra
-                bar.set_edgecolor('black')  # Color del borde de la barra (ajusta según tus preferencias)
-
-            # Mostrar la gráfica
-            plt.show()
-
+            visualizar_distribucion(df, 'Valor', 'Valor', 'Distribución puntuaciones jugadores', 'black')
         elif self.selected_option == 2:
-            print("Puntos")
-            # Visualizar la distribución de las puntuaciones
-            data = df['Puntuación Fantasy'].dropna()
-
-            sns.set_style("whitegrid")  # Configurar el estilo de la gráfica
-            sns.histplot(data, bins=30, kde=False)  # Cambiando kde a False
-
-            # Configurar título y etiquetas
-            plt.title('Distribución puntuaciones jugadores')
-            plt.xlabel('Puntuación')
-            plt.ylabel('Frecuencia')
-
-            # Ajustar las propiedades del gráfico de barras para que no estén conectadas
-            bars = plt.gca().patches
-            for bar in bars:
-                bar.set_width(0.8)  # Ancho de la barra
-                bar.set_edgecolor('white')  # Color del borde de la barra (ajusta según tus preferencias)
-
-            # Mostrar la gráfica
-            plt.show()
-
-            time.sleep(1)
-
+            visualizar_distribucion(df, 'Puntuación Fantasy', 'Puntuación', 'Distribución puntuaciones jugadores', 'white')
+            
         self.output_textedit.insertPlainText(f"Histograma generado exitosamente.\n")
         self.progress += 1
         self.invocar_actualizacion(self.progress)

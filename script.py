@@ -3878,7 +3878,7 @@ class trainWindow(QWidget):
         # Crear una instancia de la figura de Matplotlib y el widget de lienzo
         self.fig = Figure()
         self.canvas = FigureCanvas(self.fig)
-        grid_layout.addWidget(self.canvas,8,1,alignment=Qt.AlignmentFlag.AlignRight)
+        #grid_layout.addWidget(self.canvas,8,1,alignment=Qt.AlignmentFlag.AlignRight)
 
         # Crear un subplot vacío
         self.ax = self.fig.add_subplot(111)
@@ -4189,8 +4189,7 @@ class trainWindow(QWidget):
         self.output_textedit.insertPlainText(f"Variables categóricas manejadas exitosamente.\n")
         self.progress += 1
         self.invocar_actualizacion(self.progress)
-        
-        
+         
         # FASE 7: Matriz de correlación ###########################################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Generando matriz de correlación...\n")
@@ -4199,12 +4198,51 @@ class trainWindow(QWidget):
         hilo.start()
 
         time.sleep(0.5)
+        self.invocar_actualizacion(self.progress)
         self.output_textedit.insertPlainText(f"Matriz de correlación generada exitosamente.\n")
+        time.sleep(0.5)
+        print(" \n")
+        time.sleep(0.5)
+
+        self.output_textedit.insertPlainText(f"Obteniendo correlación media de cada variable con el resto de varoables...\n")
+        # Calcular la matriz de correlación
+        correlation_matrix = df.corr()
+
+        # Calcular la media de correlación para cada variable
+        mean_correlation = correlation_matrix.abs().mean()
+
+        for indice, valor in mean_correlation.items():
+            self.output_textedit.insertPlainText(f"{indice}: media de correlación: {valor}\n")
+            time.sleep(0.5)
+
+        # Definir umbral para la media de correlación
+        threshold = 0.1
+
+        # Identificar columnas con media de correlación menor al umbral
+        low_correlation_columns = mean_correlation[mean_correlation < threshold].index
+
+        self.output_textedit.insertPlainText(f"\nEliminado columnas con baja correlación:\n")
+        time.sleep(0.5)
+        for i, columna in enumerate(low_correlation_columns):
+            self.output_textedit.insertPlainText(f"{columna}")
+                
+            # Verificar si es el último elemento
+            if i < len(low_correlation_columns) - 1:
+                self.output_textedit.insertPlainText(", ")
+            else:
+                 self.output_textedit.insertPlainText(".")
+                
+        time.sleep(0.5)
+        self.output_textedit.insertPlainText("\n")
+
+
+        # Eliminar columnas con baja correlación
+        df = df.drop(columns=low_correlation_columns)
+
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
-
-
+  
             
     def guardar_modeleo(self):
         self.output_textedit.insertPlainText("future guardar modelo\n")

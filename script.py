@@ -3968,6 +3968,27 @@ class trainWindow(QWidget):
             # Mostrar la gráfica
             plt.show()
             time.sleep(1)
+
+        def plot_boxplot(df, columna, titulo, etiqueta_x):
+            # Visualizar el boxplot de la columna de interés
+            data = df[columna].dropna()
+
+            sns.set_style("whitegrid")  # Configurar el estilo de la gráfica
+            sns.boxplot(x=data)
+
+            # Configurar título y etiquetas
+            plt.title(titulo)
+            plt.xlabel(etiqueta_x)
+            plt.ylabel('Valor')
+
+            # Ajustar las propiedades del boxplot
+            boxes = plt.gca().artists
+            for box in boxes:
+                box.set_linewidth(2)  # Ancho del borde
+
+            # Mostrar la gráfica
+            plt.show()
+            time.sleep(1)
                        
         self.start_progress()
         #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS ########################################################################################
@@ -4075,11 +4096,28 @@ class trainWindow(QWidget):
 
         # Realizar acciones en función de la opción seleccionada
         if self.selected_option == 1:
-            visualizar_distribucion(df, 'Valor', 'Valor', 'Distribución puntuaciones jugadores', 'black')
+            hilo = threading.Thread(target=visualizar_distribucion(df, 'Valor', 'Valor', 'Distribución puntuaciones jugadores', 'black'))
+            hilo.start()
+
         elif self.selected_option == 2:
-            visualizar_distribucion(df, 'Puntuación Fantasy', 'Puntuación', 'Distribución puntuaciones jugadores', 'white')
+            hilo = threading.Thread(target=visualizar_distribucion(df, 'Puntuación Fantasy', 'Puntuación', 'Distribución puntuaciones jugadores', 'white'))
+            hilo.start()
             
         self.output_textedit.insertPlainText(f"Histograma generado exitosamente.\n")
+        self.progress += 1
+        self.invocar_actualizacion(self.progress)
+
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Analizando outliers...\n")
+        if self.selected_option == 1:
+            hilo = threading.Thread(target=plot_boxplot(df, 'Valor', 'Distribución puntuaciones jugadores','Eje x'))
+            hilo.start()
+
+        elif self.selected_option == 2:
+            hilo = threading.Thread(target=plot_boxplot(df, 'Puntuación Fantasy', 'Distribución puntuaciones jugadores','Eje x'))
+            hilo.start()
+        
+        self.output_textedit.insertPlainText(f"Box plot generado exitosamente.\n")
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 

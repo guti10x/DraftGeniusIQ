@@ -3990,8 +3990,9 @@ class trainWindow(QWidget):
             plt.show()
             time.sleep(1)
         
+     
         self.start_progress()
-        #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS ########################################################################################
+        #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS #####################################################################
         # Ruta a la carpeta que contiene los archivos json de Sofaescore
         carpeta_datasets = self.text_input.text()
         if not carpeta_datasets:
@@ -4005,7 +4006,7 @@ class trainWindow(QWidget):
             self.output_textedit.mergeCurrentCharFormat(formato_negro)
             return
 
-        # FASE 1: fusionar todos los dataset de entrada de cada jornada selecionados en uno solo #######################
+        # FASE 1: fusionar todos los dataset de entrada de cada jornada selecionados en uno solo #########################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Generando dataset de entrada...\n")
         carpeta_datasets = self.text_input.text()
@@ -4038,43 +4039,47 @@ class trainWindow(QWidget):
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
-        # FASE 2: Gestión de MISSING VALUES ##########################################################################
+        #Fase 2: Eliminar columnas que no aportan (tiene muvhos valores nulos o igules en la misma columna) ##############################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
-        self.output_textedit.insertPlainText(f"Manejando Missing Values...\n")
+        self.output_textedit.insertPlainText(f"Analizando relevacia de cada columna del dataset...\n")
+        # Definir umbrales para el porcentaje de valores iguales o nulos
+        umbral_porcentaje_iguales = 88
+        umbral_porcentaje_nulos = 88
 
-        # Reemplaza los valores vacíos con 0
-        df = df.fillna(0)
-        df = df.replace('-', 0)
+        # Obtener información sobre cada columna
+        columnas_a_eliminar = []
 
-        # Reemplaza los valores iguales a 0 con un string en una columna específica
-        columna = 'Ausencia'
-        string_reemplazo = 'None'
-        df[columna] = df[columna].apply(lambda x: string_reemplazo if x == 0 else x)
+        for columna in df.columns:
+            # Calcular el porcentaje de valores iguales
+            porcentaje_iguales = (df[columna].value_counts().max() / len(df)) * 100
+            
+            # Calcular el porcentaje de valores nulos
+            porcentaje_nulos = (df[columna].isnull().sum() / len(df)) * 100
 
-        # Guarda el DataFrame modificado en un nuevo archivo Excel
-        #archivo_salida = carpeta_datasets + "/dataset_training_without_Missing_Values.xlsx"
-        #df.to_excel(archivo_salida, index=False)
+            self.output_textedit.insertPlainText(f"{columna}: - Porcentaje de valores Iguales: {porcentaje_iguales} - Porcenta de valores Nulos: {porcentaje_nulos}\n")
+            time.sleep(0.7)
+            
+            # Verificar si el porcentaje supera los umbrales y agregar la columna a la lista de eliminación
+            if porcentaje_iguales >= umbral_porcentaje_iguales or porcentaje_nulos >= umbral_porcentaje_nulos:
+                columnas_a_eliminar.append(columna)
 
+        # Eliminar las columnas seleccionadas del DataFrame
+        df = df.drop(columnas_a_eliminar, axis=1)
+
+        # Mostrar las columnas seleccionadas para eliminar
+        self.output_textedit.insertPlainText(f" \n")
+        self.output_textedit.insertPlainText(f"Columnas seleccionadas para eliminar: {columnas_a_eliminar}\n")
         time.sleep(0.5)
-        self.output_textedit.insertPlainText(f"Gestión de Missing Values completada exitosamente.\n")
+        self.output_textedit.insertPlainText(f"Columnas elimadas correctamente\n")
+        time.sleep(0.5)
 
-        self.progress += 1
-        self.invocar_actualizacion(self.progress)
-
-        # FASE 3: Gestión de atributos del dataset de entrada ##########################################################################
-        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
-        self.output_textedit.insertPlainText(f"Eliminando atributos inservibles del dataset...\n")
-
+        # Eliminamos manualmente la columna nombre xq esta duplicado dentro del dataset consecuencia de la fusión de los datasets de SF y MF
         columna_a_eliminar="Nombre"
 
         # Verifica si la columna existe antes de intentar eliminarla
         if columna_a_eliminar in df.columns:
             # Elimina la columna por su nombre
             df = df.drop(columns=columna_a_eliminar)
-
-            # Guarda el DataFrame modificado en un nuevo archivo Excel
-            #archivo_salida = carpeta_datasets + "/dataset_training_without_Missing_Values_without_Useless_Atributes.xlsx"
-            #df.to_excel(archivo_salida, index=False)ç
 
             time.sleep(0.5)          
             self.output_textedit.insertPlainText(f"Columna '{columna_a_eliminar}' eliminada con éxito.\n")
@@ -4084,7 +4089,29 @@ class trainWindow(QWidget):
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
-        # FASE 4: Analisis de distribución de la variable label  ########################################################################################################
+        # FASE 3: Gestión de MISSING VALUES ##############################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Manejando Missing Values...\n")
+
+        # Obtener información sobre el tipo de dato de cada columna
+        tipos_de_dato = df.dtypes
+
+        # Inicializar los valores faltantes basándote en el tipo de dato
+        for columna, tipo in tipos_de_dato.items():
+            if pd.api.types.is_numeric_dtype(tipo):
+                # Si es numérico, inicializar con 0
+                df[columna] = df[columna].fillna(0)
+            elif pd.api.types.is_string_dtype(tipo):
+                # Si es cadena, inicializar con numpy.nan
+                df[columna] = df[columna].fillna(np.nan)
+
+        self.output_textedit.insertPlainText(f"Gestión de Missing Values completada exitosamente.\n")
+        
+        self.progress += 1
+        self.invocar_actualizacion(self.progress)
+        time.sleep(0.5)
+
+        # FASE 4: Analisis de distribución de la variable label  ################################################################################################
         # Actualizar los datos y volver a dibujar la gráfica
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Generando gráfica de la distribución de la variable a predecir...\n")
@@ -4107,7 +4134,7 @@ class trainWindow(QWidget):
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
-        # FASE 5: Analisis de outliers ###########################################################################################################################
+        # FASE 5: Analisis de outliers ############################################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Analizando outliers...\n")
         if self.selected_option == 1:
@@ -4134,7 +4161,7 @@ class trainWindow(QWidget):
         self.output_textedit.insertPlainText(f"Variables categóricas transformadas: {categoricas}\n")
 
         # Transformar variables categóricas utilizando codificación one-hot
-        df_encoded = pd.get_dummies(df, columns=categoricas)
+        df = pd.get_dummies(df, columns=categoricas)
 
         # Guardar el nuevo DataFrame en un nuevo archivo Excel
         #excel_file_encoded = 'ruta_del_nuevo_archivo_encoded.xlsx'  # Cambia esto con la ruta de tu nuevo archivo
@@ -4144,6 +4171,9 @@ class trainWindow(QWidget):
         self.output_textedit.insertPlainText(f"Variables categóricas manejadas exitosamente.\n")
         self.progress += 1
         self.invocar_actualizacion(self.progress)
+        
+
+
 
             
     def guardar_modeleo(self):

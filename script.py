@@ -3930,7 +3930,7 @@ class trainWindow(QWidget):
 
     def start_progress(self):
         # Establecer el rango de la barra de progreso según tus necesidades
-        self.progress_bar.setRange(0, 5)
+        self.progress_bar.setRange(0, 10)
 
         ruta_output = self.text_input.text()
         if ruta_output!="":
@@ -3989,7 +3989,7 @@ class trainWindow(QWidget):
             # Mostrar la gráfica
             plt.show()
             time.sleep(1)
-                       
+        
         self.start_progress()
         #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS ########################################################################################
         # Ruta a la carpeta que contiene los archivos json de Sofaescore
@@ -4030,8 +4030,9 @@ class trainWindow(QWidget):
             df_combinado = pd.concat(lista_dataframes, ignore_index=True)
             
             # Guardar el DataFrame combinado en un nuevo archivo Excel
-            archivo_salida = carpeta_datasets + "/dataset_training.xlsx"
-            df_combinado.to_excel(archivo_salida, index=False)
+            #archivo_salida = carpeta_datasets + "/dataset_training.xlsx"
+            #df_combinado.to_excel(archivo_salida, index=False)
+            time.sleep(0.5)
             self.output_textedit.insertPlainText(f"Dataset de entrada fusionado exitosamente.\n")
 
         self.progress += 1
@@ -4040,8 +4041,6 @@ class trainWindow(QWidget):
         # FASE 2: Gestión de MISSING VALUES ##########################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Manejando Missing Values...\n")
-        # Lee el archivo Excel
-        df = pd.read_excel(archivo_salida)
 
         # Reemplaza los valores vacíos con 0
         df = df.fillna(0)
@@ -4053,9 +4052,10 @@ class trainWindow(QWidget):
         df[columna] = df[columna].apply(lambda x: string_reemplazo if x == 0 else x)
 
         # Guarda el DataFrame modificado en un nuevo archivo Excel
-        archivo_salida = carpeta_datasets + "/dataset_training_without_Missing_Values.xlsx"
-        df.to_excel(archivo_salida, index=False)
+        #archivo_salida = carpeta_datasets + "/dataset_training_without_Missing_Values.xlsx"
+        #df.to_excel(archivo_salida, index=False)
 
+        time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Gestión de Missing Values completada exitosamente.\n")
 
         self.progress += 1
@@ -4064,8 +4064,6 @@ class trainWindow(QWidget):
         # FASE 3: Gestión de atributos del dataset de entrada ##########################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Eliminando atributos inservibles del dataset...\n")
-        # Lee el archivo Excel
-        df = pd.read_excel(archivo_salida)
 
         columna_a_eliminar="Nombre"
 
@@ -4075,9 +4073,10 @@ class trainWindow(QWidget):
             df = df.drop(columns=columna_a_eliminar)
 
             # Guarda el DataFrame modificado en un nuevo archivo Excel
-            archivo_salida = carpeta_datasets + "/dataset_training_without_Missing_Values_without_Useless_Atributes.xlsx"
-            df.to_excel(archivo_salida, index=False)
-                        
+            #archivo_salida = carpeta_datasets + "/dataset_training_without_Missing_Values_without_Useless_Atributes.xlsx"
+            #df.to_excel(archivo_salida, index=False)ç
+
+            time.sleep(0.5)          
             self.output_textedit.insertPlainText(f"Columna '{columna_a_eliminar}' eliminada con éxito.\n")
         else:
             self.output_textedit.insertPlainText(f"La columna '{columna_a_eliminar}' no existe en el DataFrame y no se pudo eliminar.\n")
@@ -4085,7 +4084,7 @@ class trainWindow(QWidget):
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
-        # FASE 4: Analisis de distribución de la variable label
+        # FASE 4: Analisis de distribución de la variable label  ########################################################################################################
         # Actualizar los datos y volver a dibujar la gráfica
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Generando gráfica de la distribución de la variable a predecir...\n")
@@ -4103,10 +4102,12 @@ class trainWindow(QWidget):
             hilo = threading.Thread(target=visualizar_distribucion(df, 'Puntuación Fantasy', 'Puntuación', 'Distribución puntuaciones jugadores', 'white'))
             hilo.start()
             
+        time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Histograma generado exitosamente.\n")
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
+        # FASE 5: Analisis de outliers ###########################################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Analizando outliers...\n")
         if self.selected_option == 1:
@@ -4117,7 +4118,30 @@ class trainWindow(QWidget):
             hilo = threading.Thread(target=plot_boxplot(df, 'Puntuación Fantasy', 'Distribución puntuaciones jugadores','Eje x'))
             hilo.start()
         
+        time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Box plot generado exitosamente.\n")
+        self.progress += 1
+        self.invocar_actualizacion(self.progress)
+
+        # FASE 6: Gestión de variables categóricas ###########################################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Gestionando variables categóricas con one-hot encoding...\n")
+
+        # Identificar variables categóricas
+        categoricas = df.select_dtypes(include=['object']).columns.tolist()
+
+        # Mostrar las variables categóricas identificadas
+        self.output_textedit.insertPlainText(f"Variables categóricas transformadas: {categoricas}\n")
+
+        # Transformar variables categóricas utilizando codificación one-hot
+        df_encoded = pd.get_dummies(df, columns=categoricas)
+
+        # Guardar el nuevo DataFrame en un nuevo archivo Excel
+        #excel_file_encoded = 'ruta_del_nuevo_archivo_encoded.xlsx'  # Cambia esto con la ruta de tu nuevo archivo
+        #df_encoded.to_excel(excel_file_encoded, index=False)
+
+        time.sleep(0.5)
+        self.output_textedit.insertPlainText(f"Variables categóricas manejadas exitosamente.\n")
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 

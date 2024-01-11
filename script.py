@@ -3832,14 +3832,15 @@ class trainWindow(QWidget):
         # LABEL DE TEXTO
         label_text = QLabel("Seleciona un algoritmo de entrenamiento: ")
         grid_layout.addWidget(label_text, 5, 0)
-        combo_box = QComboBox()
-        combo_box.addItem("Gradient Boosted Tree model")
-        combo_box.addItem("Random Forest model")
-        combo_box.addItem("K-NN model")
-        combo_box.addItem("Linear Regresion model")
+
+        self.combo_box = QComboBox()
+        self.combo_box.addItem("Gradient Boosted Tree model")
+        self.combo_box.addItem("Random Forest model")
+        self.combo_box.addItem("K-NN model")
+        self.combo_box.addItem("Linear Regresion model")
         # Establecer el ancho máximo para la QComboBox
-        combo_box.setMaximumWidth(185)
-        grid_layout.addWidget(combo_box, 5, 1)
+        self.combo_box.setMaximumWidth(185)
+        grid_layout.addWidget(self.combo_box, 5, 1)
 
 
         label_choice = QLabel("Seleccionar atributo del jugador predecir:")
@@ -3888,7 +3889,6 @@ class trainWindow(QWidget):
 
         # Ocultar la gráfica inicialmente
         self.canvas.setVisible(False)
-
 
         ###  SELECCIONAR RUTA DONDE GUARDAR EL MODELO  ###################################
         # LABEL TEXTO 
@@ -4181,10 +4181,6 @@ class trainWindow(QWidget):
         encoder = ce.CountEncoder()
         df[categoricas] = encoder.fit_transform(df[categoricas])
 
-
-        # Guardar el nuevo DataFrame en un nuevo archivo Excel
-        #df.to_excel('ruta_del_nuevo_archivo_encoded.xlsx', index=False)
-
         time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Variables categóricas manejadas exitosamente.\n")
         self.progress += 1
@@ -4230,7 +4226,7 @@ class trainWindow(QWidget):
             if i < len(low_correlation_columns) - 1:
                 self.output_textedit.insertPlainText(", ")
             else:
-                 self.output_textedit.insertPlainText(".")
+                self.output_textedit.insertPlainText(".")
                 
         time.sleep(0.5)
         self.output_textedit.insertPlainText("\n")
@@ -4242,7 +4238,46 @@ class trainWindow(QWidget):
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
-  
+        # Guardar el nuevo DataFrame en un nuevo archivo Excel
+        df.to_excel('dataset_trasEDA.xlsx', index=False)
+
+        selected_model = self.combo_box.currentText()
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+
+        if selected_model == "Gradient Boosted Tree model":
+            if self.selected_option == 1:
+                self.output_textedit.insertPlainText(f"Entrenando con Gradient Boosted Trees con el atributo Valor como label.")
+            elif self.selected_option == 2:
+                self.output_textedit.insertPlainText(f"Entrenando con Gradient Boosted Trees con el atributo Puntuación Fnatsy como label.")
+
+        elif selected_model == "K-NN model":
+            if self.selected_option == 1:
+                self.output_textedit.insertPlainText(f"Entrenando con K-NN con el atributo Valor como label.")
+
+                X = df.drop('Valor', axis=1)  # Features
+                Y = df['Valor']  # Variable de salida
+
+            elif self.selected_option == 2:
+                self.output_textedit.insertPlainText(f"Entrenando con K-NN con el atributo Puntuación Fnatsy como label.")
+
+                X = df.drop('Puntuación Fantasy', axis=1)  # Features
+                Y = df['Puntuación Fantasy']  # Variable de salida
+
+            # Crear conjuntos de entrenamiento 
+            conjunto_train = pd.concat([X, Y], axis=1)
+
+            # Crear copias para poner las predicciones del train y val
+            conjunto_train_eval = conjunto_train.copy()
+
+            precision_train = {}
+            precision_val = {}
+            
+        elif selected_model == "Linear Regression model":
+            if self.selected_option == 1:
+               self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Valor como label.")
+            elif self.selected_option == 2:
+                self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Puntuación Fnatsy como label.")
+
             
     def guardar_modeleo(self):
         self.output_textedit.insertPlainText("future guardar modelo\n")

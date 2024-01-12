@@ -3981,6 +3981,15 @@ class trainWindow(QWidget):
             plt.show()
             time.sleep(1)
         
+        def plot_lineplot(x_values, y_values, title, xlabel, ylabel):
+            
+            plt.plot(x_values, y_values, marker='o')
+            plt.title(title)
+            plt.xlabel(xlabel)
+            plt.ylabel(ylabel)
+            plt.show()
+            time.sleep(1)
+        
         def plot_correlation_matrix(df, title):
             # Calcular la matriz de correlación
             correlation_matrix = df.corr()
@@ -4344,6 +4353,8 @@ class trainWindow(QWidget):
             # Imprimir el menor MSE y su información asociada al final
             self.output_textedit.insertPlainText(f'\nMenor MSE obtenido: {min_mse} con k = {best_k} en la iteración {best_iteration}\n')
 
+            hilo = threading.Thread(target=plot_lineplot(k_values, avg_mse_values, 'MSE Medio para Cada k', 'Número de vecinos (k)', 'MSE Medio'))
+            hilo.start()
 
         elif selected_model == "Linear Regression model":
             if self.selected_option == 1:

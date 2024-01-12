@@ -4460,7 +4460,6 @@ class trainWindow(QWidget):
         self.invocar_actualizacion(self.progress)
         time.sleep(2)
        
-
 class predictWindow(QWidget):
     def __init__(self):
         super().__init__()
@@ -4599,6 +4598,7 @@ class predictWindow(QWidget):
         #### PARTE 1 : CARGAR MODELO E INFORMACIÓN ASOCIADA del entrenamiento #########################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Cargando modelo e información estadística asociada del entrenamiento del mismo...\n\n")
+       
         # Cargar el diccionario desde el archivo
         loaded_combined_data = joblib.load(file_modelo)
 
@@ -4624,6 +4624,68 @@ class predictWindow(QWidget):
         self.output_textedit.insertPlainText(f"Columnas con las que ha sido entrenado': {loaded_entrenamiento_info['Columnas eliminadas']} \n")
         time.sleep(0.2)
         
+        #### PARTE 2 : CARGAR DATASET DE JUGADORES A PREDECIR #########################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Cargando fichero de jugadores a predecir...\n")
+
+        # Cargar el DataFrame de jugadores
+        df = pd.read_excel(file_futbolistas)
+
+        time.sleep(0.5)
+        self.output_textedit.insertPlainText(f"Fichero cargado exitosamente...\n\n")
+        time.sleep(0.5)
+
+        #### PARTE 3 : ELIMINAR COLUMNAS eliminadas en el entrenamiento  #########################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Eliminando columnas que no fueron usadas para entrenar el modelo...\n")
+
+        # Obtener las columnas a mantener del array 'Columnas eliminadas'
+        columnas_a_mantener = loaded_entrenamiento_info.get('Columnas eliminadas', [])
+
+        # Eliminar las columnas que no están en 'columnas_a_mantener'
+        columnas_a_eliminar = [col for col in df.columns if col not in columnas_a_mantener]
+        df = df.drop(columns=columnas_a_eliminar)
+
+        self.output_textedit.insertPlainText(f"Columnas que no fueron usadas para entrenar el modelo eliminadas correctamente.\n\n")
+
+        #### PARTE 4 : CODIFICAR VARIABLES CATEGÓRICAS ############################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Codificando variables categóricas.\n\n")
+
+        # Identificar variables categóricas
+        categoricas = df.select_dtypes(include=['object']).columns.tolist()
+
+        # Mostrar las variables categóricas identificadas
+        self.output_textedit.insertPlainText(f"Variables categóricas transformadas: {categoricas}\n")
+
+        # Aplicar codificación de frecuencia a las variables categóricas
+        encoder = ce.CountEncoder()
+        df[categoricas] = encoder.fit_transform(df[categoricas])
+
+        time.sleep(0.5)
+        self.output_textedit.insertPlainText(f"Variables categóricas manejadas exitosamente.\n")
+
+        #### PARTE 5 : MANEJAR MISSING VALUES ######################################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Manejando Missing Values...\n")
+
+        # Obtener información sobre el tipo de dato de cada columna
+        tipos_de_dato = df.dtypes
+
+        # Inicializar los valores faltantes basándote en el tipo de dato
+        for columna, tipo in tipos_de_dato.items():
+            if pd.api.types.is_numeric_dtype(tipo):
+                # Si es numérico, inicializar con 0
+                df[columna] = df[columna].fillna(0)
+            elif pd.api.types.is_string_dtype(tipo):
+                # Si es cadena, inicializar con numpy.nan
+                df[columna] = df[columna].fillna(np.nan)
+
+        self.output_textedit.insertPlainText(f"Gestión de Missing Values completada exitosamente.\n")
+        
+        # Guardar el DataFrame procesado en un nuevo archivo Excel
+        df.to_excel("archivo_procesado.xlsx", index=False)
+
         selected_option = self.combo_box1.currentText()
         
         if selected_option == "Entrenar para predecir valor de mercado que alcanzará un jugador en la próxima jornada":

@@ -4465,9 +4465,6 @@ class predictWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        # Crear un diseño principal usando QVBoxLayout
-        layout = QVBoxLayout()
-
         # Crear un diseño de cuadrícula dentro del QVBoxLayout
         grid_layout = QGridLayout(self)
 
@@ -4557,7 +4554,7 @@ class predictWindow(QWidget):
         self.scrape_button = QPushButton("Realizar prediciones")
 
         # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+        self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
 
         # Alineación y estilos
         grid_layout.addWidget(self.scrape_button, 12, 0)
@@ -4567,13 +4564,49 @@ class predictWindow(QWidget):
         # Crear un QTextEdit para la salida
         self.output_textedit = QTextEdit(self)
         grid_layout.addWidget(self.output_textedit, 13, 0, 10, 0)  # row, column, rowSpan, columnSpan
+    
+    def iniciar_scrapear_thread(self):  
+        # Crear un hilo y ejecutar la función en segundo plano
+        thread = threading.Thread(target=self.train_function)
+        thread.start()
+
+    def train_function(self):
+        #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS #####################################################################
+        # Ruta a la carpeta que contiene los archivos json de Sofaescore
+        file_futbolistas = self.text_file_input.text()
+        file_modelo = self.text_file2_input.text()
+        carpeta_save=self.text_input.text()
+
+        if not file_futbolistas or not file_modelo or not carpeta_save:
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            self.output_textedit.mergeCurrentCharFormat(formato_rojo)
+            if not file_futbolistas:
+                self.output_textedit.insertPlainText("La ruta de la carpeta del dataset de entrenamiento no ha sido inicializada.\n")
+
+            if not file_modelo:
+                self.output_textedit.insertPlainText("La ruta de la carpeta del dataset de entrenamiento no ha sido inicializada.\n")
+            
+            if not carpeta_save:
+                self.output_textedit.insertPlainText("La ruta de la carpeta donde guardar el modleo generado no ha sido inicializada.\n")
+            
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            self.output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
+        
+        selected_option = self.combo_box1.currentText()
+
+        if selected_option == "Entrenar para predecir valor de mercado que alcanzará un jugador en la próxima jornada":
+            print("Predecir valores que obtendrán los futbolistas selecionados en el próximo partido de la jornada")
+        elif selected_option == "Entrenar para predecir puntos que obtendrá un jugador en la próxima jornada":
+            print("Predecir puntos que obtendrán los futbolistas selecionados en el próximo partido de la jornada")
 
 
 class login(QWidget):   
-    def __init__(self):
+    def __init__(self): 
         super().__init__()
-        # Crear un diseño principal usando QVBoxLayout
-        layout = QVBoxLayout()
 
         # Crear un diseño de cuadrícula dentro del QVBoxLayout
         grid_layout = QGridLayout(self)

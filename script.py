@@ -20,6 +20,7 @@ import Levenshtein
 from difflib import get_close_matches
 import re
 import category_encoders as ce
+import pickle
 
 import seaborn as sns
 
@@ -3816,7 +3817,7 @@ class trainWindow(QWidget):
         # Alineación
         grid_layout.addWidget(self.text_input, 3, 0, 1, 2)
 
-        # BOTÓN PARA SELECCIONAR ARCHIVO
+        # BOTÓN PARA SELECCIONAR CARPETA
         select_folder_button = QPushButton("Seleccionar carpeta")
         select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
@@ -3850,6 +3851,27 @@ class trainWindow(QWidget):
         self.combo_box1.setMaximumWidth(500)
         grid_layout.addWidget(self.combo_box1, 6, 1)
 
+        ###  SELECCIONAR RUTA DONDE GUARDAR EL MODELO  ###################################
+        # LABEL TEXTO 
+        label_text = QLabel("Ruta donde guardar el modelo generado:")
+        grid_layout.addWidget(label_text, 7, 0)
+
+        # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
+        self.text_input2 = QLineEdit(self)
+        # Alineación
+        grid_layout.addWidget(self.text_input2, 8, 0, 1, 2)
+        # Estilos 
+        self.text_input2.setMinimumWidth(350)
+
+        # BOTÓN PARA SELECCIONAR CARPETA
+        select_folder_button = QPushButton("Seleccionar Carpeta")
+        select_folder_button.clicked.connect(lambda: select_folder2(self))
+        # Alineación
+        grid_layout.addWidget(select_folder_button, 9, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        # Estilos
+        select_folder_button.setMinimumWidth(140)
+
+        self.selected_option = None
         ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
         # Crear un botón
         self.scrape_button = QPushButton("Iniciar entrenamiento del modelo")
@@ -3858,18 +3880,18 @@ class trainWindow(QWidget):
         self.scrape_button.clicked.connect(self.iniciar_thread)
 
         # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 7, 0,alignment=Qt.AlignmentFlag.AlignLeft)
+        grid_layout.addWidget(self.scrape_button, 10, 0,alignment=Qt.AlignmentFlag.AlignLeft)
         self.scrape_button.setMinimumWidth(225)
 
         ###  BARRA DE PROGRESO  ################################################
         # Crear Barra de progreso
         self.progress_bar = QProgressBar(self)
-        grid_layout.addWidget(self.progress_bar,7,1)
+        grid_layout.addWidget(self.progress_bar,10,1)
 
         ###  VENTANA OUTPUT SCRAPER  ####################################################################################
         # Crear un QTextEdit para la salida
         self.output_textedit = QTextEdit(self)
-        grid_layout.addWidget(self.output_textedit, 8, 0, 6, 0)  # row, column, rowSpan, columnSpan
+        grid_layout.addWidget(self.output_textedit, 11, 0, 10, 0)  # row, column, rowSpan, columnSpan
 
         ###  GRÁFICA  ####################################################################################
         # Crear una instancia de la figura de Matplotlib y el widget de lienzo
@@ -3885,42 +3907,6 @@ class trainWindow(QWidget):
 
         # Ocultar la gráfica inicialmente
         self.canvas.setVisible(False)
-
-        ###  SELECCIONAR RUTA DONDE GUARDAR EL MODELO  ###################################
-        # LABEL TEXTO 
-        label_text = QLabel("Ruta donde guardar el modelo generado:")
-        grid_layout.addWidget(label_text, 15, 0)
-
-        # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
-        self.text_input2 = QLineEdit(self)
-        # Alineación
-        grid_layout.addWidget(self.text_input2, 15, 1)
-        # Estilos 
-        self.text_input2.setMinimumWidth(350)
-
-        # BOTÓN PARA SELECCIONAR CARPETA
-        select_folder_button = QPushButton("Seleccionar Carpeta")
-        select_folder_button.clicked.connect(lambda: select_folder2(self))
-        # Alineación
-        grid_layout.addWidget(select_folder_button, 16, 1, alignment=Qt.AlignmentFlag.AlignRight)
-        # Estilos
-        select_folder_button.setMinimumWidth(140)
-
-        ### BOTÓN PARA GUARDAR MODLEO ###########################################################
-
-        # Crear un botón
-        self.scrape_button = QPushButton("Guardar modelo")
-
-        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.scrape_button.clicked.connect(self.guardar_modeleo)
-
-        # Alineación 
-        grid_layout.addWidget(self.scrape_button, 17, 1, alignment=Qt.AlignmentFlag.AlignRight)
-        # Estilos
-        self.scrape_button.setMinimumWidth(140)
-
-
-        self.selected_option = None
 
     def start_progress(self):
         # Establecer el rango de la barra de progreso según tus necesidades
@@ -4017,12 +4003,18 @@ class trainWindow(QWidget):
         #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS #####################################################################
         # Ruta a la carpeta que contiene los archivos json de Sofaescore
         carpeta_datasets = self.text_input.text()
-        if not carpeta_datasets:
+        carpeta_save=self.text_input2.text()
+        if not carpeta_datasets or not carpeta_save:
             color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             self.output_textedit.mergeCurrentCharFormat(formato_rojo)
-            self.output_textedit.insertPlainText("La ruta de la carpeta del dataset de entrenamiento no ha sido inicializada.\n")
+            if not carpeta_datasets:
+                self.output_textedit.insertPlainText("La ruta de la carpeta del dataset de entrenamiento no ha sido inicializada.\n")
+            
+            if not carpeta_save:
+                self.output_textedit.insertPlainText("La ruta de la carpeta donde guardar el modleo generado no ha sido inicializada.\n")
+            
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             self.output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -4243,6 +4235,8 @@ class trainWindow(QWidget):
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
+        columnas_array = df.columns.to_numpy()
+
         # Guardar el nuevo DataFrame en un nuevo archivo Excel
         df.to_excel('dataset_trasEDA.xlsx', index=False)
 
@@ -4408,38 +4402,67 @@ class trainWindow(QWidget):
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
-        # FASE 8.2.4 Guardar modelo generado ################################################################################################
-        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
-        self.output_textedit.insertPlainText(f"Guardando modelo generado en el entrenamiento...\n")
-        time.sleep(1)
-        
+        # FASE 8.2.5 Resumen del entrenamiento ################################################################################################
         # Obtener la fecha actual
         fecha_actual = datetime.now()
         # Formatear la fecha como una cadena (opcional)
         fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
-        model_name= "KNN_model_"+fecha_actual_str+".pkl"
 
-        # Guardar el modelo con mejor k obtenido del cross-validation
-        best_model = KNeighborsRegressor(n_neighbors=best_k)
-        best_model.fit(X_train_scaled, y_train)
-        joblib.dump(best_model, model_name)
-        self.output_textedit.insertPlainText(f"Modelo guardando correctamente como  {model_name}...\n")
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"Resumen del entrenamiento:\n")
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"Fecha de entrenamiento:  {fecha_actual_str}\n")
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"Número de ejemplares utilizados:  {len(archivos_excel)}\n")
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"Algoritmo utilizado:  {algoritmo_utilizado}\n")
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"Tiempo de entrenamiento:  {int(minutes)} minutos y {seconds:.2f} segundos\n")
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"Mejor K obtenida:  {best_k}\n")
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"MSE obtenido en el entrenamiento:  {min_mse}\n")
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"MSE obtenido en el test del modelo:  {val_mse}\n")
+        time.sleep(0.3)
+
+        # Guardar la información del entrenamiento, incluyendo las columnas eliminadas
+        entrenamiento_info = {
+            'Fecha de entrenamiento': fecha_actual_str,
+            'Número de ejemplares utilizados': len(archivos_excel),
+            'Algoritmo utilizado': algoritmo_utilizado,
+            'Tiempo de entrenamiento (minutos)': minutes,
+            'Mejor K obtenida': best_k,
+            'MSE obtenido en el entrenamiento': min_mse,
+            'MSE obtenido en el test del modelo': val_mse,  
+            'Columnas eliminadas': columnas_array.tolist()  
+        }
+
+        # FASE 8.2.4 Guardar modelo e información asociada de la generación del modelo en el entrenanienta ################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Guardando modelo generado e información asociada del entrenamiento y test del modleo...\n")
+        time.sleep(1)
+        
+        model_name= "KNN_model_"+fecha_actual_str+".pkl"
+        carpeta_save=self.text_input2.text()
+
+        ruta_save=carpeta_save+"/"+model_name
+        
+        # Crear un diccionario que contiene el modelo y la información del entrenamiento
+        combined_data = {
+            'model': best_model,
+            'training_info': entrenamiento_info
+        }
+
+        # Guardar el diccionario en un archivo
+        joblib.dump(combined_data, ruta_save)
+
+        self.output_textedit.insertPlainText(f"Modelo guardando correctamente en  {ruta_save}\n")
         self.progress += 1
         self.invocar_actualizacion(self.progress)
         time.sleep(2)
-
-         # FASE 8.2.5 Resumen del entrenamiento ################################################################################################
-        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
-        self.output_textedit.insertPlainText(f"Resumen del entrenamiento:\n")
-        self.output_textedit.insertPlainText(f"Fecha de entrenamiento:  {fecha_actual_str}\n")
-        self.output_textedit.insertPlainText(f"Número de ejemplares utilizados:  {len(archivos_excel)}\n")
-        self.output_textedit.insertPlainText(f"Algoritmo utilizado:  {algoritmo_utilizado}\n")
-        self.output_textedit.insertPlainText(f"Tiempo de entrenamiento:  {int(minutes)} minutos y {seconds:.2f} segundos\n")
-        self.output_textedit.insertPlainText(f"Mejor K obtenida:  {best_k}\n")
-        self.output_textedit.insertPlainText(f"MSE obtenido en el entrenamiento:  {min_mse}\n")
-        self.output_textedit.insertPlainText(f"MSE obtenido en el test del modelo:  {min_mse}\n")
-
-        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+       
 
 class predictWindow(QWidget):
     def __init__(self):

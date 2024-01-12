@@ -33,6 +33,7 @@ from sklearn.model_selection import train_test_split, cross_val_score, train_tes
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import MinMaxScaler 
 from sklearn.metrics import mean_absolute_error,mean_squared_error, r2_score
+import joblib
 
 
 headers = {
@@ -4395,8 +4396,22 @@ class trainWindow(QWidget):
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
-    def guardar_modeleo(self):
-        self.output_textedit.insertPlainText("future guardar modelo\n")
+        # FASE 8.2.4 Guardar modelo generado ################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Guardando modelo generado en el entrenamiento...\n")
+        # Obtener la fecha actual
+        fecha_actual = datetime.now()
+        # Formatear la fecha como una cadena (opcional)
+        fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
+        model_name= "KNN_model_"+fecha_actual_str+".pkl"
+
+        # Guardar el modelo con mejor k obtenido del cross-validation
+        best_model = KNeighborsRegressor(n_neighbors=best_k)
+        best_model.fit(X_train_scaled, y_train)
+        joblib.dump(best_model, model_name)
+        self.output_textedit.insertPlainText(f"Modelo guardando correctamente como  {model_name}...\n")
+        self.progress += 1
+        self.invocar_actualizacion(self.progress)
 
 class predictWindow(QWidget):
     def __init__(self):
@@ -4494,7 +4509,7 @@ class predictWindow(QWidget):
         select_folder_button.setMinimumWidth(140)
 
 
-class login(QWidget):
+class login(QWidget):   
     def __init__(self):
         super().__init__()
         # Crear un diseño principal usando QVBoxLayout

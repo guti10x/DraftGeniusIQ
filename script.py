@@ -4433,7 +4433,7 @@ class trainWindow(QWidget):
             'Mejor K obtenida': best_k,
             'MSE obtenido en el entrenamiento': min_mse,
             'MSE obtenido en el test del modelo': val_mse,  
-            'Columnas eliminadas': columnas_array.tolist()  
+            'Columnas con las que ha sido entrenado': columnas_array.tolist()  
         }
 
         # FASE 8.2.4 Guardar modelo e información asociada de la generación del modelo en el entrenanienta ################################################################################################
@@ -4596,8 +4596,36 @@ class predictWindow(QWidget):
             self.output_textedit.mergeCurrentCharFormat(formato_negro)
             return
         
-        selected_option = self.combo_box1.currentText()
+        #### PARTE 1 : CARGAR MODELO E INFORMACIÓN ASOCIADA del entrenamiento #########################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Cargando modelo e información estadística asociada del entrenamiento del mismo...\n\n")
+        # Cargar el diccionario desde el archivo
+        loaded_combined_data = joblib.load(file_modelo)
 
+        # Acceder al modelo y la información del entrenamiento desde el diccionario
+        loaded_model = loaded_combined_data['model']
+        loaded_entrenamiento_info = loaded_combined_data['training_info']
+
+        # Imprimir todos los valores de la información del entrenamiento
+        self.output_textedit.insertPlainText(f"Fecha de entrenamiento: {loaded_entrenamiento_info['Fecha de entrenamiento']} \n")
+        time.sleep(0.2)
+        self.output_textedit.insertPlainText(f"Número de ejemplares utilizados: {loaded_entrenamiento_info['Número de ejemplares utilizados']} \n")
+        time.sleep(0.2)
+        self.output_textedit.insertPlainText(f"Algoritmo utilizado: {loaded_entrenamiento_info['Algoritmo utilizado']} \n")
+        time.sleep(0.2)
+        self.output_textedit.insertPlainText(f"Tiempo de entrenamiento (minutos): {loaded_entrenamiento_info['Tiempo de entrenamiento (minutos)']} \n")
+        time.sleep(0.2)
+        self.output_textedit.insertPlainText(f"Mejor K obtenida: {loaded_entrenamiento_info['Mejor K obtenida']} \n")
+        time.sleep(0.2)
+        self.output_textedit.insertPlainText(f"MSE obtenido en el entrenamiento: {loaded_entrenamiento_info['MSE obtenido en el entrenamiento']} \n")
+        time.sleep(0.2)
+        self.output_textedit.insertPlainText(f"MSE obtenido en el test del modelo: {loaded_entrenamiento_info['MSE obtenido en el test del modelo']} \n")
+        time.sleep(0.2)
+        self.output_textedit.insertPlainText(f"Columnas con las que ha sido entrenado': {loaded_entrenamiento_info['Columnas eliminadas']} \n")
+        time.sleep(0.2)
+        
+        selected_option = self.combo_box1.currentText()
+        
         if selected_option == "Entrenar para predecir valor de mercado que alcanzará un jugador en la próxima jornada":
             print("Predecir valores que obtendrán los futbolistas selecionados en el próximo partido de la jornada")
         elif selected_option == "Entrenar para predecir puntos que obtendrá un jugador en la próxima jornada":

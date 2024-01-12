@@ -32,6 +32,8 @@ from matplotlib.figure import Figure
 from sklearn.model_selection import train_test_split, cross_val_score, train_test_split, cross_val_score, KFold
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import MinMaxScaler 
+from sklearn.metrics import mean_absolute_error,mean_squared_error, r2_score
+
 
 headers = {
     "X-RapidAPI-Key": "11822210cdmsha855c4a12c471b5p18100fjsn3972b17b3be8",
@@ -4351,6 +4353,7 @@ class trainWindow(QWidget):
                 time.sleep(0.4)
 
             # Imprimir el menor MSE y su información asociada al final
+            self.output_textedit.insertPlainText(f'____________________________________________________\n')
             self.output_textedit.insertPlainText(f'\nMenor MSE obtenido: {min_mse} con k = {best_k} en la iteración {best_iteration}\n')
 
             hilo = threading.Thread(target=plot_lineplot(k_values, avg_mse_values, 'MSE Medio para Cada k', 'Número de vecinos (k)', 'MSE Medio'))
@@ -4364,7 +4367,34 @@ class trainWindow(QWidget):
 
         self.progress += 1
         self.invocar_actualizacion(self.progress)
+
+        # FASE 8.2.3 Validar modelo generado en el entrenamiento ################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Validando modelo generado en el entrenamiento...\n")
+
+        # Ajustar el mejor modelo con el mejor k en el conjunto de entrenamiento
+        best_model = KNeighborsRegressor(n_neighbors=best_k)
+        best_model.fit(X_train_scaled, y_train)
+
+        # Realizar predicciones en el conjunto de validación
+        y_val_pred = best_model.predict(X_val_scaled)
+
+        # Calcular varias métricas en el conjunto de validación
+        val_mse = mean_squared_error(y_val, y_val_pred)
+        val_rmse = np.sqrt(val_mse)  # Raíz cuadrada del MSE para obtener el RMSE
+        val_mae = mean_absolute_error(y_val, y_val_pred)
+        val_r2 = r2_score(y_val, y_val_pred)
+
+        # Imprimir varias métricas en el conjunto de validación
+        self.output_textedit.insertPlainText(f"Validación completada con los siguientes resultados:\n")
+        self.output_textedit.insertPlainText(f'     -MSE obtenido en la validación del modleo con k = {best_k}:   {val_mse}\n')
+        self.output_textedit.insertPlainText(f'     -RMSE obtenido en la validación del modleo con k = {best_k}:   {val_rmse}\n')
+        self.output_textedit.insertPlainText(f'     -MAE obtenido en la validación del modleo con k = {best_k}:   {val_mae}\n')
+        self.output_textedit.insertPlainText(f'     -R^2 obtenido en la validación del modleo con k = {best_k}:   {val_r2}\n')
             
+        self.progress += 1
+        self.invocar_actualizacion(self.progress)
+
     def guardar_modeleo(self):
         self.output_textedit.insertPlainText("future guardar modelo\n")
 

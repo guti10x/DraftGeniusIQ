@@ -4257,6 +4257,7 @@ class trainWindow(QWidget):
                 self.output_textedit.insertPlainText(f"Entrenando con Gradient Boosted Trees con el atributo Puntuación Fnatsy como label.\n")
 
         elif selected_model == "K-NN model":
+            algoritmo_utilizado="KNN model"
             # FASE 8.2. Preparar los datos para entrenar con ellos ######################################################################
             if self.selected_option == 1:
                 self.output_textedit.insertPlainText(f"Entrenando con K-NN con el atributo Valor como label.\n")
@@ -4292,6 +4293,10 @@ class trainWindow(QWidget):
             avg_error_values = []
 
             # FASE 8.2.2 Realizar cross validation ######################################################################
+            # Tiempo de inicio del train
+            elapsed_time=0
+            start_time = time.time()
+
             # Bucle para probar diferentes valores de k
             for k in k_values:
                 k_mse = []
@@ -4339,7 +4344,14 @@ class trainWindow(QWidget):
                     self.output_textedit.insertPlainText(f'        -Standard Deviation CV MSE: {cv_scores.std()}\n')
                     time.sleep(0.4)
                     self.output_textedit.insertPlainText(f'        -Error medio: {mean_error}\n')
-                    time.sleep(0.4)
+                    time.sleep(0.3)
+                
+                # Tiempo de final del train
+                end_time = time.time()
+                # Calcula la diferencia de tiempo
+                elapsed_time = end_time - start_time
+                # Convertir a minutos y segundos
+                minutes, seconds = divmod(elapsed_time, 60)
 
                 # Calcular el MSE medio y el error medio para todas las iteraciones y almacenarlos
                 avg_mse_values.append(np.mean(k_mse))
@@ -4371,7 +4383,7 @@ class trainWindow(QWidget):
 
         # FASE 8.2.3 Validar modelo generado en el entrenamiento ################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
-        self.output_textedit.insertPlainText(f"Validando modelo generado en el entrenamiento...\n")
+        self.output_textedit.insertPlainText(f"Probando modelo generado en el entrenamiento...\n")
 
         # Ajustar el mejor modelo con el mejor k en el conjunto de entrenamiento
         best_model = KNeighborsRegressor(n_neighbors=best_k)
@@ -4387,11 +4399,11 @@ class trainWindow(QWidget):
         val_r2 = r2_score(y_val, y_val_pred)
 
         # Imprimir varias métricas en el conjunto de validación
-        self.output_textedit.insertPlainText(f"Validación completada con los siguientes resultados:\n")
-        self.output_textedit.insertPlainText(f'     -MSE obtenido en la validación del modleo con k = {best_k}:   {val_mse}\n')
-        self.output_textedit.insertPlainText(f'     -RMSE obtenido en la validación del modleo con k = {best_k}:   {val_rmse}\n')
-        self.output_textedit.insertPlainText(f'     -MAE obtenido en la validación del modleo con k = {best_k}:   {val_mae}\n')
-        self.output_textedit.insertPlainText(f'     -R^2 obtenido en la validación del modleo con k = {best_k}:   {val_r2}\n')
+        self.output_textedit.insertPlainText(f"Test completado con los siguientes resultados:\n")
+        self.output_textedit.insertPlainText(f'     -MSE obtenido en el test del modleo con k = {best_k}:   {val_mse}\n')
+        self.output_textedit.insertPlainText(f'     -RMSE obtenido en el test del modleo con k = {best_k}:   {val_rmse}\n')
+        self.output_textedit.insertPlainText(f'     -MAE obtenido en el test del modleo con k = {best_k}:   {val_mae}\n')
+        self.output_textedit.insertPlainText(f'     -R^2 obtenido en el test del modleo con k = {best_k}:   {val_r2}\n')
             
         self.progress += 1
         self.invocar_actualizacion(self.progress)
@@ -4399,6 +4411,8 @@ class trainWindow(QWidget):
         # FASE 8.2.4 Guardar modelo generado ################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Guardando modelo generado en el entrenamiento...\n")
+        time.sleep(1)
+        
         # Obtener la fecha actual
         fecha_actual = datetime.now()
         # Formatear la fecha como una cadena (opcional)
@@ -4412,6 +4426,20 @@ class trainWindow(QWidget):
         self.output_textedit.insertPlainText(f"Modelo guardando correctamente como  {model_name}...\n")
         self.progress += 1
         self.invocar_actualizacion(self.progress)
+        time.sleep(2)
+
+         # FASE 8.2.5 Resumen del entrenamiento ################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText(f"Resumen del entrenamiento:\n")
+        self.output_textedit.insertPlainText(f"Fecha de entrenamiento:  {fecha_actual_str}\n")
+        self.output_textedit.insertPlainText(f"Número de ejemplares utilizados:  {len(archivos_excel)}\n")
+        self.output_textedit.insertPlainText(f"Algoritmo utilizado:  {algoritmo_utilizado}\n")
+        self.output_textedit.insertPlainText(f"Tiempo de entrenamiento:  {int(minutes)} minutos y {seconds:.2f} segundos\n")
+        self.output_textedit.insertPlainText(f"Mejor K obtenida:  {best_k}\n")
+        self.output_textedit.insertPlainText(f"MSE obtenido en el entrenamiento:  {min_mse}\n")
+        self.output_textedit.insertPlainText(f"MSE obtenido en el test del modelo:  {min_mse}\n")
+
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
 
 class predictWindow(QWidget):
     def __init__(self):

@@ -19,26 +19,19 @@ from unidecode import unidecode
 import Levenshtein
 from difflib import get_close_matches
 import re
-import seaborn as sns
-import matplotlib.pyplot as plt
-from sklearn.model_selection import train_test_split, cross_val_score, cross_val_predict, StratifiedKFold
-from sklearn.neighbors import KNeighborsClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import make_pipeline
-from sklearn.model_selection import GridSearchCV
-from sklearn.pipeline import Pipeline
-from sklearn.metrics import confusion_matrix, classification_report, accuracy_score
-from sklearn.metrics import make_scorer
-from sklearn.model_selection import train_test_split
-from matplotlib.figure import Figure
-
-from sklearn.neighbors import KNeighborsClassifier
-
-import matplotlib
-matplotlib.use('TkAgg')  # Cambia 'TkAgg' según tus necesidades, 'Agg' es un backend no interactivo
-from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 import category_encoders as ce
 
+import seaborn as sns
+
+import matplotlib
+matplotlib.use('TkAgg')  #  'TkAgg' / 'Agg' 
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
+from matplotlib.figure import Figure
+
+from sklearn.model_selection import train_test_split, cross_val_score, train_test_split, cross_val_score, KFold
+from sklearn.neighbors import KNeighborsRegressor
+from sklearn.preprocessing import MinMaxScaler 
 
 headers = {
     "X-RapidAPI-Key": "11822210cdmsha855c4a12c471b5p18100fjsn3972b17b3be8",
@@ -4241,43 +4234,125 @@ class trainWindow(QWidget):
         # Guardar el nuevo DataFrame en un nuevo archivo Excel
         df.to_excel('dataset_trasEDA.xlsx', index=False)
 
+        # FASE 8: Entrenar modeleo con el daatset procesado con el algoritmo selecionado ###########################################################################################################################
         selected_model = self.combo_box.currentText()
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
 
         if selected_model == "Gradient Boosted Tree model":
             if self.selected_option == 1:
-                self.output_textedit.insertPlainText(f"Entrenando con Gradient Boosted Trees con el atributo Valor como label.")
+                self.output_textedit.insertPlainText(f"Entrenando con Gradient Boosted Trees con el atributo Valor como label.\n")
             elif self.selected_option == 2:
-                self.output_textedit.insertPlainText(f"Entrenando con Gradient Boosted Trees con el atributo Puntuación Fnatsy como label.")
+                self.output_textedit.insertPlainText(f"Entrenando con Gradient Boosted Trees con el atributo Puntuación Fnatsy como label.\n")
 
         elif selected_model == "K-NN model":
+            # FASE 8.2. Preparar los datos para entrenar con ellos ######################################################################
             if self.selected_option == 1:
-                self.output_textedit.insertPlainText(f"Entrenando con K-NN con el atributo Valor como label.")
+                self.output_textedit.insertPlainText(f"Entrenando con K-NN con el atributo Valor como label.\n")
 
                 X = df.drop('Valor', axis=1)  # Features
                 Y = df['Valor']  # Variable de salida
 
             elif self.selected_option == 2:
-                self.output_textedit.insertPlainText(f"Entrenando con K-NN con el atributo Puntuación Fnatsy como label.")
+                self.output_textedit.insertPlainText(f"Entrenando con K-NN con el atributo Puntuación Fnatsy como label.\n")
 
                 X = df.drop('Puntuación Fantasy', axis=1)  # Features
                 Y = df['Puntuación Fantasy']  # Variable de salida
-
-            # Crear conjuntos de entrenamiento 
-            conjunto_train = pd.concat([X, Y], axis=1)
-
-            # Crear copias para poner las predicciones del train y val
-            conjunto_train_eval = conjunto_train.copy()
-
-            precision_train = {}
-            precision_val = {}
             
+            # División en 80/20 para entrenamiento y validación
+            X_train, X_val, y_train, y_val = train_test_split(X, Y, test_size=0.2, random_state=42)
+
+            # Normalización de datos
+            scaler = MinMaxScaler()
+            X_train_scaled = scaler.fit_transform(X_train)
+            X_val_scaled = scaler.transform(X_val)
+            
+            # Definir los valores de k que quieres probar
+            k_values = [3, 4, 5, 6, 7, 8, 9, 10]
+            n_cv_iterations = 10  # Número de iteraciones en el cross-validation
+
+            # Inicializar variables para almacenar el menor MSE y su información asociada
+            min_mse = float('inf')
+            best_k = None
+            best_iteration = None
+
+            # Inicializar listas para almacenar el MSE medio y el error medio para cada k
+            avg_mse_values = []
+            avg_error_values = []
+
+            # FASE 8.2.2 Realizar cross validation ######################################################################
+            # Bucle para probar diferentes valores de k
+            for k in k_values:
+                k_mse = []
+                k_error = []
+                self.output_textedit.insertPlainText(f'_________________________________________________________\n')
+                time.sleep(0.4)
+                self.output_textedit.insertPlainText(f'k = {k}:\n')
+                time.sleep(0.4)
+                
+                # Bucle para realizar el cross-validation en cada iteración
+                for iteration in range(1, n_cv_iterations + 1):
+                    # Inicializar el modelo k-NN
+                    knn_model = KNeighborsRegressor(n_neighbors=k)
+
+                    # Configurar el objeto KFold para controlar las iteraciones del cross-validation
+                    kf = KFold(n_splits=10, shuffle=True, random_state=iteration)
+
+                    # Realizar validación cruzada y obtener las puntuaciones
+                    cv_scores = cross_val_score(knn_model, X_train_scaled, y_train, cv=kf, scoring='neg_mean_squared_error')
+
+                    # Convertir las puntuaciones negativas a positivas para MSE
+                    cv_scores = -cv_scores
+
+                    # Calcular el promedio del MSE y el error medio
+                    mean_mse = cv_scores.mean()
+                    mean_error = np.sqrt(mean_mse)  # Raíz cuadrada del MSE para obtener el error medio
+                    
+                    # Almacenar el menor MSE y su información asociada
+                    if mean_mse < min_mse:
+                        min_mse = mean_mse
+                        best_k = k
+                        best_iteration = iteration
+
+                    # Almacenar el MSE y el error para la iteración actual
+                    k_mse.append(mean_mse)
+                    k_error.append(mean_error)
+
+                    # Imprimir información para cada valor de k e iteración
+                    self.output_textedit.insertPlainText(f'     --------------------------------------\n')
+                    time.sleep(0.4)
+                    self.output_textedit.insertPlainText(f'     Iteración {iteration} para k = {k}\n')
+                    time.sleep(0.4)
+                    self.output_textedit.insertPlainText(f'        -Mean CV MSE: {mean_mse}\n')
+                    time.sleep(0.4)
+                    self.output_textedit.insertPlainText(f'        -Standard Deviation CV MSE: {cv_scores.std()}\n')
+                    time.sleep(0.4)
+                    self.output_textedit.insertPlainText(f'        -Error medio: {mean_error}\n')
+                    time.sleep(0.4)
+
+                # Calcular el MSE medio y el error medio para todas las iteraciones y almacenarlos
+                avg_mse_values.append(np.mean(k_mse))
+                avg_error_values.append(np.mean(k_error))
+
+                # Imprimir el MSE medio y el error medio final para cada valor de k
+                self.output_textedit.insertPlainText(f'____________________________________________________\n')
+                time.sleep(0.4)
+                self.output_textedit.insertPlainText(f'MSE medio final para k = {k}: {avg_mse_values[-1]}\n')
+                time.sleep(0.4)
+                self.output_textedit.insertPlainText(f'Error medio final para k = {k}: {avg_error_values[-1]}\n')
+                time.sleep(0.4)
+
+            # Imprimir el menor MSE y su información asociada al final
+            self.output_textedit.insertPlainText(f'\nMenor MSE obtenido: {min_mse} con k = {best_k} en la iteración {best_iteration}\n')
+
+
         elif selected_model == "Linear Regression model":
             if self.selected_option == 1:
-               self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Valor como label.")
+               self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Valor como label.\n")
             elif self.selected_option == 2:
-                self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Puntuación Fnatsy como label.")
+                self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Puntuación Fnatsy como label.\n")
 
+        self.progress += 1
+        self.invocar_actualizacion(self.progress)
             
     def guardar_modeleo(self):
         self.output_textedit.insertPlainText("future guardar modelo\n")

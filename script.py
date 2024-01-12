@@ -3788,8 +3788,6 @@ class PlayerScraperWindowMF(QDialog, QWidget):
 class trainWindow(QWidget):
     def __init__(self):
         super().__init__()
-        # Crear un diseño principal usando QVBoxLayout
-        layout = QVBoxLayout()
 
         self.progress = 0
 
@@ -3825,7 +3823,7 @@ class trainWindow(QWidget):
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
-        ### SELECCIONAR ALGORITMO ##################################################
+        ### SELECTOR ALGORITMO A USAR ##################################################
         # LABEL DE TEXTO
         label_text = QLabel("Seleciona un algoritmo de entrenamiento: ")
         grid_layout.addWidget(label_text, 5, 0)
@@ -3839,7 +3837,7 @@ class trainWindow(QWidget):
         self.combo_box.setMaximumWidth(185)
         grid_layout.addWidget(self.combo_box, 5, 1)
 
-
+        ### SELECTOR ATRIBUTO A PREDECIR ###########################################################
         label_choice = QLabel("Seleccionar atributo del jugador predecir:")
         grid_layout.addWidget(label_choice, 6, 0)
 
@@ -3888,25 +3886,25 @@ class trainWindow(QWidget):
         self.progress_bar = QProgressBar(self)
         grid_layout.addWidget(self.progress_bar,10,1)
 
-        ###  VENTANA OUTPUT SCRAPER  ####################################################################################
+        ###  VENTANA OUTPUT TRAIN  ####################################################################################
         # Crear un QTextEdit para la salida
         self.output_textedit = QTextEdit(self)
         grid_layout.addWidget(self.output_textedit, 11, 0, 10, 0)  # row, column, rowSpan, columnSpan
 
         ###  GRÁFICA  ####################################################################################
         # Crear una instancia de la figura de Matplotlib y el widget de lienzo
-        self.fig = Figure()
-        self.canvas = FigureCanvas(self.fig)
+        #self.fig = Figure()
+        #self.canvas = FigureCanvas(self.fig)
         #grid_layout.addWidget(self.canvas,8,1,alignment=Qt.AlignmentFlag.AlignRight)
 
         # Crear un subplot vacío
-        self.ax = self.fig.add_subplot(111)
+        #self.ax = self.fig.add_subplot(111)
 
         # Ajustar el tamaño de la gráfica
-        self.canvas.setFixedSize(250, 200)
+        #self.canvas.setFixedSize(250, 200)
 
         # Ocultar la gráfica inicialmente
-        self.canvas.setVisible(False)
+        #self.canvas.setVisible(False)
 
     def start_progress(self):
         # Establecer el rango de la barra de progreso según tus necesidades
@@ -4228,7 +4226,6 @@ class trainWindow(QWidget):
         time.sleep(0.5)
         self.output_textedit.insertPlainText("\n")
 
-
         # Eliminar columnas con baja correlación
         df = df.drop(columns=low_correlation_columns)
 
@@ -4476,78 +4473,62 @@ class predictWindow(QWidget):
 
         # TITULO VENTANA  ###########################################################################################
         # LABEL TÍTULO
-        label_text = QLabel("PREDECIR")
+        label_text = QLabel("PREDECIR DATOS")
         # Aplicar estilos para destacar el texto
         label_text.setStyleSheet("font-weight: bold; color: black; font-size: 20px;")
         grid_layout.addWidget(label_text, 0, 0)
 
         # LABEL SUBTÍTULO 1
-        label_subtext1 = QLabel("predecir el valor de mercado o los puntos que obtendrá el jugaodr en la sigueinte jornada de la liga mediante el modelo generado en el entrenamiento. ")
+        label_subtext1 = QLabel("Predice el valor de mercado o los puntos que obtendrá el jugador en la sigueinte jornada de la liga mediante el modelo generado en el entrenamiento.")
         grid_layout.addWidget(label_subtext1, 1, 0, 1, 2)
 
         ### SELECCIONAR RUTA DATASET DE ENTRADA ##################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Selecionar ruta de los futbolitas a predecir su puntuación: ")
+        label_text = QLabel("Ruta de los futbolitas a predecir: ")
         grid_layout.addWidget(label_text, 2, 0)
 
         # INPUT DE TEXTO
         self.text_file_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_file_input, 2, 1)
+        grid_layout.addWidget(self.text_file_input, 3, 0, 1, 2)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar Archivo")
         select_file_button.clicked.connect(lambda: select_file(self))
 
         # Alineación
-        grid_layout.addWidget(select_file_button, 3, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_file_button, 4, 1, alignment=Qt.AlignmentFlag.AlignRight)
 
         # Estilos
         select_file_button.setMinimumWidth(140)
 
-
         ### SELECCIONAR RUTA MODELO A USAR #################################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Selecionar ruta del modelo que se desea utilzar para predecir: ")
-        grid_layout.addWidget(label_text, 4, 0)
+        label_text = QLabel("Ruta del modelo a utilzar para predecir: ")
+        grid_layout.addWidget(label_text, 5, 0)
 
         # INPUT DE TEXTO
         self.text_file2_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_file2_input, 4, 1)
+        grid_layout.addWidget(self.text_file2_input, 6, 0, 1, 2)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
         select_file_button = QPushButton("Seleccionar Archivo")
         select_file_button.clicked.connect(lambda: select_file2(self))
         # Alineación
-        grid_layout.addWidget(select_file_button, 5, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_file_button, 7, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         select_file_button.setMinimumWidth(140)
 
-        ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
-        # LABEL DE TEXTO
-        label_text = QLabel("Predecir valores")
-        grid_layout.addWidget(label_text, 6, 0)
-
-        # Crear un botón
-        self.scrape_button = QPushButton("Predecir puntuación")
-
-        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
-        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
-
-        # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 6, 1)
-        self.scrape_button.setMaximumWidth(150)
-
         ###  SELECCIONAR RUTA DONDE GUARDAR EL EXCEL OUTPUT DEL SCRAPER  ###################################
         # LABEL TEXTO 
-        label_text = QLabel("Ruta output donde guardar estadisticas del modelo:")
-        grid_layout.addWidget(label_text, 7, 0)
+        label_text = QLabel("Ruta donde guardar estadisticas del modelo: ")
+        grid_layout.addWidget(label_text, 8, 0)
 
         # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
         self.text_input = QLineEdit(self)
         # Alineación
-        grid_layout.addWidget(self.text_input, 7, 1)
+        grid_layout.addWidget(self.text_input, 9, 0, 1, 2)
         # Estilos 
         #self.text_input.setMinimumWidth(350)
 
@@ -4555,9 +4536,37 @@ class predictWindow(QWidget):
         select_folder_button = QPushButton("Seleccionar Carpeta")
         select_folder_button.clicked.connect(lambda: select_folder(self))
         # Alineación
-        grid_layout.addWidget(select_folder_button, 8, 1, alignment=Qt.AlignmentFlag.AlignRight)
+        grid_layout.addWidget(select_folder_button, 10, 1, alignment=Qt.AlignmentFlag.AlignRight)
         # Estilos
         select_folder_button.setMinimumWidth(140)
+
+        ### SELECTOR ATRIBUTO A PREDECIR ###########################################################
+        label_choice = QLabel("Seleccionar atributo del jugador predecir: ")
+        grid_layout.addWidget(label_choice, 11, 0)
+
+        self.combo_box1 = QComboBox()
+        self.combo_box1.addItem("Entrenar para predecir valor de mercado que alcanzará un jugaodr en la próxima jornada")
+        self.combo_box1.addItem("Entrenar para predecir puntos que obtendrá un jugaodr en la próxima jornada")
+
+        # Establecer el ancho máximo para la QComboBox
+        self.combo_box1.setMaximumWidth(500)
+        grid_layout.addWidget(self.combo_box1, 11, 1,alignment=Qt.AlignmentFlag.AlignLeft)
+
+        ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
+        # Crear un botón
+        self.scrape_button = QPushButton("Realizar prediciones")
+
+        # Conectar la señal clicked del botón a la función iniciar_scrapear_thread e iniciar la barra de progreso
+        #self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
+
+        # Alineación y estilos
+        grid_layout.addWidget(self.scrape_button, 12, 0)
+        self.scrape_button.setMaximumWidth(150)
+
+        ###  VENTANA OUTPUT predecir  ####################################################################################
+        # Crear un QTextEdit para la salida
+        self.output_textedit = QTextEdit(self)
+        grid_layout.addWidget(self.output_textedit, 13, 0, 10, 0)  # row, column, rowSpan, columnSpan
 
 
 class login(QWidget):   

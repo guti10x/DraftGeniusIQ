@@ -5,6 +5,7 @@ from PyQt6.QtCore import QMetaObject, Qt, Q_ARG
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.common.exceptions import ElementNotInteractableException, NoSuchElementException
+from bs4 import BeautifulSoup
 import requests
 import openpyxl
 import time
@@ -20,17 +21,12 @@ import Levenshtein
 from difflib import get_close_matches
 import re
 import category_encoders as ce
-import pickle
-from bs4 import BeautifulSoup
-
 import seaborn as sns
-
 import matplotlib
 matplotlib.use('TkAgg')  #  'TkAgg' / 'Agg' 
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
-
 from sklearn.model_selection import train_test_split, cross_val_score, train_test_split, cross_val_score, KFold
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import MinMaxScaler 
@@ -5114,6 +5110,32 @@ class predictWindow(QWidget):
                 time.sleep(0.2)
                 index+=1
             self.output_textedit.insertPlainText(f" \n")
+
+        #### PARTE 6 : GUARDAR DATOS PREDECIDOS DE CADA JUGADOR ######################################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        
+        self.output_textedit.insertPlainText("Guardando datos predecidos...\n")
+
+   
+        for posicion, jugadores in grupos_por_posicion.items():
+            grupos_por_posicion[posicion] = sorted(jugadores, key=lambda x: x['prediccion'], reverse=True)
+
+        # Concatenar todos los subgrupos en un solo DataFrame
+        df_total = pd.concat([pd.DataFrame(jugadores) for jugadores in grupos_por_posicion.values()])
+
+        # Guardar todos los jugadores en un solo archivo Excel
+        #Obtener la fecha actual
+        fecha_actual = datetime.now()
+        fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
+        
+        if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
+            excel_file_path = carpeta_save+"/predicciones_Valores_Mercado_jugadores_" + fecha_actual_str + ".xlsx"
+        elif 'KNN_model_Puntos_MF_' in file_modelo:
+            excel_file_path = carpeta_save+"/predicciones_Puntos_jugadores_" + fecha_actual_str + ".xlsx"
+
+        df_total.to_excel(excel_file_path, index=False)
+              
+        self.output_textedit.insertPlainText(f"Datos predecidos guardados correctamente en {excel_file_path}.\n")
 
 
 class login(QWidget):   

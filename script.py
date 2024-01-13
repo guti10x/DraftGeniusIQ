@@ -4622,7 +4622,7 @@ class predictWindow(QWidget):
         self.output_textedit.insertPlainText(f"Cargando fichero de jugadores a predecir...\n")
 
         # Cargar el DataFrame de jugadores
-        dfp = pd.read_excel(file_futbolistas)
+        df = pd.read_excel(file_futbolistas)
 
         time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Fichero cargado exitosamente...\n\n")
@@ -4634,7 +4634,7 @@ class predictWindow(QWidget):
 
         # Eliminar las columnas que no están en 'columnas_a_mantener'
         columnas_a_eliminar = [col for col in df.columns if col not in columnas_a_mantener]
-        df = dfp.drop(columns=columnas_a_eliminar)
+        df = df.drop(columns=columnas_a_eliminar)
 
         self.output_textedit.insertPlainText(f"Columnas que no fueron usadas para entrenar el modelo eliminadas correctamente.\n\n")
 
@@ -4679,22 +4679,23 @@ class predictWindow(QWidget):
         #### PARTE 5 : EJECUTAR MODELO ######################################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
-            self.output_textedit.insertPlainText(f"Prediciendo valores de mercado de los jugadores selecionados para la próxima jornada de liga.\n")
-           
-            # Eliminar la columna a predecir
+            self.output_textedit.insertPlainText("Prediciendo valores de mercado de los jugadores seleccionados para la próxima jornada de liga.\n")
+        
+            # Eliminar la columna a predecir del DataFrame df
             columna_a_eliminar = 'Puntuación Fantasy'
+            df = df.drop(columna_a_eliminar, axis=1)
             
         elif 'KNN_model_Puntos_MF_' in file_modelo:
-            self.output_textedit.insertPlainText(f"Prediciendo puntuación de Mister Fantasy MD de los jugadores selecionados para la próxima jornada de liga.\n")
+            self.output_textedit.insertPlainText("Prediciendo puntuación de Mister Fantasy MD de los jugadores seleccionados para la próxima jornada de liga.\n")
             
-            # Eliminar la columna a predecir
+            # Eliminar la columna a predecir del DataFrame df
             columna_a_eliminar = 'Valor'
-            
+            df = df.drop(columna_a_eliminar, axis=1)
+
         else:
-            self.output_textedit.insertPlainText(f"Modelo cargado incompatible.\n")
+            self.output_textedit.insertPlainText("Modelo cargado incompatible.\n")
             return
-        
-        df = df.drop(columna_a_eliminar, axis=1)
+
 
         # Realizar predicciones
         predicciones = loaded_model.predict(df)
@@ -4702,11 +4703,14 @@ class predictWindow(QWidget):
         # Crear un DataFrame con las predicciones
         df_predicciones = pd.DataFrame({'Predicciones': predicciones})
 
-        # Imprimir el DataFrame de predicciones
-        self.output_textedit.insertPlainText("\nPredicciones:\n")
-        self.output_textedit.insertPlainText(df_predicciones.to_string(index=False) + "\n")
+        # Cargar el DataFrame de jugadores
+        dfp = pd.read_excel(file_futbolistas)
 
-        
+        #Imprimir nombre + posicion + predicción
+        for index, (nombre, pos, row) in enumerate(zip(dfp['Jugador'], dfp['Posición'], df_predicciones.iterrows())):
+            self.output_textedit.insertPlainText(f"Jugador: {nombre}, Posición: {pos}, Predicción: {row[1]['Predicciones']}\n")
+            time.sleep(0.2)
+
 
 
 class login(QWidget):   

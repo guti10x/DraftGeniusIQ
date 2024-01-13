@@ -3074,6 +3074,28 @@ class PlayerScraperWindowSC(QWidget):
     def invocar_actualizacion(self, nuevo_valor):
         QMetaObject.invokeMethod(self.progress_bar, "setValue", Qt.ConnectionType.QueuedConnection, Q_ARG(int, nuevo_valor))
     
+    def performance_to_json(self, JsonJugador):
+        nombre_archivo = f"performance_jugadores_partido_{self.slugJson}.json"
+        ruta_completa_archivo = os.path.join(self.ruta_jornada, nombre_archivo)
+        
+        # Verificar si el archivo JSON existe
+        if os.path.exists(ruta_completa_archivo):
+            # Si el archivo existe, cargar su contenido
+            with open(ruta_completa_archivo, 'r') as archivo:
+                datos = json.load(archivo)
+        else:
+            # Si el archivo no existe, crear un diccionario vacío
+            datos = {}
+        # Actualizar el diccionario existente con la nueva entrada
+        datos.update(JsonJugador)
+        
+        # Guardar los datos actualizados en el archivo JSON
+        if not os.path.exists(ruta_completa_archivo):
+            with open(ruta_completa_archivo, 'w') as archivo:
+                archivo.write("{}")  # Crea un archivo vacío si no existe
+        with open(ruta_completa_archivo, 'w') as archivo:
+            json.dump(datos, archivo, indent=4)
+
     def obtener_informacion_jugador(self):
 
         # Obtiene el contenido HTML de la página
@@ -3130,7 +3152,7 @@ class PlayerScraperWindowSC(QWidget):
                         }
                     }
                     
-                    #performance_to_json(JsonJugador)
+                    self.performance_to_json(JsonJugador)
 
             except NoSuchElementException as e:
                 self.output_textedit.append("Sin jugar")
@@ -3160,7 +3182,7 @@ class PlayerScraperWindowSC(QWidget):
                         }
                 }
                 
-                #performance_to_json(JsonJugador)
+                self.performance_to_json(JsonJugador)
                 
                 return
 
@@ -3256,8 +3278,8 @@ class PlayerScraperWindowSC(QWidget):
         else:
              self.output_textedit.append(f"Error al obtener datos para el equipo {selected_team}. Código de estado: {response.status_code}")
                 
-        nombre_carpeta_jornada = "jornada_" + str(valor_round)
-        self.ruta_jornada = os.path.join(ruta_output, nombre_carpeta_jornada,"json")
+        nombre_carpeta_jornada = "jornada_" + str(valor_round)+"_SF"
+        self.ruta_jornada = os.path.join(ruta_output, nombre_carpeta_jornada)
         
         #######################################################################################################################################################       
         #  PARTE 3 : Mediante los datos obtenidos de la API cosntruimos la url de cada patido de todos los equipos de LaLiga                                  #

@@ -21,6 +21,7 @@ from difflib import get_close_matches
 import re
 import category_encoders as ce
 import pickle
+from tabulate import tabulate
 
 import seaborn as sns
 
@@ -4686,7 +4687,7 @@ class predictWindow(QWidget):
             df = df.drop(columna_a_eliminar, axis=1)
             
         elif 'KNN_model_Puntos_MF_' in file_modelo:
-            self.output_textedit.insertPlainText("Prediciendo puntuación de Mister Fantasy MD de los jugadores seleccionados para la próxima jornada de liga.\n")
+            self.output_textedit.insertPlainText("Prediciendo puntuaciones de Mister Fantasy MD de los jugadores seleccionados para la próxima jornada de liga.\n")
             
             # Eliminar la columna a predecir del DataFrame df
             columna_a_eliminar = 'Valor'
@@ -4711,6 +4712,49 @@ class predictWindow(QWidget):
             self.output_textedit.insertPlainText(f"Jugador: {nombre}, Posición: {pos}, Predicción: {row[1]['Predicciones']}\n")
             time.sleep(0.2)
 
+
+        #### PARTE 6 : MOSTRAR MEJOR JUGADOR POR POSICIÓN ######################################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        
+        if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
+            self.output_textedit.insertPlainText("Mejores jugadores para cada posicón por puntos obtenidos:\n")
+        elif 'KNN_model_Puntos_MF_' in file_modelo:
+            self.output_textedit.insertPlainText("Mejores jugadores para cada posicón por puntos obtenidos:\n")
+
+        # Crear un diccionario para almacenar los jugadores agrupados y ordenados por posición y predicción
+        grupos_por_posicion = {}
+
+        # Iterar sobre los datos
+        for index, (nombre, pos, row) in enumerate(zip(dfp['Jugador'], dfp['Posición'], df_predicciones.iterrows())):
+            # Crear un subgrupo para la posición si aún no existe
+            if pos not in grupos_por_posicion:
+                grupos_por_posicion[pos] = []
+
+            # Agregar el jugador al subgrupo correspondiente
+            grupos_por_posicion[pos].append({
+                'jugador': nombre,
+                'posicion': pos,
+                'prediccion': row[1]['Predicciones']
+            })
+
+        # Ordenar cada subgrupo por posición y predicción de mayor a menor
+        for posicion, jugadores in grupos_por_posicion.items():
+            grupos_por_posicion[posicion] = sorted(jugadores, key=lambda x: x['prediccion'], reverse=True)
+
+        # Imprimir cada subgrupo ordenado
+        for posicion, jugadores in grupos_por_posicion.items():
+            self.output_textedit.insertPlainText(f"\nPosición {posicion}:\n")
+            index=1
+            for jugador_info in jugadores:
+
+                if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
+                    self.output_textedit.insertPlainText(f"{index}- {jugador_info['jugador']} :  Predicción de valor de mercado: {jugador_info['prediccion']}\n")
+                elif 'KNN_model_Puntos_MF_' in file_modelo:
+                    self.output_textedit.insertPlainText(f"{index}- {jugador_info['jugador']} :  Predicción de puntuación: {jugador_info['prediccion']}\n")
+                
+                time.sleep(0.2)
+                index+=1
+            self.output_textedit.insertPlainText(f" \n")
 
 
 class login(QWidget):   

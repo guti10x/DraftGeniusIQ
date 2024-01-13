@@ -4440,8 +4440,12 @@ class trainWindow(QWidget):
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Guardando modelo generado e información asociada del entrenamiento y test del modleo...\n")
         time.sleep(1)
-        
-        model_name= "KNN_model_"+fecha_actual_str+".pkl"
+
+        if self.selected_option == 1:
+            model_name= "KNN_model_Valor_Mercado_to_predict_"+fecha_actual_str+".pkl" 
+        elif self.selected_option == 2:
+            model_name= "KNN_model_"+fecha_actual_str+".pkl"
+
         carpeta_save=self.text_input2.text()
 
         ruta_save=carpeta_save+"/"+model_name
@@ -4536,18 +4540,6 @@ class predictWindow(QWidget):
         # Estilos
         select_folder_button.setMinimumWidth(140)
 
-        ### SELECTOR ATRIBUTO A PREDECIR ###########################################################
-        label_choice = QLabel("Seleccionar atributo del jugador predecir: ")
-        grid_layout.addWidget(label_choice, 11, 0)
-
-        self.combo_box1 = QComboBox()
-        self.combo_box1.addItem("Entrenar para predecir valor de mercado que alcanzará un jugaodr en la próxima jornada")
-        self.combo_box1.addItem("Entrenar para predecir puntos que obtendrá un jugaodr en la próxima jornada")
-
-        # Establecer el ancho máximo para la QComboBox
-        self.combo_box1.setMaximumWidth(500)
-        grid_layout.addWidget(self.combo_box1, 11, 1,alignment=Qt.AlignmentFlag.AlignLeft)
-
         ### BOTÓN PARA EMPEZAR ENTRENAMIENTO ###########################################################
         # Crear un botón
         self.scrape_button = QPushButton("Realizar prediciones")
@@ -4556,13 +4548,13 @@ class predictWindow(QWidget):
         self.scrape_button.clicked.connect(self.iniciar_scrapear_thread)
 
         # Alineación y estilos
-        grid_layout.addWidget(self.scrape_button, 12, 0)
+        grid_layout.addWidget(self.scrape_button, 11, 0)
         self.scrape_button.setMaximumWidth(150)
 
         ###  VENTANA OUTPUT predecir  ####################################################################################
         # Crear un QTextEdit para la salida
         self.output_textedit = QTextEdit(self)
-        grid_layout.addWidget(self.output_textedit, 13, 0, 10, 0)  # row, column, rowSpan, columnSpan
+        grid_layout.addWidget(self.output_textedit, 12, 0, 10, 0)  # row, column, rowSpan, columnSpan
     
     def iniciar_scrapear_thread(self):  
         # Crear un hilo y ejecutar la función en segundo plano
@@ -4621,7 +4613,8 @@ class predictWindow(QWidget):
         time.sleep(0.2)
         self.output_textedit.insertPlainText(f"MSE obtenido en el test del modelo: {loaded_entrenamiento_info['MSE obtenido en el test del modelo']} \n")
         time.sleep(0.2)
-        self.output_textedit.insertPlainText(f"Columnas con las que ha sido entrenado': {loaded_entrenamiento_info['Columnas eliminadas']} \n")
+        columnas_a_mantener = loaded_entrenamiento_info['Columnas con las que ha sido entrenado']
+        self.output_textedit.insertPlainText(f"Columnas con las que ha sido entrenado: {columnas_a_mantener} \n")
         time.sleep(0.2)
         
         #### PARTE 2 : CARGAR DATASET DE JUGADORES A PREDECIR #########################################################################################
@@ -4629,7 +4622,7 @@ class predictWindow(QWidget):
         self.output_textedit.insertPlainText(f"Cargando fichero de jugadores a predecir...\n")
 
         # Cargar el DataFrame de jugadores
-        df = pd.read_excel(file_futbolistas)
+        dfp = pd.read_excel(file_futbolistas)
 
         time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Fichero cargado exitosamente...\n\n")
@@ -4639,12 +4632,9 @@ class predictWindow(QWidget):
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Eliminando columnas que no fueron usadas para entrenar el modelo...\n")
 
-        # Obtener las columnas a mantener del array 'Columnas eliminadas'
-        columnas_a_mantener = loaded_entrenamiento_info.get('Columnas eliminadas', [])
-
         # Eliminar las columnas que no están en 'columnas_a_mantener'
         columnas_a_eliminar = [col for col in df.columns if col not in columnas_a_mantener]
-        df = df.drop(columns=columnas_a_eliminar)
+        df = dfp.drop(columns=columnas_a_eliminar)
 
         self.output_textedit.insertPlainText(f"Columnas que no fueron usadas para entrenar el modelo eliminadas correctamente.\n\n")
 
@@ -4686,12 +4676,37 @@ class predictWindow(QWidget):
         # Guardar el DataFrame procesado en un nuevo archivo Excel
         df.to_excel("archivo_procesado.xlsx", index=False)
 
-        selected_option = self.combo_box1.currentText()
+        #### PARTE 5 : EJECUTAR MODELO ######################################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
+            self.output_textedit.insertPlainText(f"Prediciendo valores de mercado de los jugadores selecionados para la próxima jornada de liga.\n")
+           
+            # Eliminar la columna a predecir
+            columna_a_eliminar = 'Puntuación Fantasy'
+            
+        elif 'KNN_model_Puntos_MF_' in file_modelo:
+            self.output_textedit.insertPlainText(f"Prediciendo puntuación de Mister Fantasy MD de los jugadores selecionados para la próxima jornada de liga.\n")
+            
+            # Eliminar la columna a predecir
+            columna_a_eliminar = 'Valor'
+            
+        else:
+            self.output_textedit.insertPlainText(f"Modelo cargado incompatible.\n")
+            return
         
-        if selected_option == "Entrenar para predecir valor de mercado que alcanzará un jugador en la próxima jornada":
-            print("Predecir valores que obtendrán los futbolistas selecionados en el próximo partido de la jornada")
-        elif selected_option == "Entrenar para predecir puntos que obtendrá un jugador en la próxima jornada":
-            print("Predecir puntos que obtendrán los futbolistas selecionados en el próximo partido de la jornada")
+        df = df.drop(columna_a_eliminar, axis=1)
+
+        # Realizar predicciones
+        predicciones = loaded_model.predict(df)
+
+        # Crear un DataFrame con las predicciones
+        df_predicciones = pd.DataFrame({'Predicciones': predicciones})
+
+        # Imprimir el DataFrame de predicciones
+        self.output_textedit.insertPlainText("\nPredicciones:\n")
+        self.output_textedit.insertPlainText(df_predicciones.to_string(index=False) + "\n")
+
+        
 
 
 class login(QWidget):   

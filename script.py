@@ -3005,7 +3005,7 @@ class PlayerScraperWindowSC(QWidget):
         layout.addWidget(label_number, 3, 0)
         # Estilos 
         self.number_input = QSpinBox(self)
-        self.number_input.setMinimum(11)  # Establecer el valor mínimo (jornada 1)
+        self.number_input.setMinimum(0)  # Establecer el valor mínimo (jornada 1)
         self.number_input.setMaximum(38)  # Establecer el valor máximo (Jornada 36)
         self.number_input.setSingleStep(2)  # Establecer el paso
         self.number_input.setMaximumSize(45, 20)
@@ -3399,7 +3399,147 @@ class PlayerScraperWindowSC(QWidget):
             self.obtener_informacion_jugador()
 
             self.driver.quit()
+        
+        #######################################################################################################################################################
+        #  PARTE 2 :  obtener el performance de los jugadores que entraron de cambio al partido / suplentes / lesionados                                      #
+        #######################################################################################################################################################
+    
+        jugador=1
 
+        while True:
+
+            # Crea una instancia del controlador del navegador
+            self.driver = webdriver.Chrome()
+            # Maximizar la ventana del navegador
+            self.driver.maximize_window()
+            # Navega a la página web que deseas hacer scraping
+            self.driver.get(url)
+            # Espera a que se cargue la página
+            self.driver.implicitly_wait(45)
+            # Encuentra el botón de "Consentir" 
+            button = self.driver.find_element(By.XPATH, '//button[@aria-label="Consentir"]')
+            # Haz clic en el botón de "Consentir" 
+            button.click()
+            try:
+                # Encuentra el botón de "Ask me later" 
+                button = self.driver.find_element(By.XPATH, '//*[@id="__next"]/div[3]/div[2]/button')
+                # Haz clic en el botón de "Consentir" 
+                button.click()
+            except:
+                pass
+            # Reducir el nivel de zoom 
+            #zoom_out_script = "document.body.style.zoom='80%';"
+            #self.driver.execute_script(zoom_out_script)
+
+            # Encuentra todos los elementos 
+            divSuplentes1 = self.driver.find_elements(By.XPATH, '//div[@display="flex" and contains(@class, "sc-fqkvVR sc-dcJsrY bASBgQ kHiXJe")]')
+            divSuplentes2 = self.driver.find_elements(By.XPATH, '//div[@display="flex" and contains(@class, "sc-fqkvVR sc-dcJsrY bphgaj kHiXJe")]')
+            
+            # Crear un nuevo array y combinar los elementos de divSuplentes1 y divSuplentes2
+            divSuplentes = []
+            divSuplentes.extend(divSuplentes1)
+            divSuplentes.extend(divSuplentes2)
+            
+            tamaño_divSuplentes = len(divSuplentes)
+            self.output_textedit.append(f"{jugador+1}/{tamaño_divSuplentes}")
+            
+            # Definir los textos a buscar en los subelementos
+            textos_a_buscar = ["Out", "Doubtful"]
+
+            elemento=divSuplentes[jugador]
+                
+            for texto_a_buscar in textos_a_buscar:
+                # Verificar si el elemento contiene un subelemento con el texto actual
+                subelemento = elemento.find_elements(By.XPATH, f'.//div[contains(text(), "{texto_a_buscar}")]')
+                
+                if subelemento:
+                    self.output_textedit.append(f"Se detectó jugador con status '{texto_a_buscar}' .")
+                    entradas = []
+                    estadisticas = {}
+                    clave = "Ausencia"
+                    valor = "Injury"
+                    estadisticas[clave] = valor
+
+                    entrada = {
+                        clave: valor
+                    }
+                    # Agrega la entrada JSON a la lista
+                    entradas.append(entrada)
+                    
+                    nombre=divSuplentes[jugador].text
+                    # Palabra que deseas eliminar
+                    palabra_a_eliminar = "Out"
+                    nombrefi=nombre.replace(palabra_a_eliminar, "")
+                    palabra_a_eliminar = "Doubtful"
+                    nombreJson = nombrefi.replace(palabra_a_eliminar, "")
+                    self.output_textedit.append(nombreJson)
+                    
+                    puntuaciónJson=None
+            
+                    # Crear el diccionario para el jugador
+                    JsonJugador = {
+                        nombreJson: {
+                            "puntuacion": puntuaciónJson,
+                            "estadisticas": entradas
+                        }
+                    }
+
+                    self.performance_to_json(JsonJugador)
+            
+            # Definir los textos a buscar en los subelementos
+            textos_a_buscar = ["Suspended"]
+
+            elemento=divSuplentes[jugador]
+            
+            for texto_a_buscar in textos_a_buscar:
+                # Verificar si el elemento contiene un subelemento con el texto actual
+                subelemento = elemento.find_elements(By.XPATH, f'.//div[contains(text(), "{texto_a_buscar}")]')
+
+                if subelemento:
+                    self.output_textedit.append(f"Se detectó jugador con status'{texto_a_buscar}' .")
+                    
+                    entradas = []
+                    estadisticas = {}
+                    clave = "Ausencia"
+                    valor = "Suspension"
+                    estadisticas[clave] = valor
+
+                    entrada = {
+                        clave: valor
+                    }
+                    # Agrega la entrada JSON a la lista
+                    entradas.append(entrada)
+                    
+                    nombre=divSuplentes[jugador].text
+                    # Palabra que deseas eliminar
+                    palabra_a_eliminar = "Suspended"
+                    # Eliminar la palabra del string
+                    nombreJson = nombre.replace(palabra_a_eliminar, "")
+                    self.output_textedit.append(nombreJson)
+                    
+                    puntuaciónJson=None
+            
+                    # Crear el diccionario para el jugador
+                    JsonJugador = {
+                        nombreJson: {
+                            "puntuacion": puntuaciónJson,
+                            "estadisticas": entradas
+                        }
+                    }
+
+                    self.performance_to_json(JsonJugador)
+            
+            divSuplentes[jugador].click()
+            time.sleep(45)
+            self.obtener_informacion_jugador()
+
+            jugador += 1 
+            
+            if jugador >= len(divSuplentes):
+                self.driver.quit()
+                break
+                
+            self.driver.quit()
 
 class PlayerScraperWindowMF(QDialog, QWidget):
     def __init__(self, window_title):

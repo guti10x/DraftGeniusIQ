@@ -3182,6 +3182,108 @@ class PlayerScraperWindowSC(QWidget):
         url = base_url.format(id,customId,slug)
         self.output_textedit.append(url)
 
+        ##############################################################################################################################################################
+        # FASE 2: "Acceder y hacer scraping de todos las urls de todos los partidos de LaLiga                                                                        #
+        ##############################################################################################################################################################
+
+        #######################################################################################################################################################
+        #  PARTE 1 : obtener el performance de los 22 jugadores titulares del partido                                                                         # 
+        #    -abre la web                                                                                                                                     #
+        #    -acepta las cookies                                                                                                                              #
+        #    -hace click sobre de cada jugador para que emerja la tarjeta con los datos del performance del partido asociados a cada jugador y los extrae)    #
+        #######################################################################################################################################################
+        self.output_textedit.append(f"________________________________________________________________________________________")
+        self.output_textedit.append("Starting scraper...")
+
+        # Crea una instancia del controlador del navegador
+        driver = webdriver.Chrome()
+            
+        # Maximizar la ventana del navegador
+        driver.maximize_window()
+            
+        # Navega a la página web que deseas hacer scraping
+        driver.get(url)
+
+        # Espera a que se cargue la página
+        driver.implicitly_wait(20)
+
+        # Encuentra el botón de "Consentir" 
+        button = driver.find_element(By.XPATH, '//button[@aria-label="Consentir"]')
+        # Haz clic en el botón de "Consentir" 
+        button.click()
+        try:
+            # Encuentra el botón de "Ask me later" 
+            button = driver.find_element(By.XPATH, '//*[@id="__next"]/div[3]/div[2]/button')
+            # Haz clic en el botón de "Consentir" 
+            button.click()
+                
+        except:
+            pass
+        time.sleep(45)
+            
+        # Reducir el nivel de zoom 
+        #zoom_out_script = "document.body.style.zoom='60%';"
+        #driver.execute_script(zoom_out_script)
+
+        # Encuentra el nombre del partido" 
+        local = driver.find_element(By.XPATH, '//*[@id="__next"]/main/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div/div[1]/div/a/div/div/bdi')
+        visitante = driver.find_element(By.XPATH, '//*[@id="__next"]/main/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div/div[3]/div/a/div/div/bdi')
+        # Concatenar los nombres para formar slugJson
+        slugJsonConcatenado = f"{local.text}_{visitante.text}"
+        slugJson = slugJsonConcatenado.replace(" ", "_")
+            
+        driver.quit()
+            
+        self.output_textedit.append(f"Scraping {slugJson}...")
+        
+        for i in range(22):
+
+            # Crear carpeta para la jornada
+            if not os.path.exists(self.ruta_jornada):
+                os.makedirs(self.ruta_jornada)
+
+            # Crea una instancia del controlador del navegador
+            driver = webdriver.Chrome()
+                
+            # Maximizar la ventana del navegador
+            driver.maximize_window()
+
+            # Navega a la página web que deseas hacer scraping
+            driver.get(url)
+
+            # Espera a que se cargue la página
+            driver.implicitly_wait(45)
+
+            # Encuentra el botón de "Consentir" 
+            button = driver.find_element(By.XPATH, '//button[@aria-label="Consentir"]')
+            # Haz clic en el botón de "Consentir" 
+            button.click()
+
+            try:
+                # Encuentra el botón de "Ask me later" 
+                button = driver.find_element(By.XPATH, '//*[@id="__next"]/div[3]/div[2]/button')
+                # Haz clic en el botón de "Consentir" 
+                button.click()
+            except:
+                pass
+                
+            # Reducir el nivel de zoom 
+            #zoom_out_script = "document.body.style.zoom='60%';"
+            #driver.execute_script(zoom_out_script)
+            time.sleep(45)
+                
+            # Encuentra todos los elementos <a> con la clase 'sc-3937c22d-0 jrbLdB'
+            divJugadores = driver.find_elements(By.XPATH, '//a[@class="sc-3937c22d-0 jrbLdB"]')
+                
+            numTitulares=len(divJugadores)
+            self.output_textedit.append(f"{i+1}/{numTitulares}")
+            divJugadores[i].click()
+            time.sleep(45)
+            #obtener_informacion_jugador()
+
+            driver.quit()
+
+
 class PlayerScraperWindowMF(QDialog, QWidget):
     def __init__(self, window_title):
         super().__init__()

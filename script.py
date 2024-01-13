@@ -21,7 +21,7 @@ from difflib import get_close_matches
 import re
 import category_encoders as ce
 import pickle
-from tabulate import tabulate
+from bs4 import BeautifulSoup
 
 import seaborn as sns
 
@@ -3058,7 +3058,6 @@ class PlayerScraperWindowSC(QWidget):
         self.output_textedit = QTextEdit(self)
         layout.addWidget(self.output_textedit, 7, 0, 11, 0)  # row, column, rowSpan, columnSpan
 
-
     def start_progress(self):
         # Establecer el rango de la barra de progreso según tus necesidades
         self.progress_bar.setRange(0, 511)
@@ -3075,6 +3074,104 @@ class PlayerScraperWindowSC(QWidget):
     def invocar_actualizacion(self, nuevo_valor):
         QMetaObject.invokeMethod(self.progress_bar, "setValue", Qt.ConnectionType.QueuedConnection, Q_ARG(int, nuevo_valor))
     
+    def obtener_informacion_jugador(self):
+
+        # Obtiene el contenido HTML de la página
+        pagina_html = self.driver.page_source
+        #print(pagina_html)
+
+        # Utiliza BeautifulSoup para analizar el HTML
+        soup = BeautifulSoup(pagina_html, 'html.parser')
+
+        try:        
+            nombre= self.driver.find_element(By.XPATH,'//*[@id="__next"]/main/div[3]/div/div/div/div[1]/div/div[1]/a/div')
+            self.output_textedit.append("_______________________________")
+            self.output_textedit.append(nombre.text)
+            
+            try:
+                puntuacion= self.driver.find_element(By.XPATH,'//*[@id="__next"]/main/div[3]/div/div/div/div[1]/div/div[2]/div/span')
+                self.output_textedit.append(puntuacion.text)
+
+                self.output_textedit.append("_______________________________")
+
+                # DEVOLVER TODOS LOS PARÁMETROS DE RENDIMIENTO DEL JUGADOR: encontrar todos los div con la clase "sc-fqkvVR sc-dcJsrY litZes eFJwJL"
+                entradas = []
+                goal_elements = soup.find_all('div', class_='sc-fqkvVR sc-dcJsrY litZes eFJwJL')
+                for element in goal_elements:
+                    
+                    # Encuentra el div con la clase "sc-jEACwC hFGVAX" y el span con la clase "sc-jEACwC jnyhQn" dentro de este div
+                    ### ¡¡¡¡¡¡¡¡ Revisar clases de los dos elementos a continuación los cuales pueden cambiar con el tiempo !!!!!!!! 
+                    div_goal = element.find('div', class_='sc-jEACwC dGzxxl')
+                    span_goal = element.find('span', class_='sc-jEACwC jrhxaB')
+                    ### ¡¡¡¡¡¡¡¡ Revisar clases de los dos elementos a continuación los cuales pueden cambiar con el tiempo !!!!!!!! 
+                    if div_goal and span_goal:
+                        self.output_textedit.append(f"{div_goal.text}: {span_goal.text}")
+
+                        estadisticas = {}
+                        clave = div_goal.text
+                        valor = span_goal.text
+                        estadisticas[clave] = valor
+
+                        entrada = {
+                            clave: valor
+                        }
+
+                        # Agrega la entrada JSON a la lista
+                        entradas.append(entrada)
+                        
+                    nombreJson=nombre.text
+                    puntuaciónJson=puntuacion.text
+            
+                    # Crear el diccionario para el jugador
+                    JsonJugador = {
+                        nombreJson: {
+                            "puntuacion": puntuaciónJson,
+                            "estadisticas": entradas
+                        }
+                    }
+                    
+                    #performance_to_json(JsonJugador)
+
+            except NoSuchElementException as e:
+                self.output_textedit.append("Sin jugar")
+                self.output_textedit.append("_______________________________")
+                
+                entradas = []
+                estadisticas = {}
+                clave = "Minutes played"
+                valor = 0
+                estadisticas[clave] = valor
+
+                entrada = {
+                    clave: valor
+                }
+
+                # Agrega la entrada JSON a la lista
+                entradas.append(entrada)
+                
+                nombreJson=nombre.text
+                puntuaciónJson=None
+            
+                # Crear el diccionario para el jugador
+                JsonJugador = {
+                        nombreJson: {
+                            "puntuacion": puntuaciónJson,
+                            "estadisticas": entradas
+                        }
+                }
+                
+                #performance_to_json(JsonJugador)
+                
+                return
+
+        except NoSuchElementException as e:
+            try:
+                manager= self.driver.find_element(By.XPATH,'//*[@id="__next"]/main/div[2]/div/div/div[1]/div[1]/div/div[2]/div[2]/div/div/span')
+                self.output_textedit.append("Entrenador")
+            except:
+                self.output_textedit.append("No convocado")
+        self.output_textedit.append("_______________________________")
+
     def scrapear_funcion(self):
         self.output_textedit.append("Conecting to API...")
 
@@ -3162,8 +3259,6 @@ class PlayerScraperWindowSC(QWidget):
         nombre_carpeta_jornada = "jornada_" + str(valor_round)
         self.ruta_jornada = os.path.join(ruta_output, nombre_carpeta_jornada,"json")
         
-        ##########################################3!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1revisar nombre output
-
         #######################################################################################################################################################       
         #  PARTE 3 : Mediante los datos obtenidos de la API cosntruimos la url de cada patido de todos los equipos de LaLiga                                  #
         #######################################################################################################################################################
@@ -3196,24 +3291,24 @@ class PlayerScraperWindowSC(QWidget):
         self.output_textedit.append("Starting scraper...")
 
         # Crea una instancia del controlador del navegador
-        driver = webdriver.Chrome()
+        self.driver = webdriver.Chrome()
             
         # Maximizar la ventana del navegador
-        driver.maximize_window()
+        self.driver.maximize_window()
             
         # Navega a la página web que deseas hacer scraping
-        driver.get(url)
+        self.driver.get(url)
 
         # Espera a que se cargue la página
-        driver.implicitly_wait(20)
+        self.driver.implicitly_wait(20)
 
         # Encuentra el botón de "Consentir" 
-        button = driver.find_element(By.XPATH, '//button[@aria-label="Consentir"]')
+        button = self.driver.find_element(By.XPATH, '//button[@aria-label="Consentir"]')
         # Haz clic en el botón de "Consentir" 
         button.click()
         try:
             # Encuentra el botón de "Ask me later" 
-            button = driver.find_element(By.XPATH, '//*[@id="__next"]/div[3]/div[2]/button')
+            button = self.driver.find_element(By.XPATH, '//*[@id="__next"]/div[3]/div[2]/button')
             # Haz clic en el botón de "Consentir" 
             button.click()
                 
@@ -3223,16 +3318,16 @@ class PlayerScraperWindowSC(QWidget):
             
         # Reducir el nivel de zoom 
         #zoom_out_script = "document.body.style.zoom='60%';"
-        #driver.execute_script(zoom_out_script)
+        #self.driver.execute_script(zoom_out_script)
 
         # Encuentra el nombre del partido" 
-        local = driver.find_element(By.XPATH, '//*[@id="__next"]/main/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div/div[1]/div/a/div/div/bdi')
-        visitante = driver.find_element(By.XPATH, '//*[@id="__next"]/main/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div/div[3]/div/a/div/div/bdi')
+        local = self.driver.find_element(By.XPATH, '//*[@id="__next"]/main/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div/div[1]/div/a/div/div/bdi')
+        visitante = self.driver.find_element(By.XPATH, '//*[@id="__next"]/main/div[2]/div[2]/div[1]/div[1]/div[1]/div[1]/div/div[3]/div/a/div/div/bdi')
         # Concatenar los nombres para formar slugJson
         slugJsonConcatenado = f"{local.text}_{visitante.text}"
         slugJson = slugJsonConcatenado.replace(" ", "_")
             
-        driver.quit()
+        self.driver.quit()
             
         self.output_textedit.append(f"Scraping {slugJson}...")
         
@@ -3243,25 +3338,25 @@ class PlayerScraperWindowSC(QWidget):
                 os.makedirs(self.ruta_jornada)
 
             # Crea una instancia del controlador del navegador
-            driver = webdriver.Chrome()
+            self.driver = webdriver.Chrome()
                 
             # Maximizar la ventana del navegador
-            driver.maximize_window()
+            self.driver.maximize_window()
 
             # Navega a la página web que deseas hacer scraping
-            driver.get(url)
+            self.driver.get(url)
 
             # Espera a que se cargue la página
-            driver.implicitly_wait(45)
+            self.driver.implicitly_wait(45)
 
             # Encuentra el botón de "Consentir" 
-            button = driver.find_element(By.XPATH, '//button[@aria-label="Consentir"]')
+            button = self.driver.find_element(By.XPATH, '//button[@aria-label="Consentir"]')
             # Haz clic en el botón de "Consentir" 
             button.click()
 
             try:
                 # Encuentra el botón de "Ask me later" 
-                button = driver.find_element(By.XPATH, '//*[@id="__next"]/div[3]/div[2]/button')
+                button = self.driver.find_element(By.XPATH, '//*[@id="__next"]/div[3]/div[2]/button')
                 # Haz clic en el botón de "Consentir" 
                 button.click()
             except:
@@ -3269,19 +3364,19 @@ class PlayerScraperWindowSC(QWidget):
                 
             # Reducir el nivel de zoom 
             #zoom_out_script = "document.body.style.zoom='60%';"
-            #driver.execute_script(zoom_out_script)
+            #self.driver.execute_script(zoom_out_script)
             time.sleep(45)
                 
             # Encuentra todos los elementos <a> con la clase 'sc-3937c22d-0 jrbLdB'
-            divJugadores = driver.find_elements(By.XPATH, '//a[@class="sc-3937c22d-0 jrbLdB"]')
+            divJugadores = self.driver.find_elements(By.XPATH, '//a[@class="sc-3937c22d-0 jrbLdB"]')
                 
             numTitulares=len(divJugadores)
             self.output_textedit.append(f"{i+1}/{numTitulares}")
             divJugadores[i].click()
             time.sleep(45)
-            #obtener_informacion_jugador()
+            self.obtener_informacion_jugador()
 
-            driver.quit()
+            self.driver.quit()
 
 
 class PlayerScraperWindowMF(QDialog, QWidget):

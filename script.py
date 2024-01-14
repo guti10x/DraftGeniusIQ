@@ -30,7 +30,7 @@ from matplotlib.figure import Figure
 from sklearn.model_selection import train_test_split, cross_val_score, train_test_split, cross_val_score, KFold
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.preprocessing import MinMaxScaler 
-from sklearn.metrics import mean_absolute_error,mean_squared_error, r2_score
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
 
 
@@ -4869,7 +4869,7 @@ class predictWindow(QWidget):
         grid_layout.addWidget(self.text_file2_input, 6, 0, 1, 2)
 
         # BOTÓN PARA SELECCIONAR ARCHIVO
-        select_file_button = QPushButton("Seleccionar Archivo")
+        select_file_button = QPushButton("Seleccionar modelo")
         select_file_button.clicked.connect(lambda: select_file2(self))
         # Alineación
         grid_layout.addWidget(select_file_button, 7, 1, alignment=Qt.AlignmentFlag.AlignRight)
@@ -4878,7 +4878,7 @@ class predictWindow(QWidget):
 
         ###  SELECCIONAR RUTA DONDE GUARDAR EL EXCEL OUTPUT DEL SCRAPER  ###################################
         # LABEL TEXTO 
-        label_text = QLabel("Ruta donde guardar estadisticas del modelo: ")
+        label_text = QLabel("Ruta donde guardar predicciones realizadas: ")
         grid_layout.addWidget(label_text, 8, 0)
 
         # INPUT TEXTO (QLineEdit en lugar de QSpinBox)
@@ -4961,7 +4961,7 @@ class predictWindow(QWidget):
         time.sleep(0.2)
         self.output_textedit.insertPlainText(f"Algoritmo utilizado: {loaded_entrenamiento_info['Algoritmo utilizado']} \n")
         time.sleep(0.2)
-        self.output_textedit.insertPlainText(f"Tiempo de entrenamiento (minutos): {loaded_entrenamiento_info['Tiempo de entrenamiento (minutos)']} \n")
+        self.output_textedit.insertPlainText(f"Tiempo de entrenamiento: {loaded_entrenamiento_info['Tiempo de entrenamiento (minutos)']} minutos. \n")
         time.sleep(0.2)
         self.output_textedit.insertPlainText(f"Mejor K obtenida: {loaded_entrenamiento_info['Mejor K obtenida']} \n")
         time.sleep(0.2)
@@ -5029,9 +5029,6 @@ class predictWindow(QWidget):
 
         self.output_textedit.insertPlainText(f"Gestión de Missing Values completada exitosamente.\n")
         
-        # Guardar el DataFrame procesado en un nuevo archivo Excel
-        df.to_excel("archivo_procesado.xlsx", index=False)
-
         #### PARTE 5 : EJECUTAR MODELO ######################################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
@@ -5052,6 +5049,8 @@ class predictWindow(QWidget):
             self.output_textedit.insertPlainText("Modelo cargado incompatible.\n")
             return
 
+        # Registra el tiempo de inicio
+        inicio_tiempo = time.time()
 
         # Realizar predicciones
         predicciones = loaded_model.predict(df)
@@ -5059,6 +5058,39 @@ class predictWindow(QWidget):
         # Crear un DataFrame con las predicciones
         df_predicciones = pd.DataFrame({'Predicciones': predicciones})
 
+        # Registra el tiempo de finalización
+        fin_tiempo = time.time()
+        # Calcula la diferencia de tiempo para obtener el tiempo total
+        tiempo_total = fin_tiempo - inicio_tiempo
+        # Convertir a minutos y segundos
+        minutes, seconds = divmod(tiempo_total, 60)
+
+        #### PARTE 6 : OBTENER ESTADISTICAS DE LAS PREDIONES REALIZADAS ######################################################################################################################
+
+        df = pd.read_excel(file_futbolistas)
+       
+        # Llena los valores nulos con ceros en las columnas 'Valor' y 'Puntuación Fantasy'
+        df['Valor'].fillna(0, inplace=True)
+        df['Puntuación Fantasy'].fillna(0, inplace=True)
+
+        # Inicializa y_true con ceros
+        y_true = np.zeros(len(df))
+
+        if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
+            y_true = df['Valor'].values
+        elif 'KNN_model_Puntos_MF_' in file_modelo:
+            y_true = df['Puntuación Fantasy'].values
+        
+        # Calcula el error cuadrático medio (MSE)
+        mse = mean_squared_error(y_true, predicciones)
+        
+        # Calculo mean ansolute error(MAE)
+        mae = mean_absolute_error(y_true, predicciones)
+
+        # Calculo de R-cuadrado
+        r2 = r2_score(y_true, predicciones)
+
+        #### PARTE 7 : MOSTRAR MEJOR JUGADOR POR POSICIÓN ######################################################################################################################
         # Cargar el DataFrame de jugadores
         dfp = pd.read_excel(file_futbolistas)
 
@@ -5067,8 +5099,6 @@ class predictWindow(QWidget):
             self.output_textedit.insertPlainText(f"Jugador: {nombre}, Posición: {pos}, Predicción: {row[1]['Predicciones']}\n")
             time.sleep(0.2)
 
-
-        #### PARTE 6 : MOSTRAR MEJOR JUGADOR POR POSICIÓN ######################################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         
         if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
@@ -5111,12 +5141,42 @@ class predictWindow(QWidget):
                 index+=1
             self.output_textedit.insertPlainText(f" \n")
 
-        #### PARTE 6 : GUARDAR DATOS PREDECIDOS DE CADA JUGADOR ######################################################################################################################
+        #### PARTE 8 : GEERAR ESTADISTICAS DE LA EJCUCIÓN DEL MODLEO para realizar la sprediciones ######################################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
+        self.output_textedit.insertPlainText("Estadísticas de la ejecución del modelo:\n")
+
+        # Obtener la fecha actual
+        fecha_actual = datetime.now()
+        # Formatear la fecha como una cadena (opcional)
+        fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
+
+        if "KNN" in file_modelo:
+           algoritmo_utilizado = 'KNN'
+        elif "Linear_Regresion" in file_modelo:
+            algoritmo_utilizado = 'Linear_Regresion'
+        elif "Gradient_Boosted_Tree" in file_modelo:
+            algoritmo_utilizado = 'Gradient_Boosted_Tree'
+
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"Fecha de ejecución:  {fecha_actual_str}\n")
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"Total de jugaodres predecidos:  {len(df_predicciones)}\n")
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"Algoritmo utilizado:  {algoritmo_utilizado}\n")
+        time.sleep(0.3)
+        self.output_textedit.insertPlainText(f"Tiempo de ejecución:  {int(minutes)} minutos y {seconds:.2f} segundos\n")
+        time.sleep(0.3)
+        #self.output_textedit.insertPlainText(f"MSE (Error cuadrático medio) obtenido en las prediciones:  {mse}\n")
+        time.sleep(0.3)
+        #self.output_textedit.insertPlainText(f"MAE (Error absoluo medio) obtenido en lss prediciones:  {mae}\n")
+        time.sleep(0.3)
+        #self.output_textedit.insertPlainText(f"R2 (Coeficiente de determinación) obtenido en las prediciones:  {r2}\n")
+        time.sleep(0.3)
         
+        #### PARTE 8 : GUARDAR DATOS PREDECIDOS DE CADA JUGADOR ######################################################################################################################
+        self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText("Guardando datos predecidos...\n")
 
-   
         for posicion, jugadores in grupos_por_posicion.items():
             grupos_por_posicion[posicion] = sorted(jugadores, key=lambda x: x['prediccion'], reverse=True)
 

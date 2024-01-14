@@ -29,6 +29,10 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sklearn.model_selection import train_test_split, cross_val_score, train_test_split, cross_val_score, KFold
 from sklearn.neighbors import KNeighborsRegressor
+<<<<<<< HEAD
+from sklearn.linear_model import LinearRegression
+=======
+>>>>>>> 570d3516ebbd97443b905679d731def3755e4a49
 from sklearn.preprocessing import MinMaxScaler 
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
@@ -4188,7 +4192,11 @@ class trainWindow(QWidget):
         self.combo_box.addItem("Gradient Boosted Tree model")
         self.combo_box.addItem("Random Forest model")
         self.combo_box.addItem("K-NN model")
+<<<<<<< HEAD
+        self.combo_box.addItem("Linear Regression model")
+=======
         self.combo_box.addItem("Linear Regresion model")
+>>>>>>> 570d3516ebbd97443b905679d731def3755e4a49
         # Establecer el ancho máximo para la QComboBox
         self.combo_box.setMaximumWidth(185)
         grid_layout.addWidget(self.combo_box, 5, 1)
@@ -4720,6 +4728,35 @@ class trainWindow(QWidget):
             hilo.start()
 
         elif selected_model == "Linear Regression model":
+<<<<<<< HEAD
+            algoritmo_utilizado="Linear Regression"
+            if self.selected_option == 1:
+                self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Valor como label.\n")
+                X = df.drop('Valor', axis=1)  # Features
+                Y = df['Valor']  # Variable de salida
+
+            elif self.selected_option == 2:
+                self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Puntuación Fantasy como label.\n")
+                X = df.drop('Puntuación Fantasy', axis=1)  # Features
+                Y = df['Puntuación Fantasy']  # Variable de salida
+        
+            # Dividimos los datos en un 80% para entrenamiento y un 20% para prueba
+            X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
+
+            # Inicializar el modelo de regresión lineal
+            modelo = LinearRegression()
+
+            # Aplicar validación cruzada
+            scores = cross_val_score(modelo, X_train, y_train, cv=5, scoring='r2')
+
+            # Imprimir los scores de cada fold
+            self.output_textedit.insertPlainText(f"Scores de cada fold de la validación cruzada:{scores}\n")
+            self.output_textedit.insertPlainText(f"Media de los scores: {scores.mean()}\n")
+
+            self.progress += 1
+            self.invocar_actualizacion(self.progress)
+            
+=======
             if self.selected_option == 1:
                self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Valor como label.\n")
             elif self.selected_option == 2:
@@ -4728,6 +4765,7 @@ class trainWindow(QWidget):
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
+>>>>>>> 570d3516ebbd97443b905679d731def3755e4a49
         # FASE 8.2.3 Validar modelo generado en el entrenamiento ################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Probando modelo generado en el entrenamiento...\n")

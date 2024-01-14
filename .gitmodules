@@ -1,6 +1,0 @@
-[submodule "Sofascore-data-collector"]
-	path = Sofascore-data-collector
-	url = https://github.com/guti10x/Sofascore-data-collector.git
-[submodule "Mister-Fantasy-Mundo-Deportivo-Scraper"]
-	path = Mister-Fantasy-Mundo-Deportivo-Scraper
-	url = https://github.com/guti10x/Mister-Fantasy-Mundo-Deportivo-Scraper.git

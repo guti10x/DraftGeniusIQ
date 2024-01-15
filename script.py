@@ -34,6 +34,7 @@ from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.preprocessing import MinMaxScaler 
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
+import copy
 
 
 headers = {
@@ -4592,7 +4593,7 @@ class trainWindow(QWidget):
         columnas_array = df.columns.to_numpy()
 
         # Guardar el nuevo DataFrame en un nuevo archivo Excel
-        df.to_excel('dataset_trasEDA.xlsx', index=False)
+        #df.to_excel('dataset_trasEDA.xlsx', index=False)
 
         # FASE 8: Entrenar modeleo con el daatset procesado con el algoritmo selecionado ###########################################################################################################################
         selected_model = self.combo_box.currentText()
@@ -4735,6 +4736,10 @@ class trainWindow(QWidget):
             # Dividimos los datos en un 80% para entrenamiento y un 20% para prueba
             X_train, X_test, y_train, y_test = train_test_split(X, Y, test_size=0.2, random_state=42)
 
+            # Tiempo de inicio del train
+            elapsed_time=0
+            start_time = time.time()
+
             # Inicializar el modelo de regresión lineal
             modelo = LinearRegression()
 
@@ -4763,6 +4768,20 @@ class trainWindow(QWidget):
                 self.output_textedit.insertPlainText(f"Explained Variance Score: {evs}\n")
                 time.sleep(0.3)
 
+            # Encontrar el índice del fold con el mejor MSE (o cualquier otra métrica de tu elección)
+            best_fold_index = np.argmax(cv_results['test_neg_mean_squared_error'])
+
+            # Obtener el mejor modelo entrenado
+            best_model = copy.deepcopy(modelo)  # Para evitar afectar al modelo original
+            best_model.fit(X_train, y_train)  # Ajustar el mejor modelo con el conjunto de entrenamiento
+            
+            # Tiempo de final del train
+            end_time = time.time()
+            # Calcula la diferencia de tiempo
+            elapsed_time = end_time - start_time
+            # Convertir a minutos y segundos
+            minutes, seconds = divmod(elapsed_time, 60)
+
             # Mostrar estadísticas agregadas
             average_mse = -cv_results['test_neg_mean_squared_error'].mean()
             average_r2 = cv_results['test_r2'].mean()
@@ -4777,7 +4796,7 @@ class trainWindow(QWidget):
             time.sleep(0.4)
             self.output_textedit.insertPlainText(f"Mean Absolute Error (Promedio): {average_mae}\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f"Explained Variance Score (Promedio): {average_evs}\n")
+            self.output_textedit.insertPlainText(f"Variance Score (Promedio): {average_evs}\n")
             time.sleep(0.4)
 
         self.progress += 1
@@ -4863,24 +4882,77 @@ class trainWindow(QWidget):
         time.sleep(0.3)
         self.output_textedit.insertPlainText(f"Tiempo de entrenamiento:  {int(minutes)} minutos y {seconds:.2f} segundos\n")
         time.sleep(0.3)
-        self.output_textedit.insertPlainText(f"Mejor K obtenida:  {best_k}\n")
-        time.sleep(0.3)
-        self.output_textedit.insertPlainText(f"MSE obtenido en el entrenamiento:  {min_mse}\n")
-        time.sleep(0.3)
-        self.output_textedit.insertPlainText(f"MSE obtenido en el test del modelo:  {val_mse}\n")
-        time.sleep(0.3)
 
-        # Guardar la información del entrenamiento, incluyendo las columnas eliminadas
-        entrenamiento_info = {
-            'Fecha de entrenamiento': fecha_actual_str,
-            'Número de ejemplares utilizados': len(archivos_excel),
-            'Algoritmo utilizado': algoritmo_utilizado,
-            'Tiempo de entrenamiento (minutos)': minutes,
-            'Mejor K obtenida': best_k,
-            'MSE obtenido en el entrenamiento': min_mse,
-            'MSE obtenido en el test del modelo': val_mse,  
-            'Columnas con las que ha sido entrenado': columnas_array.tolist()  
-        }
+        if selected_model == "Gradient Boosted Tree model":
+            print("")
+        elif selected_model == "Linear Regression model":
+            
+            self.output_textedit.insertPlainText(f"Mean Squared Error en el entrenamiento: {average_mse}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"R2 Score en el entrenamiento: {average_r2}")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"Mean Absolute Error en el entrenamiento: {average_mae}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"Variance Score en el entrenamiento: {average_evs}\n")
+            time.sleep(0.4)
+
+            self.output_textedit.insertPlainText(f"Mean Squared Error (MSE) en conjunto de test: {val_mse}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"Root Mean Squared Error (RMSE) en conjunto de test: {val_rmse}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"Mean Absolute Error (MAE) en conjunto de test: {val_mae}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"R2 Score en conjunto de test: {val_r2}\n")
+            time.sleep(0.4)
+
+            # Guardar la información del entrenamiento, incluyendo las columnas eliminadas
+            entrenamiento_info = {
+                'Fecha de entrenamiento': fecha_actual_str,
+                'Número de ejemplares utilizados': len(archivos_excel),
+                'Algoritmo utilizado': algoritmo_utilizado,
+                'Tiempo de entrenamiento (minutos)': minutes,
+                'Tiempo de entrenamiento (segundos)': seconds,
+                'MSE obtenido en el entrenamiento': average_mse,
+                'Variance Score obtenido en el entrenamiento': average_evs,
+                'MAE obtenido en el entrenamiento': average_mae,
+                'R^2 obtenido en el entrenamiento': average_r2,
+                'MSE obtenido en el test del modelo': val_mse, 
+                'RMSE obtenido en el test del modelo': val_rmse, 
+                'MAE obtenido en el test del modelo': val_mae, 
+                'R^2 obtenido en el test del modelo': val_r2, 
+                'Columnas con las que ha sido entrenado': columnas_array.tolist()  
+            }
+
+        elif selected_model == "K-NN model":
+
+            self.output_textedit.insertPlainText(f"Mejor K obtenida:  {best_k}\n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"MSE obtenido en el entrenamiento:  {min_mse}\n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"MSE obtenido en el test del modelo:  {val_mse}\n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"RMSE obtenido en el test del modelo:  {val_rmse}\n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"MAE obtenido en el test del modelo:  {val_mae}\n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"R^2 obtenido en el test del modelo:  {val_r2}\n")
+            time.sleep(0.3)
+
+            # Guardar la información del entrenamiento, incluyendo las columnas eliminadas
+            entrenamiento_info = {
+                'Fecha de entrenamiento': fecha_actual_str,
+                'Número de ejemplares utilizados': len(archivos_excel),
+                'Algoritmo utilizado': algoritmo_utilizado,
+                'Tiempo de entrenamiento (minutos)': minutes,
+                'Tiempo de entrenamiento (segundos)': seconds,
+                'Mejor K obtenida': best_k,
+                'MSE obtenido en el entrenamiento': min_mse,
+                'MSE obtenido en el test del modelo': val_mse, 
+                'RMSE obtenido en el test del modelo': val_rmse, 
+                'MAE obtenido en el test del modelo': val_mae, 
+                'R^2 obtenido en el test del modelo': val_r2, 
+                'Columnas con las que ha sido entrenado': columnas_array.tolist()  
+            }
 
         # FASE 8.2.4 Guardar modelo e información asociada de la generación del modelo en el entrenanienta ################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
@@ -4888,9 +4960,9 @@ class trainWindow(QWidget):
         time.sleep(1)
 
         if self.selected_option == 1:
-            model_name= "KNN_model_Valor_Mercado_to_predict_"+fecha_actual_str+".pkl" 
+            model_name= algoritmo_utilizado+"_Valor_Mercado_to_predict_"+fecha_actual_str+".pkl" 
         elif self.selected_option == 2:
-            model_name= "KNN_model_"+fecha_actual_str+".pkl"
+            model_name= algoritmo_utilizado+"_Puntuación_Fantasy"+fecha_actual_str+".pkl"
 
         carpeta_save=self.text_input2.text()
 
@@ -5121,14 +5193,14 @@ class predictWindow(QWidget):
         
         #### PARTE 5 : EJECUTAR MODELO ######################################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
-        if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
+        if '_Valor_Mercado_to_predict_' in file_modelo:
             self.output_textedit.insertPlainText("Prediciendo valores de mercado de los jugadores seleccionados para la próxima jornada de liga.\n")
         
             # Eliminar la columna a predecir del DataFrame df
             columna_a_eliminar = 'Puntuación Fantasy'
             df = df.drop(columna_a_eliminar, axis=1)
             
-        elif 'KNN_model_Puntos_MF_' in file_modelo:
+        elif '_Puntuación_Fantasy_' in file_modelo:
             self.output_textedit.insertPlainText("Prediciendo puntuaciones de Mister Fantasy MD de los jugadores seleccionados para la próxima jornada de liga.\n")
             
             # Eliminar la columna a predecir del DataFrame df

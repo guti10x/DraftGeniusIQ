@@ -28,11 +28,13 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sklearn.model_selection import train_test_split, cross_val_score, train_test_split, cross_val_score, KFold
+from sklearn.ensemble import GradientBoostingRegressor
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression
 from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.preprocessing import MinMaxScaler 
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
+from xgboost import XGBRegressor
 import joblib
 import copy
 
@@ -4602,9 +4604,51 @@ class trainWindow(QWidget):
         if selected_model == "Gradient Boosted Tree model":
             if self.selected_option == 1:
                 self.output_textedit.insertPlainText(f"Entrenando con Gradient Boosted Trees con el atributo Valor como label.\n")
+                
+                # Dividir los datos de entrenamiento
+                X = df.drop(["Valor"], axis=1)
+                y = df["Valor"]  # Variable objetivo ahora es "Valor"
+                
+                # Dividir los datos en conjunto de entrenamiento y prueba
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+                
+                # Entrenar el modelo Gradient Boost
+                model = GradientBoostingRegressor()
+                model.fit(X_train, y_train)
+                
+                # Evaluar el modelo en el conjunto de prueba
+                y_pred = model.predict(X_test)
+                mse = mean_squared_error(y_test, y_pred)
+                print(f"Mean Squared Error for Valor: {mse}")
+
+                
             elif self.selected_option == 2:
                 self.output_textedit.insertPlainText(f"Entrenando con Gradient Boosted Trees con el atributo Puntuación Fnatsy como label.\n")
+                
+                #Crea un nuevo DataFrame X eliminando la columna llamada "Puntuación Fantasy" del DataFrame original df_entrenamiento. El parámetro axis=1 indica que la operación se realiza a lo largo de las columnas.
+                X =df.drop(["Puntuación Fantasy"], axis=1)
 
+                #Crea una Serie y que contiene la columna "Puntuación Fantasy" del DataFrame original df_entrenamiento. En otras palabras, se extraen las etiquetas y los valores de la columna "Puntuación Fantasy" y se almacenan en la Serie y.
+                y = df["Puntuación Fantasy"] #Variable objetivo
+                
+                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+                
+                # Entrenar el modelo Gradient Boost
+                model = GradientBoostingRegressor()
+                model.fit(X_train, y_train)
+                
+                #Evaluar el modelo en el conjunto de prueba
+                y_pred = model.predict(X_test)
+                mse = mean_squared_error(y_test, y_pred)
+                print(f"Mean Squared Error: {mse}")
+                
+                #Utiliza el modelo entrenado para hacer predicciones en el conjunto de datos que queremos predecir
+                #predicciones = model.predict(df_predecir)
+                predicciones = model.predict(X_test)
+
+                from sklearn.metrics import mean_squared_error
+                mse = mean_squared_error(y_test, y_pred)
+                print(f'Mean Squared Error: {mse}')
         elif selected_model == "K-NN model":
             algoritmo_utilizado="KNN model"
             # FASE 8.2. Preparar los datos para entrenar con ellos ######################################################################

@@ -30,6 +30,7 @@ from matplotlib.figure import Figure
 from sklearn.model_selection import train_test_split, cross_val_score, train_test_split, cross_val_score, KFold
 from sklearn.neighbors import KNeighborsRegressor
 from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split, cross_validate
 from sklearn.preprocessing import MinMaxScaler 
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
@@ -4187,9 +4188,8 @@ class trainWindow(QWidget):
 
         self.combo_box = QComboBox()
         self.combo_box.addItem("Gradient Boosted Tree model")
-        self.combo_box.addItem("Random Forest model")
         self.combo_box.addItem("K-NN model")
-        self.combo_box.addItem("Linear Regresion model")
+        self.combo_box.addItem("Linear Regression model")
         # Establecer el ancho máximo para la QComboBox
         self.combo_box.setMaximumWidth(185)
         grid_layout.addWidget(self.combo_box, 5, 1)
@@ -4738,12 +4738,34 @@ class trainWindow(QWidget):
             # Inicializar el modelo de regresión lineal
             modelo = LinearRegression()
 
-            # Aplicar validación cruzada
-            scores = cross_val_score(modelo, X_train, y_train, cv=5, scoring='r2')
+            # Aplicar validación cruzada con múltiples métricas
+            scoring = ['neg_mean_squared_error', 'r2', 'neg_mean_absolute_error', 'explained_variance']
+            cv_results = cross_validate(modelo, X_train, y_train, cv=5, scoring=scoring)
 
-            # Imprimir los scores de cada fold
-            self.output_textedit.insertPlainText(f"Scores de cada fold de la validación cruzada:{scores}\n")
-            self.output_textedit.insertPlainText(f"Media de los scores: {scores.mean()}\n")
+            # Mostrar estadísticas para cada fold
+            for i in range(5):  # 5 folds en este caso
+                mse = -cv_results['test_neg_mean_squared_error'][i]  # Quítale la negación si usaste 'neg_mean_squared_error'
+                r2 = cv_results['test_r2'][i]
+                mae = -cv_results['test_neg_mean_absolute_error'][i]  # Quítale la negación si usaste 'neg_mean_absolute_error'
+                evs = cv_results['test_explained_variance'][i]
+
+                self.output_textedit.insertPlainText(f"\nFold {i + 1}:\n")
+                self.output_textedit.insertPlainText(f"Mean Squared Error: {mse}\n")
+                self.output_textedit.insertPlainText(f"R2 Score: {r2}\n")
+                self.output_textedit.insertPlainText(f"Mean Absolute Error: {mae}\n")
+                self.output_textedit.insertPlainText(f"Explained Variance Score: {evs}\n")
+
+            # Mostrar estadísticas agregadas
+            average_mse = -cv_results['test_neg_mean_squared_error'].mean()  
+            average_r2 = cv_results['test_r2'].mean()
+            average_mae = -cv_results['test_neg_mean_absolute_error'].mean() 
+            average_evs = cv_results['test_explained_variance'].mean()
+
+            self.output_textedit.insertPlainText("\nEstadísticas finales obtenidas:\n")
+            self.output_textedit.insertPlainText(f"Mean Squared Error (Promedio): {average_mse}\n")
+            self.output_textedit.insertPlainText(f"R2 Score (Promedio): {average_r2}")
+            self.output_textedit.insertPlainText(f"Mean Absolute Error (Promedio): {average_mae}\n")
+            self.output_textedit.insertPlainText(f"Explained Variance Score (Promedio): {average_evs}\n")
 
         self.progress += 1
         self.invocar_actualizacion(self.progress)

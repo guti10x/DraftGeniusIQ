@@ -4738,68 +4738,109 @@ class trainWindow(QWidget):
             # Inicializar el modelo de regresión lineal
             modelo = LinearRegression()
 
+            # Definimos el número de folds a realizar
+            folds=10
+
             # Aplicar validación cruzada con múltiples métricas
             scoring = ['neg_mean_squared_error', 'r2', 'neg_mean_absolute_error', 'explained_variance']
-            cv_results = cross_validate(modelo, X_train, y_train, cv=5, scoring=scoring)
+            cv_results = cross_validate(modelo, X_train, y_train, cv=folds, scoring=scoring)
 
             # Mostrar estadísticas para cada fold
-            for i in range(5):  # 5 folds en este caso
-                mse = -cv_results['test_neg_mean_squared_error'][i]  # Quítale la negación si usaste 'neg_mean_squared_error'
+            for i in range(folds):  
+                mse = -cv_results['test_neg_mean_squared_error'][i]  
                 r2 = cv_results['test_r2'][i]
-                mae = -cv_results['test_neg_mean_absolute_error'][i]  # Quítale la negación si usaste 'neg_mean_absolute_error'
+                mae = -cv_results['test_neg_mean_absolute_error'][i]  
                 evs = cv_results['test_explained_variance'][i]
 
                 self.output_textedit.insertPlainText(f"\nFold {i + 1}:\n")
+                time.sleep(0.4)
                 self.output_textedit.insertPlainText(f"Mean Squared Error: {mse}\n")
+                time.sleep(0.4)
                 self.output_textedit.insertPlainText(f"R2 Score: {r2}\n")
+                time.sleep(0.4)
                 self.output_textedit.insertPlainText(f"Mean Absolute Error: {mae}\n")
+                time.sleep(0.4)
                 self.output_textedit.insertPlainText(f"Explained Variance Score: {evs}\n")
+                time.sleep(0.3)
 
             # Mostrar estadísticas agregadas
-            average_mse = -cv_results['test_neg_mean_squared_error'].mean()  
+            average_mse = -cv_results['test_neg_mean_squared_error'].mean()
             average_r2 = cv_results['test_r2'].mean()
             average_mae = -cv_results['test_neg_mean_absolute_error'].mean() 
             average_evs = cv_results['test_explained_variance'].mean()
 
             self.output_textedit.insertPlainText("\nEstadísticas finales obtenidas:\n")
+            time.sleep(0.4)
             self.output_textedit.insertPlainText(f"Mean Squared Error (Promedio): {average_mse}\n")
+            time.sleep(0.4)
             self.output_textedit.insertPlainText(f"R2 Score (Promedio): {average_r2}")
+            time.sleep(0.4)
             self.output_textedit.insertPlainText(f"Mean Absolute Error (Promedio): {average_mae}\n")
+            time.sleep(0.4)
             self.output_textedit.insertPlainText(f"Explained Variance Score (Promedio): {average_evs}\n")
+            time.sleep(0.4)
 
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
         # FASE 8.2.3 Validar modelo generado en el entrenamiento ################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
-        self.output_textedit.insertPlainText(f"Probando modelo generado en el entrenamiento...\n")
+        self.output_textedit.insertPlainText(f"Testeando modelo generado en el entrenamiento...\n")
 
         if selected_model == "Gradient Boosted Tree model":
             print("GBT validation")
 
         elif selected_model == "Linear Regression model":
-            print("LR validation")
+           # Inicializar el modelo de regresión lineal
+            modelo = LinearRegression()
+
+            # Ajustar el modelo con el conjunto de entrenamiento
+            modelo.fit(X_test, y_test)
+
+            # Realizar predicciones en el conjunto de test
+            y_test_pred = modelo.predict(X_test)
+
+            # Calcular varias métricas en el conjunto de test
+            val_mse = mean_squared_error(y_test, y_test_pred)
+            val_rmse = np.sqrt(val_mse)  # Raíz cuadrada del MSE para obtener el RMSE
+            val_mae = mean_absolute_error(y_test, y_test_pred)
+            val_r2 = r2_score(y_test, y_test_pred)
+
+            # Imprimir las métricas
+            self.output_textedit.insertPlainText(f"Mean Squared Error (MSE) en conjunto de test: {val_mse}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"Root Mean Squared Error (RMSE) en conjunto de test: {val_rmse}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"Mean Absolute Error (MAE) en conjunto de test: {val_mae}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"R2 Score en conjunto de test: {val_r2}\n")
+            time.sleep(0.4)
             
         elif selected_model == "K-NN model":
             # Ajustar el mejor modelo con el mejor k en el conjunto de entrenamiento
             best_model = KNeighborsRegressor(n_neighbors=best_k)
             best_model.fit(X_train_scaled, y_train)
 
-            # Realizar predicciones en el conjunto de validación
+            # Realizar predicciones en el conjunto de test
             y_val_pred = best_model.predict(X_val_scaled)
 
-            # Calcular varias métricas en el conjunto de validación
+            # Calcular varias métricas en el conjunto de test
             val_mse = mean_squared_error(y_val, y_val_pred)
             val_rmse = np.sqrt(val_mse)  # Raíz cuadrada del MSE para obtener el RMSE
             val_mae = mean_absolute_error(y_val, y_val_pred)
             val_r2 = r2_score(y_val, y_val_pred)
 
-            # Imprimir varias métricas en el conjunto de validación
+            # Imprimir varias métricas en el conjunto de test
             self.output_textedit.insertPlainText(f"Test completado con los siguientes resultados:\n")
+            time.sleep(0.4)
             self.output_textedit.insertPlainText(f'     -MSE obtenido en el test del modleo con k = {best_k}:   {val_mse}\n')
+            time.sleep(0.4)
             self.output_textedit.insertPlainText(f'     -RMSE obtenido en el test del modleo con k = {best_k}:   {val_rmse}\n')
+            time.sleep(0.4)
             self.output_textedit.insertPlainText(f'     -MAE obtenido en el test del modleo con k = {best_k}:   {val_mae}\n')
+            time.sleep(0.4)
             self.output_textedit.insertPlainText(f'     -R^2 obtenido en el test del modleo con k = {best_k}:   {val_r2}\n')
+            time.sleep(0.4)
             
         self.progress += 1
         self.invocar_actualizacion(self.progress)

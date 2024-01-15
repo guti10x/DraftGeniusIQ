@@ -4654,7 +4654,7 @@ class trainWindow(QWidget):
             average_mae = -cv_results['test_neg_mean_absolute_error'].mean()
             average_evs = cv_results['test_explained_variance'].mean()
 
-            self.output_textedit.insertPlainText("\nEstadísticas agregadas:\n")
+            self.output_textedit.insertPlainText("\nEstadísticas finales obtenidas:\n")
             time.sleep(0.4)
             self.output_textedit.insertPlainText(f"Mean Squared Error (Promedio): {average_mse}\n")
             time.sleep(0.4)
@@ -4867,7 +4867,32 @@ class trainWindow(QWidget):
         self.output_textedit.insertPlainText(f"Testeando modelo generado en el entrenamiento...\n")
 
         if selected_model == "Gradient Boosted Tree model":
-            print("GBT validation")
+            # Inicializar el modelo Gradient Boosted Tree
+            modelo = GradientBoostingRegressor(random_state=42)
+
+            # Ajustar (fit) el modelo con el conjunto de entrenamiento
+            modelo.fit(X_train, y_train)
+
+            # Realizar predicciones en el conjunto de prueba
+            y_pred_test = modelo.predict(X_test)
+
+            # Calcular métricas de evaluación en el conjunto de prueba
+            test_mse = mean_squared_error(y_test, y_pred_test)
+            test_rmse = np.sqrt(test_mse)
+            test_mae = mean_absolute_error(y_test, y_pred_test)
+            test_r2 = r2_score(y_test, y_pred_test)
+
+            # Imprimir las métricas en el conjunto de prueba
+            self.output_textedit.insertPlainText("\nMétricas en el conjunto de prueba:\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"      -Mean Squared Error (MSE) en conjunto de test: {test_mse}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"      -Root Mean Squared Error (RMSE) en conjunto de test: {test_rmse}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"      -Mean Absolute Error (MAE) en conjunto de test: {test_mae}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"      -R^2 Score en conjunto de test: {test_r2}\n")
+            time.sleep(0.4)
 
         elif selected_model == "Linear Regression model":
            # Inicializar el modelo de regresión lineal
@@ -4885,14 +4910,16 @@ class trainWindow(QWidget):
             val_mae = mean_absolute_error(y_test, y_test_pred)
             val_r2 = r2_score(y_test, y_test_pred)
 
-            # Imprimir las métricas
-            self.output_textedit.insertPlainText(f"Mean Squared Error (MSE) en conjunto de test: {val_mse}\n")
+        # Imprimir las métricas
+            self.output_textedit.insertPlainText("\nMétricas en el conjunto de prueba:\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f"Root Mean Squared Error (RMSE) en conjunto de test: {val_rmse}\n")
+            self.output_textedit.insertPlainText(f"     -Mean Squared Error (MSE) en conjunto de test: {val_mse}\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f"Mean Absolute Error (MAE) en conjunto de test: {val_mae}\n")
+            self.output_textedit.insertPlainText(f"     -Root Mean Squared Error (RMSE) en conjunto de test: {val_rmse}\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f"R2 Score en conjunto de test: {val_r2}\n")
+            self.output_textedit.insertPlainText(f"     -Mean Absolute Error (MAE) en conjunto de test: {val_mae}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"     -R^2 Score en conjunto de test: {val_r2}\n")
             time.sleep(0.4)
             
         elif selected_model == "K-NN model":
@@ -4910,15 +4937,15 @@ class trainWindow(QWidget):
             val_r2 = r2_score(y_val, y_val_pred)
 
             # Imprimir varias métricas en el conjunto de test
-            self.output_textedit.insertPlainText(f"Test completado con los siguientes resultados:\n")
+            self.output_textedit.insertPlainText("\nMétricas en el conjunto de prueba:\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f'     -MSE obtenido en el test del modleo con k = {best_k}:   {val_mse}\n')
+            self.output_textedit.insertPlainText(f'     -Mean Squared Error (MSE) obtenido en el test del modleo con k = {best_k}:   {val_mse}\n')
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f'     -RMSE obtenido en el test del modleo con k = {best_k}:   {val_rmse}\n')
+            self.output_textedit.insertPlainText(f'     -Root Mean Squared Error (RMSE) obtenido en el test del modleo con k = {best_k}:   {val_rmse}\n')
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f'     -MAE obtenido en el test del modleo con k = {best_k}:   {val_mae}\n')
+            self.output_textedit.insertPlainText(f'     -Mean Absolute Error (MAE) obtenido en el test del modleo con k = {best_k}:   {val_mae}\n')
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f'     -R^2 obtenido en el test del modleo con k = {best_k}:   {val_r2}\n')
+            self.output_textedit.insertPlainText(f'     -R^2 Score obtenido en el test del modleo con k = {best_k}:   {val_r2}\n')
             time.sleep(0.4)
             
         self.progress += 1

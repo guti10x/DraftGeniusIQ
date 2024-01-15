@@ -4962,7 +4962,7 @@ class trainWindow(QWidget):
         if self.selected_option == 1:
             model_name= algoritmo_utilizado+"_Valor_Mercado_to_predict_"+fecha_actual_str+".pkl" 
         elif self.selected_option == 2:
-            model_name= algoritmo_utilizado+"_Puntuación_Fantasy"+fecha_actual_str+".pkl"
+            model_name= algoritmo_utilizado+"_Puntuación_Fantasy_to_predict_"+fecha_actual_str+".pkl"
 
         carpeta_save=self.text_input2.text()
 
@@ -5125,12 +5125,45 @@ class predictWindow(QWidget):
         time.sleep(0.2)
         self.output_textedit.insertPlainText(f"Tiempo de entrenamiento: {loaded_entrenamiento_info['Tiempo de entrenamiento (minutos)']} minutos. \n")
         time.sleep(0.2)
-        self.output_textedit.insertPlainText(f"Mejor K obtenida: {loaded_entrenamiento_info['Mejor K obtenida']} \n")
+        self.output_textedit.insertPlainText(f"Tiempo de entrenamiento: {loaded_entrenamiento_info['Tiempo de entrenamiento (segundos)']} seconds. \n")
         time.sleep(0.2)
-        self.output_textedit.insertPlainText(f"MSE obtenido en el entrenamiento: {loaded_entrenamiento_info['MSE obtenido en el entrenamiento']} \n")
-        time.sleep(0.2)
-        self.output_textedit.insertPlainText(f"MSE obtenido en el test del modelo: {loaded_entrenamiento_info['MSE obtenido en el test del modelo']} \n")
-        time.sleep(0.2)
+
+        if loaded_entrenamiento_info['Algoritmo utilizado'] == "Gradient Boosted Tree model":
+            print("")
+
+        elif loaded_entrenamiento_info['Algoritmo utilizado'] == "Linear Regression model":
+            self.output_textedit.insertPlainText(f"Mean Squared Error en el entrenamiento:  {loaded_entrenamiento_info['Mean Squared Error en el entrenamiento']} \n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"R2 Score en el entrenamiento:  {loaded_entrenamiento_info['R2 Score en el entrenamiento']} \n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"Mean Absolute Error en el entrenamiento:  {loaded_entrenamiento_info['Mean Absolute Error en el entrenamiento']} \n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"Variance Score en el entrenamiento:  {loaded_entrenamiento_info['Variance Score en el entrenamiento']} \n")      
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"Mean Squared Error (MSE) en conjunto de test:  {loaded_entrenamiento_info['Mean Squared Error (MSE) en conjunto de test']} \n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"Root Mean Squared Error (RMSE) en conjunto de test:  {loaded_entrenamiento_info['Root Mean Squared Error (RMSE) en conjunto de test']} \n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"Mean Absolute Error (MAE) en conjunto de test:  {loaded_entrenamiento_info['Mean Absolute Error (MAE) en conjunto de test']} \n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"R2 Score en conjunto de test:  {loaded_entrenamiento_info['R2 Score en conjunto de test']} \n")      
+            time.sleep(0.3)
+          
+        elif loaded_entrenamiento_info['Algoritmo utilizado'] == "K-NN model":
+            self.output_textedit.insertPlainText(f"Mejor K obtenida: {loaded_entrenamiento_info['Mejor K obtenida']} \n")
+            time.sleep(0.2)
+            self.output_textedit.insertPlainText(f"MSE obtenido en el entrenamiento: {loaded_entrenamiento_info['MSE obtenido en el entrenamiento']} \n")
+            time.sleep(0.2)
+
+            self.output_textedit.insertPlainText(f"MSE obtenido en el test del modelo:  {loaded_entrenamiento_info['MSE obtenido en el test del modelo']} \n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"RMSE obtenido en el test del modelo:  {loaded_entrenamiento_info['RMSE obtenido en el test del modelo']} \n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"MAE obtenido en el test del modelo:  {loaded_entrenamiento_info['MAE obtenido en el test del modelo']} \n")
+            time.sleep(0.3)
+            self.output_textedit.insertPlainText(f"R^2 obtenido en el test del modelo:  {loaded_entrenamiento_info['R^2 obtenido en el test del modelo']} \n")      
+            time.sleep(0.3)
+
         columnas_a_mantener = loaded_entrenamiento_info['Columnas con las que ha sido entrenado']
         self.output_textedit.insertPlainText(f"Columnas con las que ha sido entrenado: {columnas_a_mantener} \n")
         time.sleep(0.2)
@@ -5193,19 +5226,21 @@ class predictWindow(QWidget):
         
         #### PARTE 5 : EJECUTAR MODELO ######################################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
-        if '_Valor_Mercado_to_predict_' in file_modelo:
+        if '_Puntuación_Fantasy_to_predict' in file_modelo:
             self.output_textedit.insertPlainText("Prediciendo valores de mercado de los jugadores seleccionados para la próxima jornada de liga.\n")
         
             # Eliminar la columna a predecir del DataFrame df
             columna_a_eliminar = 'Puntuación Fantasy'
             df = df.drop(columna_a_eliminar, axis=1)
+            print("Check elimada col puntos MF")
             
-        elif '_Puntuación_Fantasy_' in file_modelo:
+        elif '_Valor_Mercado_to_predict' in file_modelo:
             self.output_textedit.insertPlainText("Prediciendo puntuaciones de Mister Fantasy MD de los jugadores seleccionados para la próxima jornada de liga.\n")
             
             # Eliminar la columna a predecir del DataFrame df
             columna_a_eliminar = 'Valor'
             df = df.drop(columna_a_eliminar, axis=1)
+            print("Check elimada col valor")
 
         else:
             self.output_textedit.insertPlainText("Modelo cargado incompatible.\n")
@@ -5227,7 +5262,7 @@ class predictWindow(QWidget):
         # Convertir a minutos y segundos
         minutes, seconds = divmod(tiempo_total, 60)
 
-        #### PARTE 6 : OBTENER ESTADISTICAS DE LAS PREDIONES REALIZADAS ######################################################################################################################
+        #### PARTE 6 : OBTENER ESTADISTICAS DE LAS PREDIciONES REALIZADAS ######################################################################################################################
 
         df = pd.read_excel(file_futbolistas)
        
@@ -5238,9 +5273,9 @@ class predictWindow(QWidget):
         # Inicializa y_true con ceros
         y_true = np.zeros(len(df))
 
-        if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
+        if '_Valor_Mercado_to_predict' in file_modelo:
             y_true = df['Valor'].values
-        elif 'KNN_model_Puntos_MF_' in file_modelo:
+        elif '_Puntuación_Fantasy_to_predict' in file_modelo:
             y_true = df['Puntuación Fantasy'].values
         
         # Calcula el error cuadrático medio (MSE)
@@ -5263,9 +5298,9 @@ class predictWindow(QWidget):
 
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         
-        if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
+        if '_Valor_Mercado_to_predict' in file_modelo:
             self.output_textedit.insertPlainText("Mejores jugadores para cada posicón por puntos obtenidos:\n")
-        elif 'KNN_model_Puntos_MF_' in file_modelo:
+        elif '_Puntuación_Fantasy_to_predict' in file_modelo:
             self.output_textedit.insertPlainText("Mejores jugadores para cada posicón por puntos obtenidos:\n")
 
         # Crear un diccionario para almacenar los jugadores agrupados y ordenados por posición y predicción
@@ -5294,9 +5329,9 @@ class predictWindow(QWidget):
             index=1
             for jugador_info in jugadores:
 
-                if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
+                if '_Valor_Mercado_to_predict' in file_modelo:
                     self.output_textedit.insertPlainText(f"{index}- {jugador_info['jugador']} :  Predicción de valor de mercado: {jugador_info['prediccion']}\n")
-                elif 'KNN_model_Puntos_MF_' in file_modelo:
+                elif '_Puntuación_Fantasy_to_predict' in file_modelo:
                     self.output_textedit.insertPlainText(f"{index}- {jugador_info['jugador']} :  Predicción de puntuación: {jugador_info['prediccion']}\n")
                 
                 time.sleep(0.2)
@@ -5313,8 +5348,8 @@ class predictWindow(QWidget):
         fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
 
         if "KNN" in file_modelo:
-           algoritmo_utilizado = 'KNN'
-        elif "Linear_Regresion" in file_modelo:
+            algoritmo_utilizado = 'KNN'
+        elif "Linear Regression" in file_modelo:
             algoritmo_utilizado = 'Linear_Regresion'
         elif "Gradient_Boosted_Tree" in file_modelo:
             algoritmo_utilizado = 'Gradient_Boosted_Tree'
@@ -5350,10 +5385,10 @@ class predictWindow(QWidget):
         fecha_actual = datetime.now()
         fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
         
-        if 'KNN_model_Valor_Mercado_to_predict_' in file_modelo:
-            excel_file_path = carpeta_save+"/predicciones_Valores_Mercado_jugadores_" + fecha_actual_str + ".xlsx"
-        elif 'KNN_model_Puntos_MF_' in file_modelo:
-            excel_file_path = carpeta_save+"/predicciones_Puntos_jugadores_" + fecha_actual_str + ".xlsx"
+        if '_Valor_Mercado_to_predict' in file_modelo:
+            excel_file_path = carpeta_save+"/predicciones_Valores_Mercado_jugadores_con_"+algoritmo_utilizado+"_" + fecha_actual_str + ".xlsx"
+        elif '_Puntuación_Fantasy_to_predict' in file_modelo:
+            excel_file_path = carpeta_save+"/predicciones_Puntos_jugadores_con_"+algoritmo_utilizado+"_" + fecha_actual_str + ".xlsx"
 
         df_total.to_excel(excel_file_path, index=False)
               

@@ -4607,21 +4607,8 @@ class trainWindow(QWidget):
                 
                 # Dividir los datos de entrenamiento
                 X = df.drop(["Valor"], axis=1)
-                y = df["Valor"]  # Variable objetivo ahora es "Valor"
-                
-                # Dividir los datos en conjunto de entrenamiento y prueba
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-                
-                # Entrenar el modelo Gradient Boost
-                model = GradientBoostingRegressor()
-                model.fit(X_train, y_train)
-                
-                # Evaluar el modelo en el conjunto de prueba
-                y_pred = model.predict(X_test)
-                mse = mean_squared_error(y_test, y_pred)
-                print(f"Mean Squared Error for Valor: {mse}")
-
-                
+                y = df["Valor"]  # Variable objetivo ahora es "Valor"                
+               
             elif self.selected_option == 2:
                 self.output_textedit.insertPlainText(f"Entrenando con Gradient Boosted Trees con el atributo Puntuación Fnatsy como label.\n")
                 
@@ -4631,24 +4618,53 @@ class trainWindow(QWidget):
                 #Crea una Serie y que contiene la columna "Puntuación Fantasy" del DataFrame original df_entrenamiento. En otras palabras, se extraen las etiquetas y los valores de la columna "Puntuación Fantasy" y se almacenan en la Serie y.
                 y = df["Puntuación Fantasy"] #Variable objetivo
                 
-                X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
-                
-                # Entrenar el modelo Gradient Boost
-                model = GradientBoostingRegressor()
-                model.fit(X_train, y_train)
-                
-                #Evaluar el modelo en el conjunto de prueba
-                y_pred = model.predict(X_test)
-                mse = mean_squared_error(y_test, y_pred)
-                print(f"Mean Squared Error: {mse}")
-                
-                #Utiliza el modelo entrenado para hacer predicciones en el conjunto de datos que queremos predecir
-                #predicciones = model.predict(df_predecir)
-                predicciones = model.predict(X_test)
+            X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-                from sklearn.metrics import mean_squared_error
-                mse = mean_squared_error(y_test, y_pred)
-                print(f'Mean Squared Error: {mse}')
+            # Inicializar el modelo Gradient Boosted Tree
+            modelo = GradientBoostingRegressor(random_state=42)
+
+            # Definimos el número de folds a realizar
+            folds = 10
+
+            # Aplicar validación cruzada con múltiples métricas
+            scoring = ['neg_mean_squared_error', 'r2', 'neg_mean_absolute_error', 'explained_variance']
+            cv_results = cross_validate(modelo, X_train, y_train, cv=folds, scoring=scoring)
+
+            # Mostrar estadísticas para cada fold
+            for i in range(folds):
+                mse = -cv_results['test_neg_mean_squared_error'][i]
+                r2 = cv_results['test_r2'][i]
+                mae = -cv_results['test_neg_mean_absolute_error'][i]
+                evs = cv_results['test_explained_variance'][i]
+
+                self.output_textedit.insertPlainText(f"\nFold {i + 1}:\n")
+                time.sleep(0.4)
+                self.output_textedit.insertPlainText(f"Mean Squared Error: {mse}\n")
+                time.sleep(0.4)
+                self.output_textedit.insertPlainText(f"R2 Score: {r2}\n")
+                time.sleep(0.4)
+                self.output_textedit.insertPlainText(f"Mean Absolute Error: {mae}\n")
+                time.sleep(0.4)
+                self.output_textedit.insertPlainText(f"Explained Variance Score: {evs}\n")
+                time.sleep(0.4)
+
+            # Mostrar estadísticas agregadas
+            average_mse = -cv_results['test_neg_mean_squared_error'].mean()
+            average_r2 = cv_results['test_r2'].mean()
+            average_mae = -cv_results['test_neg_mean_absolute_error'].mean()
+            average_evs = cv_results['test_explained_variance'].mean()
+
+            self.output_textedit.insertPlainText("\nEstadísticas agregadas:\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"Mean Squared Error (Promedio): {average_mse}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"R2 Score (Promedio): {average_r2}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"Mean Absolute Error (Promedio): {average_mae}\n")
+            time.sleep(0.4)
+            self.output_textedit.insertPlainText(f"Explained Variance Score (Promedio): {average_evs}\n")
+            time.sleep(0.4)
+            
         elif selected_model == "K-NN model":
             algoritmo_utilizado="KNN model"
             # FASE 8.2. Preparar los datos para entrenar con ellos ######################################################################

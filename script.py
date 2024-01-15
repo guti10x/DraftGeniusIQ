@@ -29,10 +29,7 @@ from matplotlib.backends.backend_qt5agg import FigureCanvasQTAgg as FigureCanvas
 from matplotlib.figure import Figure
 from sklearn.model_selection import train_test_split, cross_val_score, train_test_split, cross_val_score, KFold
 from sklearn.neighbors import KNeighborsRegressor
-<<<<<<< HEAD
 from sklearn.linear_model import LinearRegression
-=======
->>>>>>> 570d3516ebbd97443b905679d731def3755e4a49
 from sklearn.preprocessing import MinMaxScaler 
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 import joblib
@@ -4192,11 +4189,7 @@ class trainWindow(QWidget):
         self.combo_box.addItem("Gradient Boosted Tree model")
         self.combo_box.addItem("Random Forest model")
         self.combo_box.addItem("K-NN model")
-<<<<<<< HEAD
-        self.combo_box.addItem("Linear Regression model")
-=======
         self.combo_box.addItem("Linear Regresion model")
->>>>>>> 570d3516ebbd97443b905679d731def3755e4a49
         # Establecer el ancho máximo para la QComboBox
         self.combo_box.setMaximumWidth(185)
         grid_layout.addWidget(self.combo_box, 5, 1)
@@ -4728,7 +4721,6 @@ class trainWindow(QWidget):
             hilo.start()
 
         elif selected_model == "Linear Regression model":
-<<<<<<< HEAD
             algoritmo_utilizado="Linear Regression"
             if self.selected_option == 1:
                 self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Valor como label.\n")
@@ -4753,42 +4745,39 @@ class trainWindow(QWidget):
             self.output_textedit.insertPlainText(f"Scores de cada fold de la validación cruzada:{scores}\n")
             self.output_textedit.insertPlainText(f"Media de los scores: {scores.mean()}\n")
 
-            self.progress += 1
-            self.invocar_actualizacion(self.progress)
-            
-=======
-            if self.selected_option == 1:
-               self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Valor como label.\n")
-            elif self.selected_option == 2:
-                self.output_textedit.insertPlainText(f"Entrenando con regresión lineal con el atributo Puntuación Fnatsy como label.\n")
-
         self.progress += 1
         self.invocar_actualizacion(self.progress)
 
->>>>>>> 570d3516ebbd97443b905679d731def3755e4a49
         # FASE 8.2.3 Validar modelo generado en el entrenamiento ################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Probando modelo generado en el entrenamiento...\n")
 
-        # Ajustar el mejor modelo con el mejor k en el conjunto de entrenamiento
-        best_model = KNeighborsRegressor(n_neighbors=best_k)
-        best_model.fit(X_train_scaled, y_train)
+        if selected_model == "Gradient Boosted Tree model":
+            print("GBT validation")
 
-        # Realizar predicciones en el conjunto de validación
-        y_val_pred = best_model.predict(X_val_scaled)
+        elif selected_model == "Linear Regression model":
+            print("LR validation")
+            
+        elif selected_model == "K-NN model":
+            # Ajustar el mejor modelo con el mejor k en el conjunto de entrenamiento
+            best_model = KNeighborsRegressor(n_neighbors=best_k)
+            best_model.fit(X_train_scaled, y_train)
 
-        # Calcular varias métricas en el conjunto de validación
-        val_mse = mean_squared_error(y_val, y_val_pred)
-        val_rmse = np.sqrt(val_mse)  # Raíz cuadrada del MSE para obtener el RMSE
-        val_mae = mean_absolute_error(y_val, y_val_pred)
-        val_r2 = r2_score(y_val, y_val_pred)
+            # Realizar predicciones en el conjunto de validación
+            y_val_pred = best_model.predict(X_val_scaled)
 
-        # Imprimir varias métricas en el conjunto de validación
-        self.output_textedit.insertPlainText(f"Test completado con los siguientes resultados:\n")
-        self.output_textedit.insertPlainText(f'     -MSE obtenido en el test del modleo con k = {best_k}:   {val_mse}\n')
-        self.output_textedit.insertPlainText(f'     -RMSE obtenido en el test del modleo con k = {best_k}:   {val_rmse}\n')
-        self.output_textedit.insertPlainText(f'     -MAE obtenido en el test del modleo con k = {best_k}:   {val_mae}\n')
-        self.output_textedit.insertPlainText(f'     -R^2 obtenido en el test del modleo con k = {best_k}:   {val_r2}\n')
+            # Calcular varias métricas en el conjunto de validación
+            val_mse = mean_squared_error(y_val, y_val_pred)
+            val_rmse = np.sqrt(val_mse)  # Raíz cuadrada del MSE para obtener el RMSE
+            val_mae = mean_absolute_error(y_val, y_val_pred)
+            val_r2 = r2_score(y_val, y_val_pred)
+
+            # Imprimir varias métricas en el conjunto de validación
+            self.output_textedit.insertPlainText(f"Test completado con los siguientes resultados:\n")
+            self.output_textedit.insertPlainText(f'     -MSE obtenido en el test del modleo con k = {best_k}:   {val_mse}\n')
+            self.output_textedit.insertPlainText(f'     -RMSE obtenido en el test del modleo con k = {best_k}:   {val_rmse}\n')
+            self.output_textedit.insertPlainText(f'     -MAE obtenido en el test del modleo con k = {best_k}:   {val_mae}\n')
+            self.output_textedit.insertPlainText(f'     -R^2 obtenido en el test del modleo con k = {best_k}:   {val_r2}\n')
             
         self.progress += 1
         self.invocar_actualizacion(self.progress)

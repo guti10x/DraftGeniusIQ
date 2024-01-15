@@ -4602,6 +4602,7 @@ class trainWindow(QWidget):
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
 
         if selected_model == "Gradient Boosted Tree model":
+            algoritmo_utilizado="Gradient Boosted Tree model"
             if self.selected_option == 1:
                 self.output_textedit.insertPlainText(f"Entrenando con Gradient Boosted Trees con el atributo Valor como label.\n")
                 
@@ -4619,6 +4620,10 @@ class trainWindow(QWidget):
                 y = df["Puntuación Fantasy"] #Variable objetivo
                 
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+            # Tiempo de inicio del train
+            elapsed_time=0
+            start_time = time.time()
 
             # Inicializar el modelo Gradient Boosted Tree
             modelo = GradientBoostingRegressor(random_state=42)
@@ -4647,6 +4652,20 @@ class trainWindow(QWidget):
                 time.sleep(0.4)
                 self.output_textedit.insertPlainText(f"Explained Variance Score: {evs}\n")
                 time.sleep(0.4)
+            
+            # Encontrar el índice del fold con el mejor MSE (o cualquier otra métrica de tu elección)
+            best_fold_index = np.argmax(cv_results['test_neg_mean_squared_error'])
+
+            # Obtener el mejor modelo entrenado
+            best_model = copy.deepcopy(modelo)  # Para evitar afectar al modelo original
+            best_model.fit(X_train, y_train)  # Ajustar el mejor modelo con el conjunto de entrenamiento
+
+            # Tiempo de final del train
+            end_time = time.time()
+            # Calcula la diferencia de tiempo
+            elapsed_time = end_time - start_time
+            # Convertir a minutos y segundos
+            minutes, seconds = divmod(elapsed_time, 60)
 
             # Mostrar estadísticas agregadas
             average_mse = -cv_results['test_neg_mean_squared_error'].mean()
@@ -4905,21 +4924,21 @@ class trainWindow(QWidget):
             y_test_pred = modelo.predict(X_test)
 
             # Calcular varias métricas en el conjunto de test
-            val_mse = mean_squared_error(y_test, y_test_pred)
-            val_rmse = np.sqrt(val_mse)  # Raíz cuadrada del MSE para obtener el RMSE
-            val_mae = mean_absolute_error(y_test, y_test_pred)
-            val_r2 = r2_score(y_test, y_test_pred)
+            test_mse = mean_squared_error(y_test, y_test_pred)
+            test_rmse = np.sqrt(test_mse)  # Raíz cuadrada del MSE para obtener el RMSE
+            test_mae = mean_absolute_error(y_test, y_test_pred)
+            test_r2 = r2_score(y_test, y_test_pred)
 
         # Imprimir las métricas
             self.output_textedit.insertPlainText("\nMétricas en el conjunto de prueba:\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f"     -Mean Squared Error (MSE) en conjunto de test: {val_mse}\n")
+            self.output_textedit.insertPlainText(f"     -Mean Squared Error (MSE) en conjunto de test: {test_mse}\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f"     -Root Mean Squared Error (RMSE) en conjunto de test: {val_rmse}\n")
+            self.output_textedit.insertPlainText(f"     -Root Mean Squared Error (RMSE) en conjunto de test: {test_rmse}\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f"     -Mean Absolute Error (MAE) en conjunto de test: {val_mae}\n")
+            self.output_textedit.insertPlainText(f"     -Mean Absolute Error (MAE) en conjunto de test: {test_mae}\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f"     -R^2 Score en conjunto de test: {val_r2}\n")
+            self.output_textedit.insertPlainText(f"     -R^2 Score en conjunto de test: {test_r2}\n")
             time.sleep(0.4)
             
         elif selected_model == "K-NN model":
@@ -4970,10 +4989,10 @@ class trainWindow(QWidget):
         self.output_textedit.insertPlainText(f"Tiempo de entrenamiento:  {int(minutes)} minutos y {seconds:.2f} segundos\n")
         time.sleep(0.3)
 
-        if selected_model == "Gradient Boosted Tree model":
-            print("")
-        elif selected_model == "Linear Regression model":
-            
+        if selected_model == "Gradient Boosted Tree model" or selected_model == "Linear Regression model":
+
+            self.output_textedit.insertPlainText(f"Mejor fold obtenida': {best_fold_index}\n")
+            time.sleep(0.4)
             self.output_textedit.insertPlainText(f"Mean Squared Error en el entrenamiento: {average_mse}\n")
             time.sleep(0.4)
             self.output_textedit.insertPlainText(f"R2 Score en el entrenamiento: {average_r2}")
@@ -4983,13 +5002,13 @@ class trainWindow(QWidget):
             self.output_textedit.insertPlainText(f"Variance Score en el entrenamiento: {average_evs}\n")
             time.sleep(0.4)
 
-            self.output_textedit.insertPlainText(f"Mean Squared Error (MSE) en conjunto de test: {val_mse}\n")
+            self.output_textedit.insertPlainText(f"Mean Squared Error (MSE) en conjunto de test: {test_mse}\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f"Root Mean Squared Error (RMSE) en conjunto de test: {val_rmse}\n")
+            self.output_textedit.insertPlainText(f"Root Mean Squared Error (RMSE) en conjunto de test: {test_rmse}\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f"Mean Absolute Error (MAE) en conjunto de test: {val_mae}\n")
+            self.output_textedit.insertPlainText(f"Mean Absolute Error (MAE) en conjunto de test: {test_mae}\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f"R2 Score en conjunto de test: {val_r2}\n")
+            self.output_textedit.insertPlainText(f"R2 Score en conjunto de test: {test_r2}\n")
             time.sleep(0.4)
 
             # Guardar la información del entrenamiento, incluyendo las columnas eliminadas
@@ -4999,14 +5018,15 @@ class trainWindow(QWidget):
                 'Algoritmo utilizado': algoritmo_utilizado,
                 'Tiempo de entrenamiento (minutos)': minutes,
                 'Tiempo de entrenamiento (segundos)': seconds,
+                'Mejor fold obtenida': best_fold_index,
                 'MSE obtenido en el entrenamiento': average_mse,
                 'Variance Score obtenido en el entrenamiento': average_evs,
                 'MAE obtenido en el entrenamiento': average_mae,
                 'R^2 obtenido en el entrenamiento': average_r2,
-                'MSE obtenido en el test del modelo': val_mse, 
-                'RMSE obtenido en el test del modelo': val_rmse, 
-                'MAE obtenido en el test del modelo': val_mae, 
-                'R^2 obtenido en el test del modelo': val_r2, 
+                'MSE obtenido en el test del modelo': test_mse, 
+                'RMSE obtenido en el test del modelo': test_rmse, 
+                'MAE obtenido en el test del modelo': test_mae, 
+                'R^2 obtenido en el test del modelo': test_r2, 
                 'Columnas con las que ha sido entrenado': columnas_array.tolist()  
             }
 

@@ -4991,7 +4991,7 @@ class trainWindow(QWidget):
 
         if selected_model == "Gradient Boosted Tree model" or selected_model == "Linear Regression model":
 
-            self.output_textedit.insertPlainText(f"Mejor fold obtenida': {best_fold_index}\n")
+            self.output_textedit.insertPlainText(f"Mejor fold obtenido': {best_fold_index}\n")
             time.sleep(0.4)
             self.output_textedit.insertPlainText(f"Mean Squared Error en el entrenamiento: {average_mse}\n")
             time.sleep(0.4)
@@ -5018,7 +5018,7 @@ class trainWindow(QWidget):
                 'Algoritmo utilizado': algoritmo_utilizado,
                 'Tiempo de entrenamiento (minutos)': minutes,
                 'Tiempo de entrenamiento (segundos)': seconds,
-                'Mejor fold obtenida': best_fold_index,
+                'Mejor fold obtenido': best_fold_index,
                 'MSE obtenido en el entrenamiento': average_mse,
                 'Variance Score obtenido en el entrenamiento': average_evs,
                 'MAE obtenido en el entrenamiento': average_mae,
@@ -5235,25 +5235,24 @@ class predictWindow(QWidget):
         self.output_textedit.insertPlainText(f"Tiempo de entrenamiento: {loaded_entrenamiento_info['Tiempo de entrenamiento (segundos)']} seconds. \n")
         time.sleep(0.2)
 
-        if loaded_entrenamiento_info['Algoritmo utilizado'] == "Gradient Boosted Tree model":
-            print("")
-
-        elif loaded_entrenamiento_info['Algoritmo utilizado'] == "Linear Regression model":
-            self.output_textedit.insertPlainText(f"Mean Squared Error en el entrenamiento:  {loaded_entrenamiento_info['Mean Squared Error en el entrenamiento']} \n")
+        if loaded_entrenamiento_info['Algoritmo utilizado'] == "Linear Regression" or loaded_entrenamiento_info['Algoritmo utilizado'] == "Gradient Boosted Tree model":
+            #self.output_textedit.insertPlainText(f"Mejor fold obtenido:  {loaded_entrenamiento_info['Mejor fold obtenido']} \n")
+            time.sleep(0.2)                                                                                       
+            self.output_textedit.insertPlainText(f"Mean Squared Error en el entrenamiento:  {loaded_entrenamiento_info['MSE obtenido en el entrenamiento']} \n")
             time.sleep(0.3)
-            self.output_textedit.insertPlainText(f"R2 Score en el entrenamiento:  {loaded_entrenamiento_info['R2 Score en el entrenamiento']} \n")
+            self.output_textedit.insertPlainText(f"R2 Score en el entrenamiento:  {loaded_entrenamiento_info['Variance Score obtenido en el entrenamiento']} \n")
             time.sleep(0.3)
-            self.output_textedit.insertPlainText(f"Mean Absolute Error en el entrenamiento:  {loaded_entrenamiento_info['Mean Absolute Error en el entrenamiento']} \n")
+            self.output_textedit.insertPlainText(f"Mean Absolute Error en el entrenamiento:  {loaded_entrenamiento_info['MAE obtenido en el entrenamiento']} \n")
             time.sleep(0.3)
-            self.output_textedit.insertPlainText(f"Variance Score en el entrenamiento:  {loaded_entrenamiento_info['Variance Score en el entrenamiento']} \n")      
+            self.output_textedit.insertPlainText(f"Variance Score en el entrenamiento:  {loaded_entrenamiento_info['R^2 obtenido en el entrenamiento']} \n")      
             time.sleep(0.3)
-            self.output_textedit.insertPlainText(f"Mean Squared Error (MSE) en conjunto de test:  {loaded_entrenamiento_info['Mean Squared Error (MSE) en conjunto de test']} \n")
+            self.output_textedit.insertPlainText(f"Mean Squared Error (MSE) en conjunto de test:  {loaded_entrenamiento_info['MSE obtenido en el test del modelo']} \n")
             time.sleep(0.3)
-            self.output_textedit.insertPlainText(f"Root Mean Squared Error (RMSE) en conjunto de test:  {loaded_entrenamiento_info['Root Mean Squared Error (RMSE) en conjunto de test']} \n")
+            self.output_textedit.insertPlainText(f"Root Mean Squared Error (RMSE) en conjunto de test:  {loaded_entrenamiento_info['RMSE obtenido en el test del modelo']} \n")
             time.sleep(0.3)
-            self.output_textedit.insertPlainText(f"Mean Absolute Error (MAE) en conjunto de test:  {loaded_entrenamiento_info['Mean Absolute Error (MAE) en conjunto de test']} \n")
+            self.output_textedit.insertPlainText(f"Mean Absolute Error (MAE) en conjunto de test:  {loaded_entrenamiento_info['MAE obtenido en el test del modelo']} \n")
             time.sleep(0.3)
-            self.output_textedit.insertPlainText(f"R2 Score en conjunto de test:  {loaded_entrenamiento_info['R2 Score en conjunto de test']} \n")      
+            self.output_textedit.insertPlainText(f"R2 Score en conjunto de test:  {loaded_entrenamiento_info['R^2 obtenido en el test del modelo']} \n")      
             time.sleep(0.3)
           
         elif loaded_entrenamiento_info['Algoritmo utilizado'] == "K-NN model":
@@ -5454,11 +5453,12 @@ class predictWindow(QWidget):
         # Formatear la fecha como una cadena (opcional)
         fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-S")
 
+        algoritmo_utilizado='undefined'
         if "KNN" in file_modelo:
             algoritmo_utilizado = 'KNN'
         elif "Linear Regression" in file_modelo:
             algoritmo_utilizado = 'Linear_Regresion'
-        elif "Gradient_Boosted_Tree" in file_modelo:
+        elif "Gradient Boosted Tree" in file_modelo:
             algoritmo_utilizado = 'Gradient_Boosted_Tree'
 
         time.sleep(0.3)
@@ -5470,11 +5470,11 @@ class predictWindow(QWidget):
         time.sleep(0.3)
         self.output_textedit.insertPlainText(f"Tiempo de ejecución:  {int(minutes)} minutos y {seconds:.2f} segundos\n")
         time.sleep(0.3)
-        #self.output_textedit.insertPlainText(f"MSE (Error cuadrático medio) obtenido en las prediciones:  {mse}\n")
+        self.output_textedit.insertPlainText(f"MSE (Error cuadrático medio) obtenido en las prediciones:  {mse}\n")
         time.sleep(0.3)
-        #self.output_textedit.insertPlainText(f"MAE (Error absoluo medio) obtenido en lss prediciones:  {mae}\n")
+        self.output_textedit.insertPlainText(f"MAE (Error absoluo medio) obtenido en lss prediciones:  {mae}\n")
         time.sleep(0.3)
-        #self.output_textedit.insertPlainText(f"R2 (Coeficiente de determinación) obtenido en las prediciones:  {r2}\n")
+        self.output_textedit.insertPlainText(f"R2 (Coeficiente de determinación) obtenido en las prediciones:  {r2}\n")
         time.sleep(0.3)
         
         #### PARTE 8 : GUARDAR DATOS PREDECIDOS DE CADA JUGADOR ######################################################################################################################

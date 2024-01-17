@@ -656,6 +656,7 @@ class marketWindow(QWidget):
 
         self.driver.quit()  
 
+
 class dataset_creator(QWidget):
   def __init__(self):
         super().__init__()
@@ -878,67 +879,81 @@ class dataset_entrenamiento(QWidget):
 
 
         # Parte 1: fusionar todos los jsons de todos los partidos scrapeados de la jornada ##############################################
-        # Rutas globales
-        carpeta_json = self.text_input.text()
-        carpeta_xlsx = self.text_input.text()
-        nombre_archivo_excel = 'todos_los_partidos_de_la_jornada.xlsx'
+        try:
+            # Rutas globales
+            carpeta_json = self.text_input.text()
+            carpeta_xlsx = self.text_input.text()
+            nombre_archivo_excel = 'todos_los_partidos_de_la_jornada.xlsx'
 
-        # Lista para almacenar los DataFrames de cada archivo JSON
-        dfs = []
+            # Lista para almacenar los DataFrames de cada archivo JSON
+            dfs = []
 
-        # Iterar sobre cada archivo en la carpeta
-        for archivo_json in os.listdir(carpeta_json):
-            if archivo_json.endswith(".json"):
-                with open(os.path.join(carpeta_json, archivo_json), "r") as file:
-                    data = json.load(file)
+            # Iterar sobre cada archivo en la carpeta
+            for archivo_json in os.listdir(carpeta_json):
+                if archivo_json.endswith(".json"):
+                    with open(os.path.join(carpeta_json, archivo_json), "r") as file:
+                        data = json.load(file)
 
-                # Crear un DataFrame vacío para cada archivo JSON
-                df = pd.DataFrame()
+                    # Crear un DataFrame vacío para cada archivo JSON
+                    df = pd.DataFrame()
 
-                # Iterar sobre los elementos del JSON y agregarlos al DataFrame
-                for jugador, estadisticas in data.items():
-                    df = pd.concat([df, pd.DataFrame([[jugador, estadisticas["puntuacion"]] + [stat[key] for stat in estadisticas["estadisticas"] for key in stat.keys()]], columns=["Nombre", "Puntuación"] + [key for stat in estadisticas["estadisticas"] for key in stat.keys()])], ignore_index=True)
+                    # Iterar sobre los elementos del JSON y agregarlos al DataFrame
+                    for jugador, estadisticas in data.items():
+                        df = pd.concat([df, pd.DataFrame([[jugador, estadisticas["puntuacion"]] + [stat[key] for stat in estadisticas["estadisticas"] for key in stat.keys()]], columns=["Nombre", "Puntuación"] + [key for stat in estadisticas["estadisticas"] for key in stat.keys()])], ignore_index=True)
 
-                # Agregar el DataFrame a la lista
-                dfs.append(df)
+                    # Agregar el DataFrame a la lista
+                    dfs.append(df)
 
-        # Concatenar todos los DataFrames en uno solo
-        df_final = pd.concat(dfs, ignore_index=True)
+            # Concatenar todos los DataFrames en uno solo
+            df_final = pd.concat(dfs, ignore_index=True)
 
-        # Guardar el DataFrame en un archivo Excel
-        ruta_excel = os.path.join(carpeta_xlsx, nombre_archivo_excel)
-        df_final.to_excel(ruta_excel, index=False)
+            # Guardar el DataFrame en un archivo Excel
+            ruta_excel = os.path.join(carpeta_xlsx, nombre_archivo_excel)
+            df_final.to_excel(ruta_excel, index=False)
 
-        # Parte 2: Fusionar MD con SC por nombre ########################################################################################
-        # Rutas de los archivos Excel
-        excel1_path = ruta_excel
-        excel2_path = self.text_file_input.text()
-        output = self.text_input2.text()
-        numero_jornada = str(self.number_input.value())
-        # Obtener la fecha actual
-        fecha_actual = datetime.now()
-        # Formatear la fecha como una cadena (opcional)
-        fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-%S")
+            # Parte 2: Fusionar MD con SC por nombre ########################################################################################
+            # Rutas de los archivos Excel
+            excel1_path = ruta_excel
+            excel2_path = self.text_file_input.text()
+            output = self.text_input2.text()
+            numero_jornada = str(self.number_input.value())
+            # Obtener la fecha actual
+            fecha_actual = datetime.now()
+            # Formatear la fecha como una cadena (opcional)
+            fecha_actual_str = fecha_actual.strftime("%Y-%m-%d--%H-%M-%S")
 
-        output_archivo=output+"/dataset_entrenamiento_jornada"+numero_jornada+"__"+fecha_actual_str+".xlsx"
-        
-        # Leer los datos de los archivos Excel
-        df1 = pd.read_excel(excel1_path, header=None)
-        df2 = pd.read_excel(excel2_path, header=None)
-        
-        # Obtener todas las celdas de la fila 1 (que ahora es la segunda fila después de desactivar el encabezado)
-        fila_excel1 = df1.iloc[0, :].dropna().tolist()
-        fila_excel2 = df2.iloc[0, :].dropna().tolist()
+            output_archivo=output+"/dataset_entrenamiento_jornada"+numero_jornada+"__"+fecha_actual_str+".xlsx"
+            
+            # Leer los datos de los archivos Excel
+            df1 = pd.read_excel(excel1_path, header=None)
+            df2 = pd.read_excel(excel2_path, header=None)
+            
+            # Obtener todas las celdas de la fila 1 (que ahora es la segunda fila después de desactivar el encabezado)
+            fila_excel1 = df1.iloc[0, :].dropna().tolist()
+            fila_excel2 = df2.iloc[0, :].dropna().tolist()
 
-        # Concatenar las listas
-        fila_concatenada =  fila_excel2 + fila_excel1
+            # Concatenar las listas
+            fila_concatenada =  fila_excel2 + fila_excel1
 
-        # Crear un DataFrame de pandas con una sola fila y múltiples columnas
-        df = pd.DataFrame([fila_concatenada])
+            # Crear un DataFrame de pandas con una sola fila y múltiples columnas
+            df = pd.DataFrame([fila_concatenada])
 
 
-        # Escribir el DataFrame en un archivo Excel
-        df.to_excel(output_archivo, index=False, header=False)
+            # Escribir el DataFrame en un archivo Excel
+            df.to_excel(output_archivo, index=False, header=False)
+        except:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText('\nCarpeta de partidos scrpaeados de Sofascore o fichero de jugaodres scrapeados de Mister Fantasy erroneo. Asegurate de introducir la ruta correcta a la carpeta o archico correcto para poder generar el dataset.\n')
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
+
+        # PARTE 4: BUSCAR COINCIENDECIAS ENTRE AMBOS DATASETS  ######################################################################################
 
         # Inicializar el conjunto de valores encontrados
         valores_encontrados = set()
@@ -1009,14 +1024,20 @@ class dataset_entrenamiento(QWidget):
         #Resultados de la fusión de datasets
         self.output_textedit.insertPlainText("\n_____________________________________________________________________________________________________\n")
         self.output_textedit.insertPlainText(f"Total coincidencias: {contador_coincidencias} / {contador_global-1}\n")
+        time.sleep(0.2)
         self.output_textedit.insertPlainText(f"Añadidos manualmente: {contador_manual}\n")
+        time.sleep(0.2)
         self.output_textedit.insertPlainText(f"Jugadores no disponibles en MisterFantasy: {((contador_global-1)-(contador_coincidencias+contador_manual))}\n")
+        time.sleep(0.2)
         self.output_textedit.insertPlainText(f"Precisión: {(((contador_coincidencias+contador_manual)/(contador_global-1))*100)} %\n")
+        time.sleep(0.2)
         self.output_textedit.insertPlainText("Dataset fusionado correctamente.\n")
 
         time.sleep(0.5)
         self.output_textedit.insertPlainText("Procesando atributos...\n")
-        # PROCESAR DATOS DE LAS COLUMNAS
+
+        # PARTE 4: PROCESAR DATOS DE LAS COLUMNAS ######################################################################################################################
+
         # Cargar el archivo Excel en un DataFrame
         df = pd.read_excel(output_archivo)
 
@@ -1860,167 +1881,214 @@ class dataset_predecir(QWidget):
         nombre_archivo = nombre_archivo.lower()
         
         if not ('plantilla' in nombre_archivo or 'mercado' in nombre_archivo):
-            self.output_textedit.insertPlainText("Archivo de jugadores del mercado o plantilla erroneo.")
-            time.sleep(0.5)
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText('\nArchivo de jugadores del mercado o plantilla erroneo.\n')
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
             return
         
         #### PARTE 1 : GENERAR DATASET resultate de fusionar los daasets de Sofaescore y Mister Fantasy ########################################################################################
-        self.json_a_excel()
+        try:
+            #self.json_a_excel()
+            print("pene")
+        except:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText('\nCarpeta de partidos scrpaeados de Sofascore o fichero de jugaodres scrapeados de Mister Fantasy erroneo. Asegurate de introducir la ruta correcta a la carpeta o archico correcto para poder generar el dataset.\n')
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
+            
+        #### PARTE 2 : ABRIR FICHERO DE JUGADORES DE MERCADO / MI PLANTILLA #####################################################################################################################
+        try:
+            # Ruta al archivo Excel
+            self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
+            time.sleep(1)
+            self.output_textedit.insertPlainText(f"Abriendo fichero de jugadores selecioandos...\n")
+            time.sleep(1)
+            self.output_textedit.insertPlainText("\n" + "" * 100 + "\n")
+            time.sleep(1)
 
-        #### PARTE 2 : ABRIR FICHERO DE JUAODRES DE MERCADO / MI PLANTILLA #####################################################################################################################
-        # Ruta al archivo Excel
-        self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
-        time.sleep(1)
-        self.output_textedit.insertPlainText(f"Abriendo fichero de jugadores selecioandos...\n")
-        time.sleep(1)
-        self.output_textedit.insertPlainText("\n" + "" * 100 + "\n")
-        time.sleep(1)
+            # Lee el archivo Excel con pandas y especifica que no hay encabezado
+            df = pd.read_excel(archivo_excel_selected_players, header=None)
 
-        # Lee el archivo Excel con pandas y especifica que no hay encabezado
-        df = pd.read_excel(archivo_excel_selected_players, header=None)
+            # Obtén los valores de la primera columna (columna 0)
+            valores_Mercado = df.iloc[:, 0].tolist()
 
-        # Obtén los valores de la primera columna (columna 0)
-        valores_Mercado = df.iloc[:, 0].tolist()
+            # Imprime o utiliza los valores según sea necesario
+            self.output_textedit.insertPlainText(f"Total de jugadores encontrados: {len(valores_Mercado)}\n")
 
-        # Imprime o utiliza los valores según sea necesario
-        self.output_textedit.insertPlainText(f"Total de jugadores encontrados: {len(valores_Mercado)}\n")
-
-        for valor in valores_Mercado:
-            self.output_textedit.insertPlainText(f"{valor}\n")
-            time.sleep(0.5)
-        time.sleep(1)
-        self.output_textedit.insertPlainText(f"\n") 
-
+            for valor in valores_Mercado:
+                self.output_textedit.insertPlainText(f"{valor}\n")
+                time.sleep(0.5)
+            time.sleep(1)
+            self.output_textedit.insertPlainText(f"\n") 
+        except:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText('\nFichero de jugadores del mercado o mi plantilla erroneo o inaccesible. Asegurate de introducir la ruta correcta del archico correcto para poder generar el dataset.\n')
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
+        
         #### PARTE 3 : SCRAPING DE DATOS DE MISTER FATASY DE JUGAODRES #########################################################################################################################
         time.sleep(0.5)
         self.output_textedit.insertPlainText("\n" + "_" * 100 + "\n")
         time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Accediendo a la web de Mister Fnatasy para scrapear datos de los jugadores que se almacenarán en el dataset...\n")
         
-        #Creamos driver con la url del fantasy y nos logueamos
-        self.driver = webdriver.Chrome()
-        time.sleep(10)
-        realizar_login(self.driver)
-        time.sleep(10)
-        
-        # Analizamso si el fichero para comprobar si contiene jugaodres del mercado o de mi plantilla y en consecuencia scrapear en el apartado de "mi plantilla" o "mercado"
-        # Obtener el nombre del archivo sin la extensión
-        nombre_archivo = os.path.splitext(os.path.basename(archivo_excel_selected_players))[0]
-
-        # Convierte el nombre del archivo a minúsculas para facilitar la comparación
-        nombre_archivo = nombre_archivo.lower()
-
-        # Verifica si el nombre del archivo contiene la palabra "mercado"
-        if 'mercado' in nombre_archivo:
-            time.sleep(2)
-            self.output_textedit.insertPlainText("Scrapeando datos de jugadores del mercado...\n")
-            # PARTE 3.1 : SCRAPEAR MERCADO
+        while True:
             try:
-                # Pinchar en el botón Market
-                market = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[2]/a')
-                time.sleep(2)
-                market.click()
-                time.sleep(3)
-            except (ElementNotInteractableException, NoSuchElementException):
-                # Maneja la excepción y espera antes de intentar nuevamente
-                self.output_textedit.insertPlainText("Anuncio detectado, reiniciando driver...")
-                self.driver.refresh()
-                time.sleep(6) 
-                market.click()
-            
-            # Encuentra el elemento <ul> con el id "list-on-sale"
-            ul_element = self.driver.find_element(By.ID, "list-on-sale")
-
-            # Encuentra los elementos <div> con la clase "name" dentro del elemento <ul>
-            div_elements = ul_element.find_elements(By.CSS_SELECTOR, "div.name")
-
-            # Itera sobre los elementos <div> encontrados e imprime el nombre del jugador
-            for div_element in div_elements:
-                self.output_textedit.insertPlainText("\n" + "-" * 40 + "\n")
-                time.sleep(0.5)
-
-                #nombre_elemento 
-                name_element = div_element.text
-                time.sleep(1)
-                #Imprime el nombre del jugador
-                self.output_textedit.insertPlainText(f"{name_element}:\n")
+                #Creamos driver con la url del fantasy y nos logueamos
+                self.driver = webdriver.Chrome()
+                time.sleep(10)
+                realizar_login(self.driver)
                 
-                time.sleep(1)
-                try:
-                    div_element.click()
-                except: 
-                    self.driver.execute_script("window.scrollBy(0, arguments[0]);", 300)  
-                    time.sleep(0.5)
-                    div_element.click()
+                # Analizamso si el fichero para comprobar si contiene jugaodres del mercado o de mi plantilla y en consecuencia scrapear en el apartado de "mi plantilla" o "mercado"
+                # Obtener el nombre del archivo sin la extensión
+                nombre_archivo = os.path.splitext(os.path.basename(archivo_excel_selected_players))[0]
+
+                # Convierte el nombre del archivo a minúsculas para facilitar la comparación
+                nombre_archivo = nombre_archivo.lower()
+
+                # Verifica si el nombre del archivo contiene la palabra "mercado"
+                if 'mercado' in nombre_archivo:
+                    time.sleep(2)
+                    self.output_textedit.insertPlainText("Scrapeando datos de jugadores del mercado...\n")
+                    # PARTE 3.1 : SCRAPEAR MERCADO
+                    try:
+                        # Pinchar en el botón Market
+                        market = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[2]/a')
+                        time.sleep(2)
+                        market.click()
+                        time.sleep(3)
+                    except (ElementNotInteractableException, NoSuchElementException):
+                        # Maneja la excepción y espera antes de intentar nuevamente
+                        self.output_textedit.insertPlainText("Anuncio detectado, reiniciando driver...")
+                        self.driver.refresh()
+                        time.sleep(6) 
+                        market = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[2]/a')
+                        market.click()
                     
-                time.sleep(2)
-                scraping_data_selected()
-                time.sleep(2)
+                    # Encuentra el elemento <ul> con el id "list-on-sale"
+                    ul_element = self.driver.find_element(By.ID, "list-on-sale")
 
+                    # Encuentra los elementos <div> con la clase "name" dentro del elemento <ul>
+                    div_elements = ul_element.find_elements(By.CSS_SELECTOR, "div.name")
 
-        # Verifica si el nombre del archivo contiene la palabra "plantilla"
-        if 'plantilla' in nombre_archivo:
-            # PARTE 3.2 : SCRAPEAR PLANTILLA
-            time.sleep(2)
-            self.output_textedit.insertPlainText("Scrapeando datos de jugadores de mi plantilla...\n")
-            time.sleep(2)
+                    # Itera sobre los elementos <div> encontrados e imprime el nombre del jugador
+                    for div_element in div_elements:
+                        self.output_textedit.insertPlainText("\n" + "-" * 40 + "\n")
+                        time.sleep(0.5)
+
+                        #nombre_elemento 
+                        name_element = div_element.text
+                        time.sleep(1)
+                        #Imprime el nombre del jugador
+                        self.output_textedit.insertPlainText(f"{name_element}:\n")
+                        
+                        time.sleep(1)
+                        try:
+                            div_element.click()
+                        except: 
+                            self.driver.execute_script("window.scrollBy(0, arguments[0]);", 300)  
+                            time.sleep(0.5)
+                            div_element.click()
+                            
+                        time.sleep(2)
+                        scraping_data_selected()
+                        time.sleep(2)
+
+                # Verifica si el nombre del archivo contiene la palabra "plantilla"
+                if 'plantilla' in nombre_archivo:
+                    # PARTE 3.2 : SCRAPEAR PLANTILLA
+                    time.sleep(2)
+                    self.output_textedit.insertPlainText("Scrapeando datos de jugadores de mi plantilla...\n")
+                    time.sleep(2)
+                    
+                    try:
+                        # Pinchar en el botón Market
+                        squad = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[3]/a')
+
+                        time.sleep(2)
+                        squad.click()
+                        time.sleep(3)
+                    except (ElementNotInteractableException, NoSuchElementException):
+                        # Maneja la excepción y espera antes de intentar nuevamente
+                        self.output_textedit.insertPlainText(f"Anuncio detectado, reiniciando driver...\n")
+                        self.driver.refresh()
+                        time.sleep(6) 
+                        squad.click()
+
+                    time.sleep(3)
+                    try:
+                        div = self.driver.find_element(By.XPATH, '//*[@id="content"]/div[2]/div[4]/ul')
+                    except:
+                        self.driver.refresh()
+                        time.sleep(6)
+                        div = self.driver.find_element(By.XPATH, '//*[@id="content"]/div[2]/div[4]/ul')
+
+                    # Encuentra todos los elementos li dentro de la ul
+                    li_elementos = div.find_elements(By.TAG_NAME, "li")
             
-            try:
-                # Pinchar en el botón Market
-                squad = self.driver.find_element(By.XPATH, '//*[@id="content"]/header/div[2]/ul/li[3]/a')
+                    # Itera sobre los elementos li
+                    for li_elemento in li_elementos:
+                        self.output_textedit.insertPlainText("\n" + "-" * 40 + "\n")
+                        time.sleep(0.5)
 
-                time.sleep(2)
-                squad.click()
-                time.sleep(3)
-            except (ElementNotInteractableException, NoSuchElementException):
-                # Maneja la excepción y espera antes de intentar nuevamente
-                self.output_textedit.insertPlainText(f"Anuncio detectado, reiniciando driver...\n")
-                self.driver.refresh()
-                time.sleep(6) 
-                squad.click()
+                        # Encuentra el elemento 'div' con la clase 'name'
+                        nombre_elemento = li_elemento.find_element(By.CLASS_NAME, "name")
+                        time.sleep(1)
+                        # Extrae el texto del elemento 'div' con la clase 'name'
+                        nombre_jugador = nombre_elemento.text.strip()
+                        # Imprime el nombre del jugador
+                        self.output_textedit.insertPlainText(f"{nombre_jugador}:\n")
+                        time.sleep(1)
 
-            time.sleep(3)
-            try:
-                div = self.driver.find_element(By.XPATH, '//*[@id="content"]/div[2]/div[4]/ul')
+                        try:
+                            nombre_elemento.click()
+                        except (ElementNotInteractableException, NoSuchElementException):
+                            # Maneja la excepción y espera antes de intentar nuevamente
+                            self.output_textedit.insertPlainText(f"Anuncio detectado, reiniciando driver...\n")
+                            self.driver.refresh()
+
+                        time.sleep(2)
+                        scraping_data_selected()
+
+                # Imprimir la información de cada jugador en la lista
+                for jugador in self.lista_jugadores_datos_scrapeados:
+                    time.sleep(0.5)
+                    print(jugador)
+                self.driver.quit()
+
+                # Salimos del bucle xq se ha conseguid completar el scraping sin anuncios bloqueantes
+                break
+            
             except:
-                self.driver.refresh()
-                time.sleep(3)
-                div = self.driver.find_element(By.XPATH, '//*[@id="content"]/div[2]/div[4]/ul')
-
-            # Encuentra todos los elementos li dentro de la ul
-            li_elementos = div.find_elements(By.TAG_NAME, "li")
-    
-            # Itera sobre los elementos li
-            for li_elemento in li_elementos:
-                self.output_textedit.insertPlainText("\n" + "-" * 40 + "\n")
-                time.sleep(0.5)
-
-                # Encuentra el elemento 'div' con la clase 'name'
-                nombre_elemento = li_elemento.find_element(By.CLASS_NAME, "name")
-                time.sleep(1)
-                # Extrae el texto del elemento 'div' con la clase 'name'
-                nombre_jugador = nombre_elemento.text.strip()
-                # Imprime el nombre del jugador
-                self.output_textedit.insertPlainText(f"{nombre_jugador}:\n")
-                time.sleep(1)
-
-                try:
-                    nombre_elemento.click()
-                except (ElementNotInteractableException, NoSuchElementException):
-                    # Maneja la excepción y espera antes de intentar nuevamente
-                    self.output_textedit.insertPlainText(f"Anuncio detectado, reiniciando driver...\n")
-                    self.driver.refresh()
-
-                time.sleep(2)
-                scraping_data_selected()
-
-
-        # Imprimir la información de cada jugador en la lista
-        for jugador in self.lista_jugadores_datos_scrapeados:
-            time.sleep(0.5)
-            print(jugador)
-        self.driver.quit()
-
+                output_textedit = self.output_textedit
+                color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+                formato_rojo = QTextCharFormat()
+                formato_rojo.setForeground(color_rojo)
+                output_textedit.mergeCurrentCharFormat(formato_rojo)
+                output_textedit.insertPlainText('Un anuncio bloquea al scraper el acceso a la información, volviendo a intentarlo...\n')
+                formato_negro = QTextCharFormat()
+                formato_negro.setForeground(QColor(0, 0, 0))
+                output_textedit.mergeCurrentCharFormat(formato_negro)
+                self.driver.quit()
+                
         #### PARTE 4 : Buscar jugaodres en los datasets de estadisticas que me interesan (jugaodres de mi plantilla / jugaodres en el mercado actual)
         # Lista global para almacenar todas las filas seleccionadas
         filas_jugadores = []

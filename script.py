@@ -1894,8 +1894,7 @@ class dataset_predecir(QWidget):
         
         #### PARTE 1 : GENERAR DATASET resultate de fusionar los daasets de Sofaescore y Mister Fantasy ########################################################################################
         try:
-            #self.json_a_excel()
-            print("pene")
+            self.json_a_excel()
         except:
             output_textedit = self.output_textedit
             color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
@@ -4500,7 +4499,7 @@ class trainWindow(QWidget):
                 self.output_textedit.insertPlainText("La ruta de la carpeta del dataset de entrenamiento no ha sido inicializada.\n")
             
             if not carpeta_save:
-                self.output_textedit.insertPlainText("La ruta de la carpeta donde guardar el modleo generado no ha sido inicializada.\n")
+                self.output_textedit.insertPlainText("La ruta de la carpeta donde guardar el modelo generado no ha sido inicializada.\n")
             
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
@@ -4511,31 +4510,52 @@ class trainWindow(QWidget):
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Generando dataset de entrada...\n")
         carpeta_datasets = self.text_input.text()
+        try:
+            # Obtener la lista de archivos en la carpeta de entrada
+            archivos_excel = [archivo for archivo in os.listdir(carpeta_datasets) if archivo.endswith('.xlsx')]
 
-        # Obtener la lista de archivos en la carpeta de entrada
-        archivos_excel = [archivo for archivo in os.listdir(carpeta_datasets) if archivo.endswith('.xlsx')]
+            # Comprobar si hay archivos Excel en la carpeta
+            if not archivos_excel:
+                output_textedit = self.output_textedit
+                color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+                formato_rojo = QTextCharFormat()
+                formato_rojo.setForeground(color_rojo)
+                output_textedit.mergeCurrentCharFormat(formato_rojo)
+                self.output_textedit.insertPlainText("No hay archivos Excel (.xlsx) en la carpeta de entrada.\n")
+                formato_negro = QTextCharFormat()
+                formato_negro.setForeground(QColor(0, 0, 0))
+                output_textedit.mergeCurrentCharFormat(formato_negro)
+                return
+                
+            else:
+                # Crear una lista para almacenar los DataFrames individuales
+                lista_dataframes = []
 
-        # Comprobar si hay archivos Excel en la carpeta
-        if not archivos_excel:
-            self.output_textedit.insertPlainText("No hay archivos Excel (.xlsx) en la carpeta de entrada.\n")
-        else:
-            # Crear una lista para almacenar los DataFrames individuales
-            lista_dataframes = []
+                # Iterar sobre cada archivo Excel y almacenar los DataFrames en la lista
+                for archivo in archivos_excel:
+                    ruta_archivo = os.path.join(carpeta_datasets, archivo)
+                    df = pd.read_excel(ruta_archivo)
+                    lista_dataframes.append(df)
 
-            # Iterar sobre cada archivo Excel y almacenar los DataFrames en la lista
-            for archivo in archivos_excel:
-                ruta_archivo = os.path.join(carpeta_datasets, archivo)
-                df = pd.read_excel(ruta_archivo)
-                lista_dataframes.append(df)
-
-            # Concatenar los DataFrames en uno solo
-            df_combinado = pd.concat(lista_dataframes, ignore_index=True)
-            
-            # Guardar el DataFrame combinado en un nuevo archivo Excel
-            #archivo_salida = carpeta_datasets + "/dataset_training.xlsx"
-            #df_combinado.to_excel(archivo_salida, index=False)
-            time.sleep(0.5)
-            self.output_textedit.insertPlainText(f"Dataset de entrada fusionado exitosamente.\n")
+                # Concatenar los DataFrames en uno solo
+                df_combinado = pd.concat(lista_dataframes, ignore_index=True)
+                
+                # Guardar el DataFrame combinado en un nuevo archivo Excel
+                #archivo_salida = carpeta_datasets + "/dataset_training.xlsx"
+                #df_combinado.to_excel(archivo_salida, index=False)
+                time.sleep(0.5)
+                self.output_textedit.insertPlainText(f"Dataset de entrada fusionado exitosamente.\n")
+        except:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText('\nCarpeta del datasets para el entrenamiento de modelos erroneo. Asegurate de introducir la ruta correcta a la carpeta para entrenar el modelo.\n')
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
 
         self.progress += 1
         self.invocar_actualizacion(self.progress)
@@ -5087,13 +5107,13 @@ class trainWindow(QWidget):
             # Imprimir varias métricas en el conjunto de test
             self.output_textedit.insertPlainText("\nMétricas en el conjunto de prueba:\n")
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f'     -Mean Squared Error (MSE) obtenido en el test del modleo con k = {best_k}:   {val_mse}\n')
+            self.output_textedit.insertPlainText(f'     -Mean Squared Error (MSE) obtenido en el test del modelo con k = {best_k}:   {val_mse}\n')
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f'     -Root Mean Squared Error (RMSE) obtenido en el test del modleo con k = {best_k}:   {val_rmse}\n')
+            self.output_textedit.insertPlainText(f'     -Root Mean Squared Error (RMSE) obtenido en el test del modelo con k = {best_k}:   {val_rmse}\n')
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f'     -Mean Absolute Error (MAE) obtenido en el test del modleo con k = {best_k}:   {val_mae}\n')
+            self.output_textedit.insertPlainText(f'     -Mean Absolute Error (MAE) obtenido en el test del modelo con k = {best_k}:   {val_mae}\n')
             time.sleep(0.4)
-            self.output_textedit.insertPlainText(f'     -R^2 Score obtenido en el test del modleo con k = {best_k}:   {val_r2}\n')
+            self.output_textedit.insertPlainText(f'     -R^2 Score obtenido en el test del modelo con k = {best_k}:   {val_r2}\n')
             time.sleep(0.4)
             
         self.progress += 1
@@ -5192,7 +5212,7 @@ class trainWindow(QWidget):
 
         # FASE 8.2.4 Guardar modelo e información asociada de la generación del modelo en el entrenanienta ################################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
-        self.output_textedit.insertPlainText(f"Guardando modelo generado e información asociada del entrenamiento y test del modleo...\n")
+        self.output_textedit.insertPlainText(f"Guardando modelo generado e información asociada del entrenamiento y test del modelo...\n")
         time.sleep(1)
 
         if self.selected_option == 1:
@@ -5334,7 +5354,7 @@ class predictWindow(QWidget):
                 self.output_textedit.insertPlainText("La ruta de la carpeta del dataset de entrenamiento no ha sido inicializada.\n")
             
             if not carpeta_save:
-                self.output_textedit.insertPlainText("La ruta de la carpeta donde guardar el modleo generado no ha sido inicializada.\n")
+                self.output_textedit.insertPlainText("La ruta de la carpeta donde guardar el modelo generado no ha sido inicializada.\n")
             
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
@@ -5345,8 +5365,20 @@ class predictWindow(QWidget):
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Cargando modelo e información estadística asociada del entrenamiento del mismo...\n\n")
        
-        # Cargar el diccionario desde el archivo
-        loaded_combined_data = joblib.load(file_modelo)
+        try:
+            # Cargar el diccionario desde el archivo
+            loaded_combined_data = joblib.load(file_modelo)
+        except:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText('Modelo cargado erroneo. Asegurate de introducir la ruta correcta del modleo con el que predecir los valores deseados.\n')
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
 
         # Acceder al modelo y la información del entrenamiento desde el diccionario
         loaded_model = loaded_combined_data['model']
@@ -5406,9 +5438,20 @@ class predictWindow(QWidget):
         #### PARTE 2 : CARGAR DATASET DE JUGADORES A PREDECIR #########################################################################################
         self.output_textedit.insertPlainText('________________________________________________________________________________________\n')
         self.output_textedit.insertPlainText(f"Cargando fichero de jugadores a predecir...\n")
-
-        # Cargar el DataFrame de jugadores
-        df = pd.read_excel(file_futbolistas)
+        try:
+            # Cargar el DataFrame de jugadores
+            df = pd.read_excel(file_futbolistas)
+        except:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText('\Fichero de jugaodres a predecir de mi plantilla o mercado erroneo. Asegurate de introducir la ruta correcta del archico para poder predecir los valores de los mismos.\n')
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
 
         time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Fichero cargado exitosamente...\n\n")

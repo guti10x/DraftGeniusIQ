@@ -277,6 +277,18 @@ class squadWindow(QWidget):
         self.setLayout(layout)
 
     def guardar_excell(self):
+        if self.text_input.text()=="": 
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText("\nRuta de la carpeta donde guardar la plantilla no ha sido inicializada.\n")
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
+        
         self.output_textedit.append(f"________________________________________________________________________________________")
         output_textedit = self.output_textedit
         color_azul = QColor(0, 0, 255)  # Valores RGB para azul
@@ -485,8 +497,19 @@ class marketWindow(QWidget):
         # Agregar el diseño principal al widget
         self.setLayout(layout)
 
-
     def guardar_excell(self):
+        if self.text_input.text()=="": 
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText("\nRuta de la carpeta donde guardar la plantilla no ha sido inicializada.\n")
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+            return
+        
         self.output_textedit.append(f"________________________________________________________________________________________")
         output_textedit = self.output_textedit
         color_azul = QColor(0, 0, 255)  # Valores RGB para azul
@@ -3979,8 +4002,20 @@ class PlayerScraperWindowMF(QDialog, QWidget):
         
     def iniciar_scrapear_thread(self):  
         # Crear un hilo y ejecutar la función en segundo plano
-        thread = threading.Thread(target=self.scrapear_funcion)
-        thread.start()
+        if usuario!="":
+            thread = threading.Thread(target=self.scrapear_funcion)
+            thread.start()
+        else:
+            output_textedit = self.output_textedit
+            color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
+            formato_rojo = QTextCharFormat()
+            formato_rojo.setForeground(color_rojo)
+            output_textedit.mergeCurrentCharFormat(formato_rojo)
+            output_textedit.insertPlainText('No has iniciado sesion en la aplicación. Logueate con tus credenciales de Mister Fantasy MD en la ventana Perfil para acceder al mercado de jugaodes.\n')
+            formato_negro = QTextCharFormat()
+            formato_negro.setForeground(QColor(0, 0, 0))
+            output_textedit.mergeCurrentCharFormat(formato_negro)
+
 
     def invocar_actualizacion(self, nuevo_valor):
         QMetaObject.invokeMethod(self.progress_bar, "setValue", Qt.ConnectionType.QueuedConnection, Q_ARG(int, nuevo_valor))
@@ -4823,7 +4858,7 @@ class trainWindow(QWidget):
             modelo = LinearRegression()
 
             # Definimos el número de folds a realizar
-            folds=10
+            folds=5
 
             # Aplicar validación cruzada con múltiples métricas
             scoring = ['neg_mean_squared_error', 'r2', 'neg_mean_absolute_error', 'explained_variance']
@@ -5633,7 +5668,7 @@ class login(QWidget):
 
                 self.driver.quit()
 
-                self.output_textedit.insertPlainText('Credenciales correctos.\n')
+                self.output_textedit.insertPlainText('Credenciales correctas.\n')
 
                 # Acceder a las variables globales desde la clase
                 global usuario, contrasena

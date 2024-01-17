@@ -404,7 +404,7 @@ class squadWindow(QWidget):
                 formato_rojo = QTextCharFormat()
                 formato_rojo.setForeground(color_rojo)
                 output_textedit.mergeCurrentCharFormat(formato_rojo)
-                output_textedit.insertPlainText('Un anuncio bloque al scraper el acceso a la información, vollviendo a intentarlo...\n')
+                output_textedit.insertPlainText('Un anuncio bloquea al scraper el acceso a la información, volviendo a intentarlo...\n')
                 formato_negro = QTextCharFormat()
                 formato_negro.setForeground(QColor(0, 0, 0))
                 output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -628,8 +628,6 @@ class marketWindow(QWidget):
 
 
                     self.driver.back()
-                
-                self.driver.quit
 
             except:
                 output_textedit = self.output_textedit
@@ -637,7 +635,7 @@ class marketWindow(QWidget):
                 formato_rojo = QTextCharFormat()
                 formato_rojo.setForeground(color_rojo)
                 output_textedit.mergeCurrentCharFormat(formato_rojo)
-                output_textedit.insertPlainText('Un anuncio bloque al scraper el acceso a la información, vollviendo a intentarlo...\n')
+                output_textedit.insertPlainText('Un anuncio bloquea al scraper el acceso a la información, volviendo a intentarlo...\n')
                 formato_negro = QTextCharFormat()
                 formato_negro.setForeground(QColor(0, 0, 0))
                 output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -656,6 +654,7 @@ class marketWindow(QWidget):
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)
 
+        self.driver.quit()  
 
 class dataset_creator(QWidget):
   def __init__(self):
@@ -3036,7 +3035,7 @@ class PlayerScraperWindowSC(QWidget):
         layout.addWidget(label_number, 3, 0)
         # Estilos 
         self.number_input = QSpinBox(self)
-        self.number_input.setMinimum(0)  # Establecer el valor mínimo (jornada 1)
+        self.number_input.setMinimum(1)  # Establecer el valor mínimo (jornada 1)
         self.number_input.setMaximum(38)  # Establecer el valor máximo (Jornada 36)
         self.number_input.setSingleStep(2)  # Establecer el paso
         self.number_input.setMaximumSize(45, 20)
@@ -3950,30 +3949,50 @@ class PlayerScraperWindowMF(QDialog, QWidget):
 
         #### IMPRIMIR TODOS LOS DATOS ####
         self.output_textedit.append("_____________________________________________")
+        time.sleep(0.2)
         self.output_textedit.append(f"-{self.progress+1}. {nombre.text}, {apellido.text}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Valor: {valor}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Posición: {posicion}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Equipo: {equipo}")
+        time.sleep(0.2)
             
         self.output_textedit.append("- - - - - - - - - - - - - - - - - - - - - - - - - -")
+        time.sleep(0.2)
 
         self.output_textedit.append(f"Puntuación Fantasy: {final_points}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Puntuación Fantasy: {as_points}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Puntuación Marca: {marca_points}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Puntuación Mundo Deportivo: {mundo_deportivo_points}")
+        time.sleep(0.2)
         
         self.output_textedit.append("- - - - - - - - - - - - - - - - - - - - - - - - - -")
+        time.sleep(0.2)
             
         self.output_textedit.append(f"Último rival: {ultimo_rival}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Resultado del partido: {result}")
+        time.sleep(0.2)
 
         self.output_textedit.append(f"Próximo rival: {proximo_rival}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Próximo partido es local: {local}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Media en casa: {media_puntos_local}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Media fuera: {media_puntos_visitante}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Edad: {edad}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Altura: {altura}")
+        time.sleep(0.2)
         self.output_textedit.append(f"Peso: {peso}")
+        time.sleep(0.2)
 
         self.progress += 1
         self.invocar_actualizacion(self.progress)

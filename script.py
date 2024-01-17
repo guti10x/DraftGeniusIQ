@@ -4483,8 +4483,10 @@ class trainWindow(QWidget):
 
             # Mostrar la gráfica
             plt.show()
-        
-        
+
+        #Lista de hilos que se van iniciando
+        hilos=[]
+
         self.start_progress()
         #### PARTE 0 : LEER INPUTS + COMPROBAR QUE TODAS LOS INPUTS (rutas de archivos y carpetas) HAN SIDO INICIALIZADAS #####################################################################
         # Ruta a la carpeta que contiene los archivos json de Sofaescore
@@ -4645,10 +4647,12 @@ class trainWindow(QWidget):
         if self.selected_option == 1:
             hilo = threading.Thread(target=visualizar_distribucion(df, 'Valor', 'Valor', 'Distribución puntuaciones jugadores', 'black'))
             hilo.start()
+            hilos.append(hilo)
 
         elif self.selected_option == 2:
             hilo = threading.Thread(target=visualizar_distribucion(df, 'Puntuación Fantasy', 'Puntuación', 'Distribución puntuaciones jugadores', 'white'))
             hilo.start()
+            hilos.append(hilo)
             
         time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Histograma generado exitosamente.\n")
@@ -4661,10 +4665,12 @@ class trainWindow(QWidget):
         if self.selected_option == 1:
             hilo = threading.Thread(target=plot_boxplot(df, 'Valor', 'Distribución puntuaciones jugadores','Eje x'))
             hilo.start()
+            hilos.append(hilo)
 
         elif self.selected_option == 2:
             hilo = threading.Thread(target=plot_boxplot(df, 'Puntuación Fantasy', 'Distribución puntuaciones jugadores','Eje x'))
             hilo.start()
+            hilos.append(hilo)
         
         time.sleep(0.5)
         self.output_textedit.insertPlainText(f"Box plot generado exitosamente.\n")
@@ -4696,6 +4702,7 @@ class trainWindow(QWidget):
 
         hilo = threading.Thread(target=plot_correlation_matrix(df,'Matriz de Correlación'))
         hilo.start()
+        hilos.append(hilo)
 
         time.sleep(0.5)
         self.invocar_actualizacion(self.progress)
@@ -4703,6 +4710,11 @@ class trainWindow(QWidget):
         time.sleep(0.5)
         print(" \n")
         time.sleep(0.5)
+
+        # Finalizar hilos generados para cada plot
+        for hilo in hilos:
+            hilo.join()
+        print("hilos de plots eliminados")
 
         self.output_textedit.insertPlainText(f"Obteniendo correlación media de cada variable con el resto de varoables...\n")
         # Calcular la matriz de correlación

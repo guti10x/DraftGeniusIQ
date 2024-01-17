@@ -404,10 +404,13 @@ class squadWindow(QWidget):
                 formato_rojo = QTextCharFormat()
                 formato_rojo.setForeground(color_rojo)
                 output_textedit.mergeCurrentCharFormat(formato_rojo)
-                output_textedit.insertPlainText('Algo salió mal, vuelve a intentarlo   :(\n')
+                output_textedit.insertPlainText('Un anuncio bloque al scraper el acceso a la información, vollviendo a intentarlo...\n')
                 formato_negro = QTextCharFormat()
                 formato_negro.setForeground(QColor(0, 0, 0))
                 output_textedit.mergeCurrentCharFormat(formato_negro)
+                # Crear un nuevo hilo y volver a intentarlo 
+                thread = threading.Thread(target=self.scrapear_funcion)
+                thread.start()
         else:
             output_textedit = self.output_textedit
             color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo
@@ -625,6 +628,8 @@ class marketWindow(QWidget):
 
 
                     self.driver.back()
+                
+                self.driver.quit
 
             except:
                 output_textedit = self.output_textedit
@@ -632,12 +637,14 @@ class marketWindow(QWidget):
                 formato_rojo = QTextCharFormat()
                 formato_rojo.setForeground(color_rojo)
                 output_textedit.mergeCurrentCharFormat(formato_rojo)
-                output_textedit.insertPlainText('Algo salió mal, vuelve a intentarlo   :(\n')
+                output_textedit.insertPlainText('Un anuncio bloque al scraper el acceso a la información, vollviendo a intentarlo...\n')
                 formato_negro = QTextCharFormat()
                 formato_negro.setForeground(QColor(0, 0, 0))
                 output_textedit.mergeCurrentCharFormat(formato_negro)
-
-            self.driver.quit()
+                # Crear un nuevo hilo y volver a intentarlo 
+                thread = threading.Thread(target=self.scrapear_funcion)
+                thread.start()
+  
         else:
             output_textedit = self.output_textedit
             color_rojo = QColor(255, 0, 0)  # Valores RGB para rojo

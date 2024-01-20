@@ -507,7 +507,7 @@ class marketWindow(QWidget):
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText("\nRuta de la carpeta donde guardar la plantilla no ha sido inicializada.\n")
+            output_textedit.insertPlainText("\nRuta de la carpeta donde guardar los jugadores del mercado no ha sido inicializada.\n")
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -519,7 +519,7 @@ class marketWindow(QWidget):
         formato_azul = QTextCharFormat()
         formato_azul.setForeground(color_azul)
         output_textedit.mergeCurrentCharFormat(formato_azul)
-        output_textedit.insertPlainText("\nGuardando plantilla...\n")
+        output_textedit.insertPlainText("\nGuardando jugaodres del mercado...\n")
         formato_negro = QTextCharFormat()
         formato_negro.setForeground(QColor(0, 0, 0))
         output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -553,7 +553,7 @@ class marketWindow(QWidget):
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText(f"\n¡La plantilla no se puede guardar porque no esta inicializada")
+            output_textedit.insertPlainText(f"\n¡Los jugaodres del mercado no se puede guardar porque no esta inicializada")
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -3157,7 +3157,7 @@ class PlayerScraperWindowSC(QWidget):
 
     def start_progress(self):
         # Establecer el rango de la barra de progreso según tus necesidades
-        self.progress_bar.setRange(0, 511)
+        self.progress_bar.setRange(0, 22)
 
         ruta_output = self.text_input.text()
         if ruta_output!="":
@@ -3310,7 +3310,7 @@ class PlayerScraperWindowSC(QWidget):
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText("\n¡La jornada no está inicializada!, Configúrala antes de empezar a scrapear")
+            output_textedit.insertPlainText("\n¡La ruta de la carpeta donde guardar los datos scrapeados no está inicializada!, Configúrala antes de empezar a scrapear")
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)
@@ -3494,14 +3494,17 @@ class PlayerScraperWindowSC(QWidget):
             divJugadores[i].click()
             time.sleep(45)
             self.obtener_informacion_jugador()
+            self.progress += 1
+            self.invocar_actualizacion(self.progress)
 
             self.driver.quit()
         
         #######################################################################################################################################################
         #  PARTE 2 :  obtener el performance de los jugadores que entraron de cambio al partido / suplentes / lesionados                                      #
         #######################################################################################################################################################
-    
-        jugador=1
+
+        self.progress_bar.setValue(0) 
+        jugador=0
 
         while True:
 
@@ -3538,6 +3541,7 @@ class PlayerScraperWindowSC(QWidget):
             divSuplentes.extend(divSuplentes2)
             
             tamaño_divSuplentes = len(divSuplentes)
+            self.progress_bar.setRange(0, tamaño_divSuplentes)
             self.output_textedit.append(f"{jugador+1}/{tamaño_divSuplentes}")
             
             # Definir los textos a buscar en los subelementos
@@ -3629,6 +3633,8 @@ class PlayerScraperWindowSC(QWidget):
             divSuplentes[jugador].click()
             time.sleep(45)
             self.obtener_informacion_jugador()
+            self.progress += 1
+            self.invocar_actualizacion(self.progress)   
 
             jugador += 1 
             
@@ -4136,7 +4142,7 @@ class PlayerScraperWindowMF(QDialog, QWidget):
             formato_rojo = QTextCharFormat()
             formato_rojo.setForeground(color_rojo)
             output_textedit.mergeCurrentCharFormat(formato_rojo)
-            output_textedit.insertPlainText("\n¡La jornada no está inicializada!, Configúrala antes de empezar a scrapear")
+            output_textedit.insertPlainText("\n¡La ruta de la carpeta donde guardar los datos scrapeados no está inicializada!, Configúrala antes de empezar a scrapear")
             formato_negro = QTextCharFormat()
             formato_negro.setForeground(QColor(0, 0, 0))
             output_textedit.mergeCurrentCharFormat(formato_negro)

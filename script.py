@@ -393,6 +393,7 @@ class squadWindow(QWidget):
 
                     self.output_textedit.append(jugador)
                     self.nombres_jugadores.append(jugador)
+                    time.sleep(1)
 
                     self.driver.back()
 
@@ -716,8 +717,8 @@ class dataset_entrenamiento(QWidget):
         # Estilos 
         self.number_input = QSpinBox(self)
         self.number_input.setMinimum(1)  # Establecer el valor mínimo (jornada 1)
-        self.number_input.setMaximum(44)  # Establecer el valor máximo (Jornada 36)
-        self.number_input.setSingleStep(2)  # Establecer el paso
+        self.number_input.setMaximum(38)  # Establecer el valor máximo (Jornada 38)
+        self.number_input.setSingleStep(1)  # Establecer el paso
         self.number_input.setMaximumSize(44, 20)
         self.number_input.setMinimumSize(44, 20)
         # Aliniación
@@ -725,7 +726,7 @@ class dataset_entrenamiento(QWidget):
 
         ### SELECCIONAR RUTA DATASET DE ENTRADA SOFAESCORE #########################################################################
         # LABEL DE TEXTO
-        label_text = QLabel("Selecionar carpeta donde se almacenaron tododos los partidos scrapeados de la jornada de la web de Sofaescore: ")
+        label_text = QLabel("Selecionar carpeta donde se almacenaron todos los partidos scrapeados de la jornada de la web de Sofascore: ")
         grid_layout.addWidget(label_text, 5, 0)
 
         # INPUT DE TEXTO
@@ -1335,8 +1336,8 @@ class dataset_predecir(QWidget):
         # Estilos 
         self.number_input = QSpinBox(self)
         self.number_input.setMinimum(1)  # Establecer el valor mínimo (jornada 1)
-        self.number_input.setMaximum(44)  # Establecer el valor máximo (Jornada 36)
-        self.number_input.setSingleStep(2)  # Establecer el paso
+        self.number_input.setMaximum(38)  # Establecer el valor máximo (Jornada 38)
+        self.number_input.setSingleStep(1)  # Establecer el paso
         self.number_input.setMaximumSize(44, 20)
         self.number_input.setMinimumSize(44, 20)
         # Aliniación
@@ -3103,8 +3104,8 @@ class PlayerScraperWindowSC(QWidget):
         # Estilos 
         self.number_input = QSpinBox(self)
         self.number_input.setMinimum(1)  # Establecer el valor mínimo (jornada 1)
-        self.number_input.setMaximum(38)  # Establecer el valor máximo (Jornada 36)
-        self.number_input.setSingleStep(2)  # Establecer el paso
+        self.number_input.setMaximum(38)  # Establecer el valor máximo (Jornada 38)
+        self.number_input.setSingleStep(1)  # Establecer el paso
         self.number_input.setMaximumSize(45, 20)
         self.number_input.setMinimumSize(45, 20)
         # Aliniación
@@ -3704,9 +3705,9 @@ class PlayerScraperWindowMF(QDialog, QWidget):
         layout.addWidget(label_number, 2, 0)
         # Estilos 
         self.number_input = QSpinBox(self)
-        self.number_input.setMinimum(11)  # Establecer el valor mínimo (jornada 1)
-        self.number_input.setMaximum(38)  # Establecer el valor máximo (Jornada 36)
-        self.number_input.setSingleStep(2)  # Establecer el paso
+        self.number_input.setMinimum(1)  # Establecer el valor mínimo (jornada 1)
+        self.number_input.setMaximum(38)  # Establecer el valor máximo (Jornada 38)
+        self.number_input.setSingleStep(1)  # Establecer el paso
         self.number_input.setMaximumSize(38, 20)
         self.number_input.setMinimumSize(38, 20)
         # Aliniación
